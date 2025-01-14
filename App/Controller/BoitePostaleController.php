@@ -114,114 +114,114 @@ class BoitePostaleController
         // A implémenter si nécessaire
     }
 
-    public function GetAllResilies()
-    {
-        return $this->boitePostaleModel->GetAllResilies() ;
+//     public function GetAllResilies()
+//     {
+//         return $this->boitePostaleModel->GetAllResilies() ;
 
-        // A implémenter si nécessaire
-    }
+//         // A implémenter si nécessaire
+//     }
 
-    public function GetClientName()
-    {
-        return $this->boitePostaleModel->GetClientName() ;
+//     public function GetClientName()
+//     {
+//         return $this->boitePostaleModel->GetClientName() ;
 
-        // A implémenter si nécessaire
-    }
-    public function EnregistrerResiliation()
-    {
-        return $this->boitePostaleModel->EnregistrerResiliation() ;
+//         // A implémenter si nécessaire
+//     }
+//     public function EnregistrerResiliation()
+//     {
+//         return $this->boitePostaleModel->EnregistrerResiliation() ;
 
-        // A implémenter si nécessaire
-    }
+//         // A implémenter si nécessaire
+//     }
 
     
-    public function GetAllBoxDetails()
-    {
-        return $this->boitePostaleModel->GetAllBoxDetails() ;
+//     public function GetAllBoxDetails()
+//     {
+//         return $this->boitePostaleModel->GetAllBoxDetails() ;
 
-        // A implémenter si nécessaire
-    }
+//         // A implémenter si nécessaire
+//     }
 
-    public function GetDetailsByClientData()
-    {
-        return $this->boitePostaleModel->GetDetailsByClientData() ;
+//     public function GetDetailsByClientData()
+//     {
+//         return $this->boitePostaleModel->GetDetailsByClientData() ;
 
-        // A implémenter si nécessaire
-    }
-
-
-    public function UpdateClientName($clientId, $jsonData  , $userId)
-    {
-        return $this->boitePostaleModel->UpdateClientName($clientId, $jsonData , $userId) ;
-
-        // A implémenter si nécessaire
-    }
-
-    // Récupérer toutes les boîtes postales
-    public function GetAllBoitesPostales()
-    {
-        return $this->boitePostaleModel->GetAllBoitesPostales();
-    }
-     // Récupérer toutes les boîtes postales
-     public function GetBoitePostaleDetails()
-     {
-         return $this->boitePostaleModel->GetBoitePostaleDetails();
-     }
-
-    // Récupérer toutes les boîtes postales
-    public function GetBoitesPostalesDetails()
-    {
-        return $this->boitePostaleModel->GetBoitesPostalesDetails();
-    }
+//         // A implémenter si nécessaire
+//     }
 
 
-    // Récupérer toutes les boîtes postales
-    public function GetClientEtatBoitePostale($jsonData)
-{
-    return $this->boitePostaleModel->GetClientEtatBoitePostale($jsonData);
-}
+//     public function UpdateClientName($clientId, $jsonData  , $userId)
+//     {
+//         return $this->boitePostaleModel->UpdateClientName($clientId, $jsonData , $userId) ;
 
-    // Récupérer toutes les boîtes postales
-    public function GetEtatBoitesPostales()
-    {
-        return $this->boitePostaleModel->GetEtatBoitesPostales();
-    }
+//         // A implémenter si nécessaire
+//     }
 
-    // Récupérer une boîte postale par son ID
-    public function getBoitePostaleById($id)
-    {
-        return $this->boitePostaleModel->getBoitePostaleById($id);
-    }
+//     // Récupérer toutes les boîtes postales
+//     public function GetAllBoitesPostales()
+//     {
+//         return $this->boitePostaleModel->GetAllBoitesPostales();
+//     }
+//      // Récupérer toutes les boîtes postales
+//      public function GetBoitePostaleDetails()
+//      {
+//          return $this->boitePostaleModel->GetBoitePostaleDetails();
+//      }
 
-    // Créer une nouvelle boîte postale
-    public function createBoitePostale($jsonData)
-    {
-        return $this->boitePostaleModel->createBoitePostale($jsonData);
-    }
+//     // Récupérer toutes les boîtes postales
+//     public function GetBoitesPostalesDetails()
+//     {
+//         return $this->boitePostaleModel->GetBoitesPostalesDetails();
+//     }
 
-    // Mettre à jour une boîte postale
-    public function updateBoitePostale($id, $data)
-    {
-        return $this->boitePostaleModel->updateBoitePostale($id, $data);
-    }
 
-    // Supprimer une ou plusieurs boîtes postales
-    public function deleteBoitePostale($jsonData)
-    {
-        return $this->boitePostaleModel->deleteBoitePostale($jsonData);
-    }
+//     // Récupérer toutes les boîtes postales
+//     public function GetClientEtatBoitePostale($jsonData)
+// {
+//     return $this->boitePostaleModel->GetClientEtatBoitePostale($jsonData);
+// }
 
-    // Récupérer les boîtes postales par type
-    public function getBoitesPostalesByType($type)
-    {
-        return $this->boitePostaleModel->getBoitesPostalesByType($type);
-    }
+//     // Récupérer toutes les boîtes postales
+//     public function GetEtatBoitesPostales()
+//     {
+//         return $this->boitePostaleModel->GetEtatBoitesPostales();
+//     }
 
-    // Compter le nombre total de boîtes postales
-    public function countBoitesPostales()
-    {
-        return $this->boitePostaleModel->countBoitesPostales();
-    }
+//     // Récupérer une boîte postale par son ID
+//     public function getBoitePostaleById($id)
+//     {
+//         return $this->boitePostaleModel->getBoitePostaleById($id);
+//     }
+
+//     // Créer une nouvelle boîte postale
+//     public function createBoitePostale($jsonData)
+//     {
+//         return $this->boitePostaleModel->createBoitePostale($jsonData);
+//     }
+
+//     // Mettre à jour une boîte postale
+//     public function updateBoitePostale($id, $data)
+//     {
+//         return $this->boitePostaleModel->updateBoitePostale($id, $data);
+//     }
+
+//     // Supprimer une ou plusieurs boîtes postales
+//     public function deleteBoitePostale($jsonData)
+//     {
+//         return $this->boitePostaleModel->deleteBoitePostale($jsonData);
+//     }
+
+//     // Récupérer les boîtes postales par type
+//     public function getBoitesPostalesByType($type)
+//     {
+//         return $this->boitePostaleModel->getBoitesPostalesByType($type);
+//     }
+
+//     // Compter le nombre total de boîtes postales
+//     public function countBoitesPostales()
+//     {
+//         return $this->boitePostaleModel->countBoitesPostales();
+//     }
 }
 
 ?>

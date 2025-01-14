@@ -22,7 +22,7 @@ class UserController
     // Fonction pour récupérer un utilisateur par son ID
     public function getUserById($id)
     {
-        return $this->userModel->getUserById($id);
+        return $this->userModel->GetUser($id);
     }
 
     // Fonction pour créer un nouvel utilisateur
@@ -41,24 +41,6 @@ class UserController
     public function deleteUser($id)
     {
         return $this->userModel->deleteUser($id);
-    }
-
-    // Fonction pour compter le nombre total d'utilisateurs
-    public function countUsers()
-    {
-        return $this->userModel->countUsers();
-    }
-
-    // Fonction pour obtenir les utilisateurs par rôle
-    public function getUsersByRole($role)
-    {
-        return $this->userModel->getUsersByRole($role);
-    }
-
-    // Fonction pour compter les utilisateurs par rôle
-    public function countUsersByRole($role)
-    {
-        return $this->userModel->countUsersByRole($role);
     }
 }
 
