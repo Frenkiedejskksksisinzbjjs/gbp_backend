@@ -1,0 +1,9 @@
+{
+    "nom_societe": "societé",
+    "nom_personne": "jakwar",
+    "telephone": "0123456789",
+    "adresse": "123 Rue Exemple",
+    "id_boite_postale":6 ,
+    "id_user": 1
+}
+
