@@ -19,10 +19,7 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization'); // En-tête
 header('Access-Control-Allow-Credentials: true'); // Permettre l'envoi de cookies et autres informations d'identification
 
 // Initialisation des contrôleurs
-$colisNotFound = new ColisNoFoundController();
-$transfert = new TransfertController();
-$arulos = new ArulosController();
-$adrCasSensible = new AdrCasSensibleController();
+
 $userModel = new UserModel() ;
 $boitePostaleModel = new BoitePostaleController();
 

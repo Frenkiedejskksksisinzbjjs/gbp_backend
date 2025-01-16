@@ -1219,10 +1219,13 @@ public function GetAllClients()
                 c.nom AS nom_client,
                 c.adresse AS adresse_client,
                 c.type_client AS type_client,
+                c.date_abonnement AS date_abonnement,
                 bp.numero AS numero_boite_postale,
                 bp.type AS type_boite_postale,
                 c.telephone AS telephone_client,
                 a.annee_abonnement AS annee_abonnement,
+                col.adresse AS adresse_collection,
+                ld.adresse AS adresse_livraison,
                 (
                     CASE 
                         WHEN a.annee_abonnement = :currentYear THEN 'mis_a_jour'
@@ -1240,6 +1243,10 @@ public function GetAllClients()
                 boites_postales bp ON c.id_boite_postale = bp.id
             LEFT JOIN 
                 abonnement a ON bp.id = a.id_boite_postale
+            LEFT JOIN 
+                collection col ON col.id_boite_postale = bp.id
+            LEFT JOIN 
+                livraison_a_domicile ld ON ld.id_boite_postale = bp.id
         ";
 
         // Préparation et exécution de la requête
@@ -1262,6 +1269,8 @@ public function GetAllClients()
         echo json_encode(["error" => "Database error: " . $e->getMessage()]);
     }
 }
+
+
 
 public function getLastReferenceAchatCle()
 {
