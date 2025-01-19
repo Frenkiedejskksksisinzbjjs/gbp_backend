@@ -46,9 +46,9 @@ class BoitePostaleController
 
 
 
-    public function updateClientNameAndAddPayment($data)
+    public function updateClientNameAndAddPayment($id,$data)
     {
-        return $this->boitePostaleModel->updateClientNameAndAddPayment($data) ;
+        return $this->boitePostaleModel->updateClientNameAndAddPayment($id,$data) ;
 
         // A implémenter si nécessaire
     }

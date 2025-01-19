@@ -19,7 +19,7 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization'); // En-tête
 header('Access-Control-Allow-Credentials: true'); // Permettre l'envoi de cookies et autres informations d'identification
 
 // Initialisation des contrôleurs
-$userModel = new UserModel() ;
+$userModel = new UserModel();
 $boitePostaleModel = new BoitePostaleController();
 
 // Gérer les requêtes préliminaires OPTIONS
@@ -37,61 +37,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         case 'getAllColisNoFound':
             echo $colisNotFound->getAllColisNoFound();
             break;
-            case 'GetBoitePostaleDetails':
-                echo $boitePostaleModel->GetBoitePostaleDetails();
-                break;
+        case 'GetBoitePostaleDetails':
+            echo $boitePostaleModel->GetBoitePostaleDetails();
+            break;
 
-                case 'GetAllBoxDetails':
-                    echo $boitePostaleModel->GetAllBoxDetails();
-                    break;
+        case 'GetAllBoxDetails':
+            echo $boitePostaleModel->GetAllBoxDetails();
+            break;
 
-                    case 'GetAllResilies':
-                        echo $boitePostaleModel->GetAllResilies();
-                        break;
+        case 'GetAllResilies':
+            echo $boitePostaleModel->GetAllResilies();
+            break;
 
-                        case 'GetAllClients':
-                            echo $boitePostaleModel->GetAllClients();
-                            break;
+        case 'GetAllClients':
+            echo $boitePostaleModel->GetAllClients();
+            break;
 
-                            case 'getLastReferenceAchatCle':
-                                echo $boitePostaleModel->getLastReferenceAchatCle();
-                                break;
-                                case 'getLastReferenceAjoutSousCouvette':
-                                    echo $boitePostaleModel->getLastReferenceAjoutSousCouvette();
-                                    break;
-                                    case 'getLastReferenceChangerNom':
-                                        echo $boitePostaleModel->getLastReferenceChangerNom();
-                                        break;
-                                        case 'getLastReferenceLivraisonDomicile':
-                                            echo $boitePostaleModel->getLastReferenceLivraisonDomicile();
-                                            break;
-                                            case 'getLastReferenceAjoutCollection':
-                                                echo $boitePostaleModel->getLastReferenceAjoutCollection();
-                                                break;
-                                                case 'getLastReference':
-                                                    echo $boitePostaleModel->getLastReference();
-                                                    break;
-    
-
+        case 'getLastReferenceAchatCle':
+            echo $boitePostaleModel->getLastReferenceAchatCle();
+            break;
+        case 'getLastReferenceAjoutSousCouvette':
+            echo $boitePostaleModel->getLastReferenceAjoutSousCouvette();
+            break;
+        case 'getLastReferenceChangerNom':
+            echo $boitePostaleModel->getLastReferenceChangerNom();
+            break;
+        case 'getLastReferenceLivraisonDomicile':
+            echo $boitePostaleModel->getLastReferenceLivraisonDomicile();
+            break;
+        case 'getLastReferenceAjoutCollection':
+            echo $boitePostaleModel->getLastReferenceAjoutCollection();
+            break;
+        case 'getLastReference':
+            echo $boitePostaleModel->getLastReference();
+            break;
 
 
 
-               
-               
-            case 'GetBoitesPostalesDetails':
-                echo $boitePostaleModel->GetBoitesPostalesDetails();
-                break;
-            case 'GetEtatBoitesPostales':
-                echo $boitePostaleModel->GetEtatBoitesPostales();
-                break;
-            case 'GetAllBoitesPostales':
-                echo $boitePostaleModel->GetAllBoitesPostales();
-                break;
-            case 'GetAllUsers':
-                echo $userModel->GetAllUsers();
-                break;
-                                  
-                
+
+
+
+
+        case 'GetBoitesPostalesDetails':
+            echo $boitePostaleModel->GetBoitesPostalesDetails();
+            break;
+        case 'GetEtatBoitesPostales':
+            echo $boitePostaleModel->GetEtatBoitesPostales();
+            break;
+        case 'GetAllBoitesPostales':
+            echo $boitePostaleModel->GetAllBoitesPostales();
+            break;
+        case 'GetAllUsers':
+            echo $userModel->GetAllUsers();
+            break;
+
+
         default:
             echo json_encode(['error' => 'Invalid method']);
     }
@@ -100,57 +100,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 // Gestion des requêtes POST
 elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = file_get_contents('php://input');
+    $id=$_GET['id'];
 
     switch ($method) {
         case 'createColisNoFound':
             echo $colisNotFound->createColisNoFound($data);
             break;
-            case 'GetClientEtatBoitePostale':
-                echo $boitePostaleModel->GetClientEtatBoitePostale($data);
-                break;
+        case 'GetClientEtatBoitePostale':
+            echo $boitePostaleModel->GetClientEtatBoitePostale($data);
+            break;
 
-                case 'addSousCouvette':
-                    echo $boitePostaleModel->addSousCouvette($data);
-                    break;
-
-
-                    case 'addMontantAchatsCle':
-                        echo $boitePostaleModel->addMontantAchatsCle($data);
-                        break;
+        case 'addSousCouvette':
+            echo $boitePostaleModel->addSousCouvette($data);
+            break;
 
 
-
-                    case 'updateClientNameAndAddPayment':
-                        echo $boitePostaleModel->updateClientNameAndAddPayment($data);
-                        break;
-
-                        case 'insertAndAssignBoitePostaleToClient':
-                            echo $boitePostaleModel->insertAndAssignBoitePostaleToClient($data);
-                            break;
-                            case 'insererLivraisonEtMettreAJourPaiement':
-                                echo $boitePostaleModel->insererLivraisonEtMettreAJourPaiement($data);
-                                break;
-                                case 'insererCollectionEtMettreAJourPaiement':
-                                    echo $boitePostaleModel->insererCollectionEtMettreAJourPaiement($data);
-                                    break;
+        case 'addMontantAchatsCle':
+            echo $boitePostaleModel->addMontantAchatsCle($data);
+            break;
 
 
 
-               
+        case 'updateClientNameAndAddPayment':
+            echo $boitePostaleModel->updateClientNameAndAddPayment($id,$data);
+            break;
+
+        case 'insertAndAssignBoitePostaleToClient':
+            echo $boitePostaleModel->insertAndAssignBoitePostaleToClient($data);
+            break;
+        case 'insererLivraisonEtMettreAJourPaiement':
+            echo $boitePostaleModel->insererLivraisonEtMettreAJourPaiement($data);
+            break;
+        case 'insererCollectionEtMettreAJourPaiement':
+            echo $boitePostaleModel->insererCollectionEtMettreAJourPaiement($data);
+            break;
 
 
-                case 'GetDetailsByClientData':
-                    echo $boitePostaleModel->GetDetailsByClientData();
-                    break;
 
-                    case 'EnregistrerResiliation':
-                        echo $boitePostaleModel->EnregistrerResiliation();
-                        break;
-                        
-                    case 'GetClientName':
-                        echo $boitePostaleModel->GetClientName();
-                        break;
-      
+
+
+
+        case 'GetDetailsByClientData':
+            echo $boitePostaleModel->GetDetailsByClientData();
+            break;
+
+        case 'EnregistrerResiliation':
+            echo $boitePostaleModel->EnregistrerResiliation();
+            break;
+
+        case 'GetClientName':
+            echo $boitePostaleModel->GetClientName();
+            break;
+
         default:
             echo json_encode(['error' => 'Invalid method']);
     }
@@ -167,15 +168,15 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         case 'UpdateClientName':
             // Récupération de l'ID du client depuis les paramètres GET
             $clientId = $_GET['id'] ?? null;
-        
+
             // Récupération de l'ID de l'utilisateur depuis les paramètres GET (ou via un mécanisme d'authentification)
             $userId = $_GET['user_id'] ?? null;
-        
+
             // Vérification de la présence de l'ID du client et de l'ID de l'utilisateur
             if ($clientId && $userId) {
                 // Récupération des données JSON depuis le corps de la requête
                 $jsonData = file_get_contents('php://input');
-        
+
                 // Appel de la méthode dans le contrôleur
                 echo $boitePostaleModel->UpdateClientName($clientId, $jsonData, $userId);
             } else {
@@ -183,9 +184,9 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
                 echo json_encode(['error' => 'Missing client ID or user ID']);
             }
             break;
-        
-        
-       
+
+
+
 
         default:
             echo json_encode(['error' => 'Invalid method']);
@@ -205,15 +206,15 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
                 echo json_encode(['error' => 'Invalid or missing ID for deleteArulo']);
             }
             break;
-            case 'deleteTransfert':
-                $data = file_get_contents('php://input');
-    
-                if (!empty($data)) {
-                    echo $transfert->deleteTransfert($data);
-                } else {
-                    echo json_encode(['error' => 'No data provided for deletion']);
-                }
-                break;
+        case 'deleteTransfert':
+            $data = file_get_contents('php://input');
+
+            if (!empty($data)) {
+                echo $transfert->deleteTransfert($data);
+            } else {
+                echo json_encode(['error' => 'No data provided for deletion']);
+            }
+            break;
 
         case 'deleteCasSensible':
             $id = $_GET['id'] ?? null;

@@ -16,6 +16,7 @@ class BoitePostaleModel
     }
 
     // une fonction qui affecte une boîte postale à un client en mettant à jour les relations entre les deux. Elle vérifie d'abord si la boîte postale est déjà assignée à un client. Si ce n'est pas le cas, elle l'associe au client spécifié.
+
     public function insertAndAssignBoitePostaleToClient($data)
     {
         try {
@@ -571,28 +572,28 @@ class BoitePostaleModel
 
 
     //une fonction qui permet de récupérer le nom du client à partir de son ID, de modifier le nom du client et d'enregistrer cette modification dans la base de données. La fonction met à jour le champ update_by dans la table clients et enregistre un paiement dans la table paiements avec un montant fixe de 5000.00 dans le champ montant_changement_nom.
-    public function updateClientNameAndAddPayment($data)
+    public function updateClientNameAndAddPayment($id, $data)
     {
         try {
             // Décodage des données JSON
             $decodedData = json_decode($data, true);
 
             // Vérification que tous les champs nécessaires sont présents dans le JSON
-            if (!isset($decodedData['id_client'], $decodedData['nouveau_nom'], $decodedData['methode_payment_nom'], $decodedData['montant_changement_nom'])) {
+            if (!isset($id, $decodedData['Nom'], $decodedData['Methode_de_paiement'], $decodedData['Montant'])) {
                 echo json_encode(["error" => "Tous les champs sont obligatoires."]);
                 return;
             }
 
-            $idClient = $decodedData['id_client'];
-            $nouveauNom = $decodedData['nouveau_nom'];
-            $methodePaymentNom = $decodedData['methode_payment_nom'];
-            $montantChangementNom = $decodedData['montant_changement_nom'];
-            $typeWalletNom = isset($decodedData['type_wallet_nom']) ? $decodedData['type_wallet_nom'] : null;
-            $numeroCheque = isset($decodedData['numero_cheque_changment_nom']) ? $decodedData['numero_cheque_changment_nom'] : null;
-            $nomBanque = isset($decodedData['nom_banque_changment_nom']) ? $decodedData['nom_banque_changment_nom'] : null;
+            $idClient = $id;
+            $nouveauNom = $decodedData['Nom'];
+            $methodePaymentNom = $decodedData['Methode_de_paiement'];
+            $montantChangementNom = $decodedData['Montant'];
+            $typeWalletNom = isset($decodedData['Wallet']) ? $decodedData['Wallet'] : null;
+            $numeroCheque = isset($decodedData['Numero_cheque']) ? $decodedData['Numero_cheque'] : null;
+            $nomBanque = isset($decodedData['Nom_Banque']) ? $decodedData['Nom_Banque'] : null;
 
-            $referenceChangerNom = isset($decodedData['reference_changer_nom']) ? $decodedData['reference_changer_nom'] : null;
-            $numeroWalletChangementNom = isset($decodedData['numero_wallet_changement_nom']) ? $decodedData['numero_wallet_changement_nom'] : null;
+            $referenceChangerNom = isset($decodedData['ReferenceId']) ? $decodedData['ReferenceId'] : null;
+            $numeroWalletChangementNom = isset($decodedData['Numero_wallet']) ? $decodedData['Numero_wallet'] : null;
 
 
             // Vérification si la référence est fournie (facultative ou obligatoire selon le cas)
@@ -610,7 +611,7 @@ class BoitePostaleModel
 
             // Si la méthode de paiement est 'wallet', vérifier type_wallet_nom
             if ($methodePaymentNom === 'wallet') {
-                if (!isset($typeWalletNom) || !in_array($typeWalletNom, ['wafi', 'cac-pay', 'd-money', 'sab-pay'])) {
+                if (!isset($typeWalletNom) || !in_array($typeWalletNom, ['waafi', 'cac-pay', 'd-money', 'sab-pay'])) {
                     echo json_encode(["error" => "Si la méthode de paiement est 'wallet', 'type_wallet_nom' est obligatoire et doit être valide."]);
                     return;
                 }
@@ -1212,24 +1213,25 @@ class BoitePostaleModel
             // Requête SQL pour récupérer les informations des clients avec vérification de l'année d'abonnement
             $sql = "
             SELECT 
-                c.nom AS nom_client,
-                c.adresse AS adresse_client,
-                c.type_client AS type_client,
-                bp.numero AS numero_boite_postale,
-                bp.type AS type_boite_postale,
-                c.telephone AS telephone_client,
-                a.annee_abonnement AS annee_abonnement,
+                c.id AS id,
+                c.nom AS Nom,
+                c.adresse AS Adresse,
+                c.type_client AS TypeClient,
+                bp.numero AS NBp,
+                bp.type AS Type_boite_postale,
+                c.telephone AS Telephone,
+                a.annee_abonnement AS Redevance,
                 (
                     CASE 
                         WHEN a.annee_abonnement = :currentYear THEN 'mis_a_jour'
                         ELSE 'non_mis_a_jour'
                     END
-                ) AS type_client_mis_a_jour,
+                ) AS Etat,
                 (
                     SELECT COUNT(*) 
                     FROM sous_couvete sc 
                     WHERE sc.id_boite_postale = bp.id
-                ) AS nombre_sous_couvettes
+                ) AS sous_couvert
             FROM 
                 clients c
             LEFT JOIN 
@@ -1263,7 +1265,15 @@ class BoitePostaleModel
     {
         try {
             // Préparer la requête pour récupérer la dernière insertion
-            $queryLastInsert = "SELECT reference_achat_cle FROM paiements ORDER BY id DESC LIMIT 1";
+            $queryLastInsert = "SELECT reference_achat_cle
+                FROM paiements
+                WHERE reference_achat_cle IS NOT NULL
+                ORDER BY 
+                    CAST(SUBSTRING(reference_achat_cle, 
+                    LOCATE('/', reference_achat_cle) + 1, 
+                    LOCATE('/', reference_achat_cle, LOCATE('/', reference_achat_cle) + 1) 
+                    - LOCATE('/', reference_achat_cle) - 1) AS UNSIGNED) DESC
+                LIMIT 1";
             $stmt = $this->db->getPdo()->prepare($queryLastInsert);
             $stmt->execute();
 
@@ -1273,15 +1283,12 @@ class BoitePostaleModel
             if ($dernierPaiement && !empty($dernierPaiement['reference_achat_cle'])) {
                 // Retourner la référence si elle existe
                 echo json_encode([
-                    "success" => true,
                     "reference_achat_cle" => $dernierPaiement['reference_achat_cle']
                 ]);
             } else {
                 // Retourner une valeur par défaut si la table est vide ou la référence absente
                 echo json_encode([
-                    "success" => false,
                     "reference_achat_cle" => null, // Ou une valeur par défaut si nécessaire
-                    "error" => "Aucune référence trouvée, initialisation nécessaire."
                 ]);
             }
         } catch (PDOException $e) {
@@ -1297,7 +1304,15 @@ class BoitePostaleModel
     {
         try {
             // Préparer la requête pour récupérer la dernière insertion pour reference_ajout_sous_couvette
-            $queryLastInsert = "SELECT reference_ajout_sous_couvette FROM paiements ORDER BY id DESC LIMIT 1";
+            $queryLastInsert = "SELECT reference_ajout_sous_couvette
+                FROM paiements
+                WHERE reference_ajout_sous_couvette IS NOT NULL
+                ORDER BY 
+                    CAST(SUBSTRING(reference_ajout_sous_couvette, 
+                    LOCATE('/', reference_ajout_sous_couvette) + 1, 
+                    LOCATE('/', reference_ajout_sous_couvette, LOCATE('/', reference_ajout_sous_couvette) + 1) 
+                    - LOCATE('/', reference_ajout_sous_couvette) - 1) AS UNSIGNED) DESC
+                LIMIT 1";
             $stmt = $this->db->getPdo()->prepare($queryLastInsert);
             $stmt->execute();
 
@@ -1307,15 +1322,12 @@ class BoitePostaleModel
             if ($dernierPaiement && !empty($dernierPaiement['reference_ajout_sous_couvette'])) {
                 // Retourner la référence si elle existe
                 echo json_encode([
-                    "success" => true,
                     "reference_ajout_sous_couvette" => $dernierPaiement['reference_ajout_sous_couvette']
                 ]);
             } else {
                 // Retourner une valeur par défaut si la table est vide ou la référence absente
                 echo json_encode([
-                    "success" => false,
                     "reference_ajout_sous_couvette" => null, // Ou une valeur par défaut si nécessaire
-                    "error" => "Aucune référence ajoutée pour sous-couverture trouvée, initialisation nécessaire."
                 ]);
             }
         } catch (PDOException $e) {
@@ -1331,7 +1343,15 @@ class BoitePostaleModel
     {
         try {
             // Préparer la requête pour récupérer la dernière insertion pour reference_changer_nom
-            $queryLastInsert = "SELECT reference_changer_nom FROM paiements ORDER BY id DESC LIMIT 1";
+            $queryLastInsert = "SELECT reference_changer_nom
+                FROM paiements
+                WHERE reference_changer_nom IS NOT NULL
+                ORDER BY 
+                    CAST(SUBSTRING(reference_changer_nom, 
+                    LOCATE('/', reference_changer_nom) + 1, 
+                    LOCATE('/', reference_changer_nom, LOCATE('/', reference_changer_nom) + 1) 
+                    - LOCATE('/', reference_changer_nom) - 1) AS UNSIGNED) DESC
+                LIMIT 1";
             $stmt = $this->db->getPdo()->prepare($queryLastInsert);
             $stmt->execute();
 
@@ -1341,15 +1361,12 @@ class BoitePostaleModel
             if ($dernierPaiement && !empty($dernierPaiement['reference_changer_nom'])) {
                 // Retourner la référence si elle existe
                 echo json_encode([
-                    "success" => true,
                     "reference_changer_nom" => $dernierPaiement['reference_changer_nom']
                 ]);
             } else {
                 // Retourner une valeur par défaut si la table est vide ou la référence absente
                 echo json_encode([
-                    "success" => false,
                     "reference_changer_nom" => null, // Ou une valeur par défaut si nécessaire
-                    "error" => "Aucune référence changée de nom trouvée, initialisation nécessaire."
                 ]);
             }
         } catch (PDOException $e) {
@@ -1366,7 +1383,15 @@ class BoitePostaleModel
     {
         try {
             // Préparer la requête pour récupérer la dernière insertion pour reference_livraison_domicile
-            $queryLastInsert = "SELECT reference_livraison_domicile FROM paiements ORDER BY id DESC LIMIT 1";
+            $queryLastInsert = "SELECT reference_livraison_domicile
+                FROM paiements
+                WHERE reference_livraison_domicile IS NOT NULL
+                ORDER BY 
+                    CAST(SUBSTRING(reference_livraison_domicile, 
+                    LOCATE('/', reference_livraison_domicile) + 1, 
+                    LOCATE('/', reference_livraison_domicile, LOCATE('/', reference_livraison_domicile) + 1) 
+                    - LOCATE('/', reference_livraison_domicile) - 1) AS UNSIGNED) DESC
+                LIMIT 1";
             $stmt = $this->db->getPdo()->prepare($queryLastInsert);
             $stmt->execute();
 
@@ -1376,15 +1401,12 @@ class BoitePostaleModel
             if ($dernierPaiement && !empty($dernierPaiement['reference_livraison_domicile'])) {
                 // Retourner la référence si elle existe
                 echo json_encode([
-                    "success" => true,
                     "reference_livraison_domicile" => $dernierPaiement['reference_livraison_domicile']
                 ]);
             } else {
                 // Retourner une valeur par défaut si la table est vide ou la référence absente
                 echo json_encode([
-                    "success" => false,
                     "reference_livraison_domicile" => null, // Ou une valeur par défaut si nécessaire
-                    "error" => "Aucune référence de livraison domicile trouvée, initialisation nécessaire."
                 ]);
             }
         } catch (PDOException $e) {
@@ -1399,42 +1421,51 @@ class BoitePostaleModel
     public function getLastReferenceAjoutCollection()
     {
         try {
-            // Préparer la requête pour récupérer la dernière insertion pour reference_ajout_collection
-            $queryLastInsert = "SELECT reference_ajout_collection FROM paiements ORDER BY id DESC LIMIT 1";
-            $stmt = $this->db->getPdo()->prepare($queryLastInsert);
+            // Préparer la requête pour récupérer la valeur avec la plus grande partie numérique
+            $query = "
+                SELECT reference_ajout_collection
+                FROM paiements
+                WHERE reference_ajout_collection IS NOT NULL
+                ORDER BY 
+                    CAST(SUBSTRING(reference_ajout_collection, 
+                    LOCATE('/', reference_ajout_collection) + 1, 
+                    LOCATE('/', reference_ajout_collection, LOCATE('/', reference_ajout_collection) + 1) 
+                    - LOCATE('/', reference_ajout_collection) - 1) AS UNSIGNED) DESC
+                LIMIT 1
+            ";
+            $stmt = $this->db->getPdo()->prepare($query);
             $stmt->execute();
 
             // Récupérer le résultat
-            $dernierPaiement = $stmt->fetch(PDO::FETCH_ASSOC);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($dernierPaiement && !empty($dernierPaiement['reference_ajout_collection'])) {
-                // Retourner la référence si elle existe
-                echo json_encode([
-                    "success" => true,
-                    "reference_ajout_collection" => $dernierPaiement['reference_ajout_collection']
-                ]);
+            if ($result && !empty($result['reference_ajout_collection'])) {
+                // Retourner la ligne avec la plus grande valeur numérique
+                return json_encode(["reference_ajout_collection" => $result['reference_ajout_collection']]);
             } else {
-                // Retourner une valeur par défaut si la table est vide ou la référence absente
-                echo json_encode([
-                    "success" => false,
-                    "reference_ajout_collection" => null, // Ou une valeur par défaut si nécessaire
-                    "error" => "Aucune référence ajout collection trouvée, initialisation nécessaire."
-                ]);
+                // Retourner null si aucune donnée n'est trouvée
+                return json_encode(["reference_ajout_collection" => null]);
             }
         } catch (PDOException $e) {
-            // Retourner une erreur en cas d'exception
-            echo json_encode([
-                "success" => false,
-                "error" => "Erreur : " . $e->getMessage()
-            ]);
+            // Gérer les erreurs en cas d'exception
+            throw new \Exception("Erreur lors de la récupération de la référence : " . $e->getMessage());
         }
     }
+
 
     public function getLastReference()
     {
         try {
             // Préparer la requête pour récupérer la dernière insertion pour reference
-            $queryLastInsert = "SELECT reference FROM paiements ORDER BY id DESC LIMIT 1";
+            $queryLastInsert = "SELECT reference
+                FROM paiements
+                WHERE reference IS NOT NULL
+                ORDER BY 
+                    CAST(SUBSTRING(reference, 
+                    LOCATE('/', reference) + 1, 
+                    LOCATE('/', reference, LOCATE('/', reference) + 1) 
+                    - LOCATE('/', reference) - 1) AS UNSIGNED) DESC
+                LIMIT 1";
             $stmt = $this->db->getPdo()->prepare($queryLastInsert);
             $stmt->execute();
 
@@ -1444,21 +1475,17 @@ class BoitePostaleModel
             if ($dernierPaiement && !empty($dernierPaiement['reference'])) {
                 // Retourner la référence si elle existe
                 echo json_encode([
-                    "success" => true,
                     "reference" => $dernierPaiement['reference']
                 ]);
             } else {
                 // Retourner une valeur par défaut si la table est vide ou la référence absente
                 echo json_encode([
-                    "success" => false,
                     "reference" => null, // Ou une valeur par défaut si nécessaire
-                    "error" => "Aucune référence trouvée, initialisation nécessaire."
                 ]);
             }
         } catch (PDOException $e) {
             // Retourner une erreur en cas d'exception
             echo json_encode([
-                "success" => false,
                 "error" => "Erreur : " . $e->getMessage()
             ]);
         }
