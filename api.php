@@ -119,6 +119,16 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         echo $boitePostaleModel->addMontantAchatsCle($data);
                         break;
 
+                        case 'enregistrerPaiement':
+                            if (isset($_GET['idClient']) && !empty($_GET['idClient'])) {
+                                $idClient = (int)$_GET['idClient'];
+                                $data = file_get_contents('php://input'); // Récupérer les données JSON
+                                $boitePostaleModel->enregistrerPaiement($idClient, $data);
+                            } else {
+                                echo json_encode(["error" => "ID du client manquant."]);
+                            }
+                            break;
+
 
 
                     case 'updateClientNameAndAddPayment':

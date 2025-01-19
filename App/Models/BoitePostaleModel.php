@@ -561,6 +561,77 @@ public function addMontantAchatsCle($data)
 }
 
 
+public function enregistrerPaiement($idClient, $data)
+{
+    try {
+        // Vérifier si $idClient est présent et valide
+        if (empty($idClient) || !is_numeric($idClient)) {
+            echo json_encode(["error" => "L'ID du client est requis et doit être valide."]);
+            return;
+        }
+
+        // Décoder les données JSON
+        $decodedData = json_decode($data, true);
+
+        // Vérifier les champs obligatoires
+        if (!isset($decodedData['methode_payment'], $decodedData['montant_redevence'])) {
+            echo json_encode(["error" => "Les champs 'methode_payment' et 'montant_redevence' sont obligatoires."]);
+            return;
+        }
+
+        $methodePayment = $decodedData['methode_payment'];
+        $montantRedevence = $decodedData['montant_redevence'];
+        $typeWallet = isset($decodedData['type_wallet']) ? $decodedData['type_wallet'] : null;
+
+        // Champs supplémentaires pour les paiements par chèque
+        $numeroCheque = isset($decodedData['numero_cheque']) ? $decodedData['numero_cheque'] : null;
+        $nomBanque = isset($decodedData['nom_banque']) ? $decodedData['nom_banque'] : null;
+
+        // Vérifier la validité de methode_payment
+        if (!in_array($methodePayment, ['wallet', 'cash', 'cheque', 'carte_credits'])) {
+            echo json_encode(["error" => "La méthode de paiement est invalide."]);
+            return;
+        }
+
+        // Si méthode de paiement est 'wallet', vérifier type_wallet
+        if ($methodePayment === 'wallet') {
+            if (!isset($typeWallet) || !in_array($typeWallet, ['wafi', 'cac-pay', 'd-money', 'sab-pay'])) {
+                echo json_encode(["error" => "Si la méthode de paiement est 'wallet', 'type_wallet' est obligatoire et doit être valide."]);
+                return;
+            }
+        }
+
+        // Si méthode de paiement est 'cheque', vérifier les champs liés
+        if ($methodePayment === 'cheque') {
+            if (empty($numeroCheque) || empty($nomBanque)) {
+                echo json_encode(["error" => "Pour le paiement par chèque, 'numero_cheque' et 'nom_banque' sont obligatoires."]);
+                return;
+            }
+        }
+
+        // Insérer directement un paiement
+        $insertQuery = "INSERT INTO paiements (id_client, montant_redevence, methode_payment, type_wallet, numero_cheque, nom_banque)
+                        VALUES (:id_client, :montant_redevence, :methode_payment, :type_wallet, :numero_cheque, :nom_banque)";
+        $stmt = $this->db->getPdo()->prepare($insertQuery);
+        $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
+        $stmt->bindParam(':montant_redevence', $montantRedevence, PDO::PARAM_STR);
+        $stmt->bindParam(':methode_payment', $methodePayment, PDO::PARAM_STR);
+        $stmt->bindParam(':type_wallet', $typeWallet, PDO::PARAM_STR);
+        $stmt->bindParam(':numero_cheque', $numeroCheque, PDO::PARAM_STR);
+        $stmt->bindParam(':nom_banque', $nomBanque, PDO::PARAM_STR);
+        $stmt->execute();
+
+        echo json_encode(["success" => "Paiement ajouté avec succès."]);
+    } catch (PDOException $e) {
+        echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
+    }
+}
+
+
+
+
+
+
 
 
 
@@ -1276,7 +1347,12 @@ public function getLastReferenceAchatCle()
 {
     try {
         // Préparer la requête pour récupérer la dernière insertion
-        $queryLastInsert = "SELECT reference_achat_cle FROM paiements ORDER BY id DESC LIMIT 1";
+        $queryLastInsert = "SELECT reference_achat_cle
+FROM paiements
+WHERE reference_achat_cle IS NOT NULL
+ORDER BY id DESC
+LIMIT 1;
+";
         $stmt = $this->db->getPdo()->prepare($queryLastInsert);
         $stmt->execute();
 

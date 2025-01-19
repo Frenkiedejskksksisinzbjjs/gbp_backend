@@ -27,6 +27,13 @@ class BoitePostaleController
         // A implémenter si nécessaire
     }
 
+    public function enregistrerPaiement($idClient, $data)
+    {
+        return $this->boitePostaleModel->enregistrerPaiement($idClient, $data) ;
+
+        // A implémenter si nécessaire
+    }
+
     public function insererLivraisonEtMettreAJourPaiement($data)
     {
         return $this->boitePostaleModel->insererLivraisonEtMettreAJourPaiement($data) ;
