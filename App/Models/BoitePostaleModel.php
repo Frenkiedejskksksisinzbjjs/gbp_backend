@@ -576,9 +576,10 @@ class BoitePostaleModel
                 return;
             }
 
-            $methodePayment = $decodedData['methode_payment'];
-            $montantRedevence = $decodedData['montant_redevence'];
-            $typeWallet = isset($decodedData['type_wallet']) ? $decodedData['type_wallet'] : null;
+        $methodePayment = $decodedData['methode_payment'];
+        $montantRedevence = $decodedData['montant_redevence'];
+        $typeWallet = isset($decodedData['type_wallet']) ? $decodedData['type_wallet'] : null;
+        $numeroWalletRedevence = isset($decodedData['numero_wallet_redevence']) ? $decodedData['numero_wallet_redevence'] : null;
 
             // Champs supplémentaires pour les paiements par chèque
             $numeroCheque = isset($decodedData['numero_cheque']) ? $decodedData['numero_cheque'] : null;
@@ -590,13 +591,17 @@ class BoitePostaleModel
                 return;
             }
 
-            // Si méthode de paiement est 'wallet', vérifier type_wallet
-            if ($methodePayment === 'wallet') {
-                if (!isset($typeWallet) || !in_array($typeWallet, ['wafi', 'cac-pay', 'd-money', 'sab-pay'])) {
-                    echo json_encode(["error" => "Si la méthode de paiement est 'wallet', 'type_wallet' est obligatoire et doit être valide."]);
-                    return;
-                }
+        // Si méthode de paiement est 'wallet', vérifier type_wallet et numero_wallet_redevence
+        if ($methodePayment === 'wallet') {
+            if (!isset($typeWallet) || !in_array($typeWallet, ['wafi', 'cac-pay', 'd-money', 'sab-pay'])) {
+                echo json_encode(["error" => "Si la méthode de paiement est 'wallet', 'type_wallet' est obligatoire et doit être valide."]);
+                return;
             }
+            if (empty($numeroWalletRedevence)) {
+                echo json_encode(["error" => "Pour le paiement par wallet, 'numero_wallet_redevence' est obligatoire."]);
+                return;
+            }
+        }
 
             // Si méthode de paiement est 'cheque', vérifier les champs liés
             if ($methodePayment === 'cheque') {
@@ -606,30 +611,24 @@ class BoitePostaleModel
                 }
             }
 
-            // Insérer directement un paiement
-            $insertQuery = "INSERT INTO paiements (id_client, montant_redevence, methode_payment, type_wallet, numero_cheque, nom_banque)
-                        VALUES (:id_client, :montant_redevence, :methode_payment, :type_wallet, :numero_cheque, :nom_banque)";
-            $stmt = $this->db->getPdo()->prepare($insertQuery);
-            $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
-            $stmt->bindParam(':montant_redevence', $montantRedevence, PDO::PARAM_STR);
-            $stmt->bindParam(':methode_payment', $methodePayment, PDO::PARAM_STR);
-            $stmt->bindParam(':type_wallet', $typeWallet, PDO::PARAM_STR);
-            $stmt->bindParam(':numero_cheque', $numeroCheque, PDO::PARAM_STR);
-            $stmt->bindParam(':nom_banque', $nomBanque, PDO::PARAM_STR);
-            $stmt->execute();
+        // Insérer directement un paiement
+        $insertQuery = "INSERT INTO paiements (id_client, montant_redevence, methode_payment, type_wallet, numero_wallet_redevence, numero_cheque, nom_banque)
+                        VALUES (:id_client, :montant_redevence, :methode_payment, :type_wallet, :numero_wallet_redevence, :numero_cheque, :nom_banque)";
+        $stmt = $this->db->getPdo()->prepare($insertQuery);
+        $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
+        $stmt->bindParam(':montant_redevence', $montantRedevence, PDO::PARAM_STR);
+        $stmt->bindParam(':methode_payment', $methodePayment, PDO::PARAM_STR);
+        $stmt->bindParam(':type_wallet', $typeWallet, PDO::PARAM_STR);
+        $stmt->bindParam(':numero_wallet_redevence', $numeroWalletRedevence, PDO::PARAM_STR);
+        $stmt->bindParam(':numero_cheque', $numeroCheque, PDO::PARAM_STR);
+        $stmt->bindParam(':nom_banque', $nomBanque, PDO::PARAM_STR);
+        $stmt->execute();
 
-            echo json_encode(["success" => "Paiement ajouté avec succès."]);
-        } catch (PDOException $e) {
-            echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
-        }
+        echo json_encode(["success" => "Paiement ajouté avec succès."]);
+    } catch (PDOException $e) {
+        echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
     }
-
-
-
-
-
-
-
+}
 
 
 
