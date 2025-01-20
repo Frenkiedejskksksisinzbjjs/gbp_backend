@@ -20,6 +20,7 @@ header('Access-Control-Allow-Credentials: true'); // Permettre l'envoi de cookie
 
 // Initialisation des contrôleurs
 $userModel = new UserModel();
+
 $boitePostaleModel = new BoitePostaleController();
 
 // Gérer les requêtes préliminaires OPTIONS
@@ -116,8 +117,18 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
         case 'addMontantAchatsCle':
-            echo $boitePostaleModel->addMontantAchatsCle($data);
+            echo $boitePostaleModel->addMontantAchatsCle($id,$data);
             break;
+
+                        case 'enregistrerPaiement':
+                            if (isset($_GET['idClient']) && !empty($_GET['idClient'])) {
+                                $idClient = (int)$_GET['idClient'];
+                                $data = file_get_contents('php://input'); // Récupérer les données JSON
+                                $boitePostaleModel->enregistrerPaiement($idClient, $data);
+                            } else {
+                                echo json_encode(["error" => "ID du client manquant."]);
+                            }
+                            break;
 
 
 
@@ -129,7 +140,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo $boitePostaleModel->insertAndAssignBoitePostaleToClient($data);
             break;
         case 'insererLivraisonEtMettreAJourPaiement':
-            echo $boitePostaleModel->insererLivraisonEtMettreAJourPaiement($data);
+            echo $boitePostaleModel->insererLivraisonEtMettreAJourPaiement($id, $data);
             break;
         case 'insererCollectionEtMettreAJourPaiement':
             echo $boitePostaleModel->insererCollectionEtMettreAJourPaiement($data);

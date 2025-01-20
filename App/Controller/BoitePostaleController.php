@@ -27,9 +27,16 @@ class BoitePostaleController
         // A implémenter si nécessaire
     }
 
-    public function insererLivraisonEtMettreAJourPaiement($data)
+    public function enregistrerPaiement($idClient, $data)
     {
-        return $this->boitePostaleModel->insererLivraisonEtMettreAJourPaiement($data) ;
+        return $this->boitePostaleModel->enregistrerPaiement($idClient, $data) ;
+
+        // A implémenter si nécessaire
+    }
+
+    public function insererLivraisonEtMettreAJourPaiement($id, $data)
+    {
+        return $this->boitePostaleModel->insererLivraisonEtMettreAJourPaiement($id, $data) ;
 
         // A implémenter si nécessaire
     }
@@ -37,9 +44,9 @@ class BoitePostaleController
 
 
 
-    public function addMontantAchatsCle($data)
+    public function addMontantAchatsCle($id,$data)
     {
-        return $this->boitePostaleModel->addMontantAchatsCle($data) ;
+        return $this->boitePostaleModel->addMontantAchatsCle($id,$data) ;
 
         // A implémenter si nécessaire
     }
