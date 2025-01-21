@@ -20,9 +20,9 @@ class BoitePostaleController
         // A implémenter si nécessaire
     }
 
-    public function insererCollectionEtMettreAJourPaiement($data)
+    public function insererCollectionEtMettreAJourPaiement($idClient, $data)
     {
-        return $this->boitePostaleModel->insererCollectionEtMettreAJourPaiement($data) ;
+        return $this->boitePostaleModel->insererCollectionEtMettreAJourPaiement($idClient, $data) ;
 
         // A implémenter si nécessaire
     }
