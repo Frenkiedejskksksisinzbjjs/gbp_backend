@@ -571,37 +571,37 @@ class BoitePostaleModel
             $decodedData = json_decode($data, true);
 
             // Vérifier les champs obligatoires
-            if (!isset($decodedData['methode_payment'], $decodedData['montant_redevence'])) {
+            if (!isset($idClient, $decodedData['Montant'], $decodedData['Methode_de_paiement'], $decodedData['ReferenceId'])) {
                 echo json_encode(["error" => "Les champs 'methode_payment' et 'montant_redevence' sont obligatoires."]);
                 return;
             }
 
-        $methodePayment = $decodedData['methode_payment'];
-        $montantRedevence = $decodedData['montant_redevence'];
-        $typeWallet = isset($decodedData['type_wallet']) ? $decodedData['type_wallet'] : null;
-        $numeroWalletRedevence = isset($decodedData['numero_wallet_redevence']) ? $decodedData['numero_wallet_redevence'] : null;
+            $methodePayment = $decodedData['Methode_de_paiement'];
+            $montantRedevence = $decodedData['Montant'];
+            $typeWallet = isset($decodedData['Wallet']) ? $decodedData['Wallet'] : null;
+            $numeroWalletRedevence = isset($decodedData['Numero_wallet']) ? $decodedData['Numero_wallet'] : null;
 
             // Champs supplémentaires pour les paiements par chèque
-            $numeroCheque = isset($decodedData['numero_cheque']) ? $decodedData['numero_cheque'] : null;
-            $nomBanque = isset($decodedData['nom_banque']) ? $decodedData['nom_banque'] : null;
+            $numeroCheque = isset($decodedData['Numero_cheque']) ? $decodedData['Numero_cheque'] : null;
+            $nomBanque = isset($decodedData['Nom_Banque']) ? $decodedData['Nom_Banque'] : null;
 
             // Vérifier la validité de methode_payment
-            if (!in_array($methodePayment, ['wallet', 'cash', 'cheque', 'carte_credits'])) {
+            if (!in_array($methodePayment, ['wallet', 'cash', 'cheque'])) {
                 echo json_encode(["error" => "La méthode de paiement est invalide."]);
                 return;
             }
 
-        // Si méthode de paiement est 'wallet', vérifier type_wallet et numero_wallet_redevence
-        if ($methodePayment === 'wallet') {
-            if (!isset($typeWallet) || !in_array($typeWallet, ['wafi', 'cac-pay', 'd-money', 'sab-pay'])) {
-                echo json_encode(["error" => "Si la méthode de paiement est 'wallet', 'type_wallet' est obligatoire et doit être valide."]);
-                return;
+            // Si méthode de paiement est 'wallet', vérifier type_wallet et numero_wallet_redevence
+            if ($methodePayment === 'wallet') {
+                if (!isset($typeWallet) || !in_array($typeWallet, ['waafi', 'cac_pay', 'd_money', 'sabpay', 'dahaplaces'])) {
+                    echo json_encode(["error" => "Si la méthode de paiement est 'wallet', 'type_wallet' est obligatoire et doit être valide."]);
+                    return;
+                }
+                if (empty($numeroWalletRedevence)) {
+                    echo json_encode(["error" => "Pour le paiement par wallet, 'numero_wallet_redevence' est obligatoire."]);
+                    return;
+                }
             }
-            if (empty($numeroWalletRedevence)) {
-                echo json_encode(["error" => "Pour le paiement par wallet, 'numero_wallet_redevence' est obligatoire."]);
-                return;
-            }
-        }
 
             // Si méthode de paiement est 'cheque', vérifier les champs liés
             if ($methodePayment === 'cheque') {
@@ -610,25 +610,25 @@ class BoitePostaleModel
                     return;
                 }
             }
-
-        // Insérer directement un paiement
-        $insertQuery = "INSERT INTO paiements (id_client, montant_redevence, methode_payment, type_wallet, numero_wallet_redevence, numero_cheque, nom_banque)
+         
+            // Insérer directement un paiement
+            $insertQuery = "INSERT INTO paiements (id_client, montant_redevence, methode_payment, type_wallet, numero_wallet_redevence, numero_cheque, nom_banque)
                         VALUES (:id_client, :montant_redevence, :methode_payment, :type_wallet, :numero_wallet_redevence, :numero_cheque, :nom_banque)";
-        $stmt = $this->db->getPdo()->prepare($insertQuery);
-        $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
-        $stmt->bindParam(':montant_redevence', $montantRedevence, PDO::PARAM_STR);
-        $stmt->bindParam(':methode_payment', $methodePayment, PDO::PARAM_STR);
-        $stmt->bindParam(':type_wallet', $typeWallet, PDO::PARAM_STR);
-        $stmt->bindParam(':numero_wallet_redevence', $numeroWalletRedevence, PDO::PARAM_STR);
-        $stmt->bindParam(':numero_cheque', $numeroCheque, PDO::PARAM_STR);
-        $stmt->bindParam(':nom_banque', $nomBanque, PDO::PARAM_STR);
-        $stmt->execute();
+            $stmt = $this->db->getPdo()->prepare($insertQuery);
+            $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
+            $stmt->bindParam(':montant_redevence', $montantRedevence, PDO::PARAM_STR);
+            $stmt->bindParam(':methode_payment', $methodePayment, PDO::PARAM_STR);
+            $stmt->bindParam(':type_wallet', $typeWallet, PDO::PARAM_STR);
+            $stmt->bindParam(':numero_wallet_redevence', $numeroWalletRedevence, PDO::PARAM_STR);
+            $stmt->bindParam(':numero_cheque', $numeroCheque, PDO::PARAM_STR);
+            $stmt->bindParam(':nom_banque', $nomBanque, PDO::PARAM_STR);
+            $stmt->execute();
 
-        echo json_encode(["success" => "Paiement ajouté avec succès."]);
-    } catch (PDOException $e) {
-        echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
+            echo json_encode(["success" => "Paiement ajouté avec succès."]);
+        } catch (PDOException $e) {
+            echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
+        }
     }
-}
 
 
 
@@ -970,7 +970,7 @@ class BoitePostaleModel
             // Validation des données spécifiques à la méthode de paiement
             if ($methodePaiement === 'wallet') {
                 $typeWallet = $decodedData['Wallet'] ?? null;
-                $validWalletTypes = ['wafi', 'cac-pay', 'd-money', 'sab-pay'];
+                $validWalletTypes = ['waafi', 'cac_pay', 'd_money', 'sabpay', 'dahabplaces'];
 
                 if (!in_array($typeWallet, $validWalletTypes) || empty($decodedData['Numero_wallet'])) {
                     echo json_encode(["error" => "Données de wallet invalides."]);
@@ -1064,7 +1064,7 @@ class BoitePostaleModel
 
 
 
-    public function insererCollectionEtMettreAJourPaiement($data)
+    public function insererCollectionEtMettreAJourPaiement($id,$data)
     {
         try {
             // Décodage des données JSON
@@ -1239,6 +1239,7 @@ class BoitePostaleModel
             // Requête SQL pour récupérer les informations des clients avec vérification de l'année d'abonnement
             $sql = "
             SELECT 
+            DISTINCT
                 c.id AS id,
                 c.nom AS Nom,
                 c.adresse AS Adresse,

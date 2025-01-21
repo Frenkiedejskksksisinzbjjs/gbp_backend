@@ -121,8 +121,8 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
 
                         case 'enregistrerPaiement':
-                            if (isset($_GET['idClient']) && !empty($_GET['idClient'])) {
-                                $idClient = (int)$_GET['idClient'];
+                            if (isset($id)) {
+                                $idClient = (int)$id;
                                 $data = file_get_contents('php://input'); // Récupérer les données JSON
                                 $boitePostaleModel->enregistrerPaiement($idClient, $data);
                             } else {
