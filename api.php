@@ -142,9 +142,22 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'insererLivraisonEtMettreAJourPaiement':
             echo $boitePostaleModel->insererLivraisonEtMettreAJourPaiement($id, $data);
             break;
-        case 'insererCollectionEtMettreAJourPaiement':
-            echo $boitePostaleModel->insererCollectionEtMettreAJourPaiement($data);
-            break;
+            case 'insererCollectionEtMettreAJourPaiement':
+                // Vérifiez si $idClient est passé correctement
+                if (isset($_GET['idClient'])) {  // Assurez-vous que la variable vient de la requête GET, POST ou session
+                    $idClient = $_GET['idClient'];  // Ou $_POST['idClient'], ou $_SESSION['idClient']
+                    
+                    // Vérification que les données sont bien reçues
+                    if (!empty($data)) {
+                        echo $boitePostaleModel->insererCollectionEtMettreAJourPaiement($idClient, $data);
+                    } else {
+                        echo json_encode(["error" => "Les données sont vides."]);
+                    }
+                } else {
+                    echo json_encode(["error" => "idClient est manquant."]);
+                }
+                break;
+            
 
 
 
