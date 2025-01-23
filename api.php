@@ -112,7 +112,13 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
 
         case 'addSousCouvette':
-            echo $boitePostaleModel->addSousCouvette($data);
+            if (isset($id)) {
+                $idClient = (int)$id;
+                $data = file_get_contents('php://input'); // Récupérer les données JSON
+                $boitePostaleModel->addSousCouvette($idClient, $data);
+            } else {
+                echo json_encode(["error" => "ID du client manquant."]);
+            }
             break;
 
 
@@ -144,8 +150,8 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
             case 'insererCollectionEtMettreAJourPaiement':
                 // Vérifiez si $idClient est passé correctement
-                if (isset($_GET['idClient'])) {  // Assurez-vous que la variable vient de la requête GET, POST ou session
-                    $idClient = $_GET['idClient'];  // Ou $_POST['idClient'], ou $_SESSION['idClient']
+                if (isset($id)) {  // Assurez-vous que la variable vient de la requête GET, POST ou session
+                    $idClient = $id;  // Ou $_POST['idClient'], ou $_SESSION['idClient']
                     
                     // Vérification que les données sont bien reçues
                     if (!empty($data)) {

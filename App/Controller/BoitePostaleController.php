@@ -65,9 +65,9 @@ class BoitePostaleController
 
 
 
-    public function addSousCouvette($data)
+    public function addSousCouvette($id, $data)
     {
-        return $this->boitePostaleModel->addSousCouvette($data) ;
+        return $this->boitePostaleModel->addSousCouvette($id, $data) ;
 
         // A implémenter si nécessaire
     }

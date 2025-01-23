@@ -611,8 +611,8 @@ class BoitePostaleModel
                 }
             }
 
-        // Insérer directement un paiement
-        $insertQuery = "INSERT INTO paiements (id_client, montant_redevence, methode_payment, type_wallet, numero_wallet_redevence, numero_cheque, nom_banque)
+            // Insérer directement un paiement
+            $insertQuery = "INSERT INTO paiements (id_client, montant_redevence, methode_payment, type_wallet, numero_wallet_redevence, numero_cheque, nom_banque)
                         VALUES (:id_client, :montant_redevence, :methode_payment, :type_wallet, :numero_wallet_redevence, :numero_cheque, :nom_banque)";
             $stmt = $this->db->getPdo()->prepare($insertQuery);
             $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
@@ -787,8 +787,7 @@ class BoitePostaleModel
 
 
 
-    // ajouter une sous couvette avec une condition que 5 couve sont autorisé pour une boite boistale 
-    public function addSousCouvette($data)
+    public function addSousCouvette($id, $data)
     {
         try {
             // Décodage des données JSON
@@ -799,7 +798,7 @@ class BoitePostaleModel
             }
 
             // Validation des champs requis
-            $requiredFields = ['nom_societe', 'nom_personne', 'telephone', 'adresse', 'numero_boite_postale', 'id_user', 'methode_payment_couvette', 'montant_sous_couvette'];
+            $requiredFields = ['NBp', 'Methode_de_paiement', 'totalMontant', 'sousCouvertures'];
             foreach ($requiredFields as $field) {
                 if (!isset($decodedData[$field])) {
                     echo json_encode(["error" => "Le champ '$field' est manquant."]);
@@ -808,50 +807,16 @@ class BoitePostaleModel
             }
 
             // Assignation des variables
-            $nomSociete = $decodedData['nom_societe'];
-            $nomPersonne = $decodedData['nom_personne'];
-            $telephone = $decodedData['telephone'];
-            $adresse = $decodedData['adresse'];
-            $numeroBoitePostale = $decodedData['numero_boite_postale'];
-            $idUser = $decodedData['id_user'];
-            $methodePayment = $decodedData['methode_payment_couvette'];
-            $montantSousCouvette = $decodedData['montant_sous_couvette'];
-            $typeWallet = $decodedData['type_wallet_couvette'] ?? null;
-            $numeroCheque = $decodedData['numero_cheque_sous_couvette'] ?? null;
-            $nomBanque = $decodedData['nom_banque_sous_couvette'] ?? null;
-
-            $referenceAjoutSousCouvette = $decodedData['reference_ajout_sous_couvette'] ?? null;
-            $numeroWalletAjoutSousCouvette = $decodedData['numero_wallet_ajout_sous_couvette'] ?? null;
-
-
-            // Validation des méthodes de paiement
-            $validPaymentMethods = ['wallet', 'cash', 'cheque', 'carte_credits'];
-            if (!in_array($methodePayment, $validPaymentMethods)) {
-                echo json_encode(["error" => "Méthode de paiement invalide."]);
-                return;
-            }
-
-            // Validation pour le type de wallet
-            if ($methodePayment === 'wallet') {
-                $validWalletTypes = ['wafi', 'cac-pay', 'd-money', 'sab-pay'];
-                if (!in_array($typeWallet, $validWalletTypes)) {
-                    echo json_encode(["error" => "Type de wallet invalide."]);
-                    return;
-                }
-
-                // Vérification que 'numero_wallet_ajout_sous_couvette' est fourni
-                if (empty($numeroWalletAjoutSousCouvette)) {
-                    echo json_encode(["error" => "Le champ 'numero_wallet_ajout_sous_couvette' est obligatoire pour la méthode de paiement 'wallet'."]);
-                    return;
-                }
-            }
-
-
-            // Validation des données pour le chèque
-            if ($methodePayment === 'cheque' && (empty($numeroCheque) || empty($nomBanque))) {
-                echo json_encode(["error" => "Numéro de chèque et nom de la banque obligatoires pour un paiement par chèque."]);
-                return;
-            }
+            $numeroBoitePostale = $decodedData['NBp'];
+            $IdUser = $decodedData['id_user'];
+            $methodePayment = $decodedData['Methode_de_paiement'];
+            $totalMontant = $decodedData['totalMontant'];
+            $sousCouvertures = $decodedData['sousCouvertures'];
+            $referenceAjoutSousCouvette = $decodedData['ReferenceId'] ?? null;
+            $typeWallet = $decodedData['Wallet'] ?? null;
+            $numeroCheque = $decodedData['Numero_cheque'] ?? null;
+            $nomBanque = $decodedData['Nom_Banque'] ?? null;
+            $numeroWalletAjoutSousCouvette = $decodedData['Numero_wallet'] ?? null;
 
             // Étape 1 : Récupération de l'ID de la boîte postale
             $queryBoitePostale = "SELECT id FROM boites_postales WHERE numero = :numero_boite_postale";
@@ -866,63 +831,65 @@ class BoitePostaleModel
             }
             $idBoitePostale = $boitePostale['id'];
 
-            // Étape 2 : Vérification du nombre de sous-couvette
+            // Étape 2 : Vérification du nombre de sous-couvertures existantes
             $queryCountSousCouvette = "SELECT COUNT(*) AS total FROM sous_couvete WHERE id_boite_postale = :id_boite_postale";
             $stmt = $this->db->getPdo()->prepare($queryCountSousCouvette);
             $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
             $stmt->execute();
             $countResult = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($countResult['total'] >= 5) {
-                echo json_encode(["error" => "Limite de sous-couvette atteinte pour cette boîte postale."]);
+            $currentSousCouvetteCount = $countResult['total'];
+            $remainingSpots = 5 - $currentSousCouvetteCount;
+
+            if ($remainingSpots <= 0) {
+                echo json_encode(["error" => "Limite de sous-couvertures atteinte. Aucun ajout supplémentaire n'est possible."]);
                 return;
             }
 
-            // Étape 3 : Récupération de l'ID client
-            $queryClient = "SELECT id FROM clients WHERE id_boite_postale = :id_boite_postale";
-            $stmt = $this->db->getPdo()->prepare($queryClient);
-            $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
-            $stmt->execute();
-            $client = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$client) {
-                echo json_encode(["error" => "Aucun client trouvé pour cette boîte postale."]);
+            // Validation si l'utilisateur tente d'ajouter plus que le nombre disponible
+            if (count($sousCouvertures) > $remainingSpots) {
+                echo json_encode([
+                    "error" => "Il n'y a que $remainingSpots emplacement(s) disponible(s). Veuillez réduire le nombre de sous-couvertures à ajouter."
+                ]);
                 return;
             }
-            $idClient = $client['id'];
 
-            // Étape 4 : Insertion dans sous_couvete
-            $insertSousCouvette = "
-            INSERT INTO sous_couvete (nom_societe, nom_personne, telephone, adresse, id_boite_postale, id_user)
-            VALUES (:nom_societe, :nom_personne, :telephone, :adresse, :id_boite_postale, :id_user)";
-            $stmt = $this->db->getPdo()->prepare($insertSousCouvette);
-            $stmt->bindParam(':nom_societe', $nomSociete, PDO::PARAM_STR);
-            $stmt->bindParam(':nom_personne', $nomPersonne, PDO::PARAM_STR);
-            $stmt->bindParam(':telephone', $telephone, PDO::PARAM_STR);
-            $stmt->bindParam(':adresse', $adresse, PDO::PARAM_STR);
-            $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
-            $stmt->bindParam(':id_user', $idUser, PDO::PARAM_INT);
-            $stmt->execute();
+            // Étape 3 : Insertion des sous-couvertures
+            foreach ($sousCouvertures as $sousCouverture) {
+                $queryInsertSousCouvette = "
+                    INSERT INTO sous_couvete (nom_societe, nom_personne, telephone, adresse, id_boite_postale, id_user)
+                    VALUES (:nom_societe, :nom_personne, :telephone, :adresse, :id_boite_postale, :id_user)
+                ";
+                $stmt = $this->db->getPdo()->prepare($queryInsertSousCouvette);
+                $stmt->bindParam(':nom_societe', $sousCouverture['societe'], PDO::PARAM_STR);
+                $stmt->bindParam(':nom_personne', $sousCouverture['personne'], PDO::PARAM_STR);
+                $stmt->bindParam(':telephone', $sousCouverture['telephone'], PDO::PARAM_STR);
+                $stmt->bindParam(':adresse', $sousCouverture['adresse'], PDO::PARAM_STR);
+                $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
+                $stmt->bindParam(':id_user', $IdUser, PDO::PARAM_INT);
+                $stmt->execute();
+            }
 
-            // Étape 5 : Récupération du montant actuel et mise à jour
+            // Étape 4 : Mise à jour du montant dans paiements
             $queryCurrentMontant = "SELECT montant_sous_couvete FROM paiements WHERE id_client = :id_client";
             $stmt = $this->db->getPdo()->prepare($queryCurrentMontant);
-            $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
+            $stmt->bindParam(':id_client', $id, PDO::PARAM_INT);
             $stmt->execute();
             $currentMontant = $stmt->fetchColumn();
 
-            $newMontant = $currentMontant ? $currentMontant + $montantSousCouvette : $montantSousCouvette;
+            $newMontant = $currentMontant ? $currentMontant + $totalMontant : $totalMontant;
 
             $updatePaiements = "
-        UPDATE paiements 
-        SET montant_sous_couvete = :montant_sous_couvete,
-            methode_payment_couvette = :methode_payment_couvette,
-            type_wallet_couvette = :type_wallet_couvette,
-            numero_cheque_sous_couvette = :numero_cheque_sous_couvette,
-            nom_banque_sous_couvette = :nom_banque_sous_couvette,
-            reference_ajout_sous_couvette = :reference_ajout_sous_couvette,
-            numero_wallet_ajout_sous_couvette = :numero_wallet_ajout_sous_couvette
-        WHERE id_client = :id_client";
+                UPDATE paiements 
+                SET montant_sous_couvete = :montant_sous_couvete,
+                    methode_payment_couvette = :methode_payment_couvette,
+                    type_wallet_couvette = :type_wallet_couvette,
+                    numero_cheque_sous_couvette = :numero_cheque_sous_couvette,
+                    nom_banque_sous_couvette = :nom_banque_sous_couvette,
+                    reference_ajout_sous_couvette = :reference_ajout_sous_couvette,
+                    numero_wallet_ajout_sous_couvette = :numero_wallet_ajout_sous_couvette
+                WHERE id_client = :id_client
+            ";
 
             $stmt = $this->db->getPdo()->prepare($updatePaiements);
             $stmt->bindParam(':montant_sous_couvete', $newMontant, PDO::PARAM_STR);
@@ -931,16 +898,18 @@ class BoitePostaleModel
             $stmt->bindParam(':numero_cheque_sous_couvette', $numeroCheque, PDO::PARAM_STR);
             $stmt->bindParam(':nom_banque_sous_couvette', $nomBanque, PDO::PARAM_STR);
             $stmt->bindParam(':reference_ajout_sous_couvette', $referenceAjoutSousCouvette, PDO::PARAM_STR);
-            $stmt->bindParam(':numero_wallet_ajout_sous_couvette', $numeroWalletAjoutSousCouvette, PDO::PARAM_STR);  // Ajout du paramètre pour numero_wallet_ajout_sous_couvette
-            $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
+            $stmt->bindParam(':numero_wallet_ajout_sous_couvette', $numeroWalletAjoutSousCouvette, PDO::PARAM_STR);
+            $stmt->bindParam(':id_client', $id, PDO::PARAM_INT);
             $stmt->execute();
-
 
             echo json_encode(["success" => "Sous-couvette ajoutée et paiement mis à jour avec succès."]);
         } catch (PDOException $e) {
             echo json_encode(["error" => "Erreur de base de données : " . $e->getMessage()]);
         }
     }
+
+
+
 
 
 
@@ -1069,55 +1038,55 @@ class BoitePostaleModel
         try {
             // Décodage des données JSON
             $decodedData = json_decode($data, true);
-    
+
             // Validation des champs obligatoires
-            if (!isset($decodedData['adresse'], $decodedData['numero_boite_postale'], $decodedData['methode_paiement_collection'], $decodedData['montant_collection'])) {
+            if (!isset($decodedData['Adresse_collection'], $decodedData['NBp'], $decodedData['Methode_de_paiement'], $decodedData['Montant'], $decodedData['ReferenceId'])) {
                 echo json_encode(["error" => "Tous les champs obligatoires doivent être fournis."]);
                 return;
             }
-            if (!isset($decodedData['reference_ajout_collection'])) {
+            if (!isset($decodedData['ReferenceId'])) {
                 echo json_encode(["error" => "La référence d'ajout de collection est requise."]);
                 return;
             }
-    
-            $referenceAjoutCollection = $decodedData['reference_ajout_collection'];
-            $numeroWalletCollection = $decodedData['numero_wallet_collection'];
-            $methodePaiement = $decodedData['methode_paiement_collection'];
-            $typeWallet = $decodedData['type_wallet_collection'] ?? null;
-    
+
+            $referenceAjoutCollection = $decodedData['ReferenceId'];
+            $numeroWalletCollection = $decodedData['Numero_wallet'];
+            $methodePaiement = $decodedData['Methode_de_paiement'];
+            $typeWallet = $decodedData['Wallet'] ?? null;
+
             // Validation de la méthode de paiement
-            $validPaymentMethods = ['wallet', 'cash', 'cheque', 'carte_credits'];
+            $validPaymentMethods = ['wallet', 'cash', 'cheque'];
             if (!in_array($methodePaiement, $validPaymentMethods)) {
                 echo json_encode(["error" => "Méthode de paiement invalide."]);
                 return;
             }
-    
+
             // Validation du type de wallet si 'wallet' est sélectionné
             if ($methodePaiement === 'wallet') {
-                $validWalletTypes = ['wafi', 'cac-pay', 'd-money', 'sab-pay'];
+                $validWalletTypes = ['waafi', 'cac_pay', 'd_money', 'sabpay', 'dahabplaces'];
                 if (!in_array($typeWallet, $validWalletTypes)) {
                     echo json_encode(["error" => "Type de wallet invalide."]);
                     return;
                 }
-                if (empty($decodedData['numero_wallet_collection'])) {
-                    echo json_encode(["error" => "Le champ 'numero_wallet_collection' est obligatoire pour la méthode de paiement 'wallet'."]);
+                if (empty($decodedData['Numero_wallet'])) {
+                    echo json_encode(["error" => "Le champ 'Numero_wallet' est obligatoire pour la méthode de paiement 'wallet'."]);
                     return;
                 }
             }
-    
+
             // Validation des informations de chèque si 'cheque' est sélectionné
             if ($methodePaiement === 'cheque') {
-                if (!isset($decodedData['numero_cheque_collection'], $decodedData['nom_banque_collection'])) {
+                if (!isset($decodedData['Numero_cheque'], $decodedData['Nom_Banque'])) {
                     echo json_encode(["error" => "Si le paiement est par chèque, le numéro de chèque et le nom de la banque sont requis."]);
                     return;
                 }
             }
-    
+
             // Démarrage de la transaction
             $this->db->getPdo()->beginTransaction();
-    
+
             // Vérification de l'existence de la boîte postale
-            $numeroBoitePostale = $decodedData['numero_boite_postale'];
+            $numeroBoitePostale = $decodedData['NBp'];
             $checkBoxQuery = "
                 SELECT id 
                 FROM boites_postales 
@@ -1126,27 +1095,27 @@ class BoitePostaleModel
             $stmt = $this->db->getPdo()->prepare($checkBoxQuery);
             $stmt->bindParam(':numero', $numeroBoitePostale, PDO::PARAM_STR);
             $stmt->execute();
-    
+
             $boitePostaleResult = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
             if (!$boitePostaleResult) {
                 $this->db->getPdo()->rollBack();
                 echo json_encode(["error" => "Aucune boîte postale trouvée avec ce numéro."]);
                 return;
             }
-    
+
             $idBoitePostale = $boitePostaleResult['id'];
-    
+
             // Insertion de la collection
             $insertQuery = "
                 INSERT INTO collection (adresse, id_boite_postale, created_at, updated_at)
                 VALUES (:adresse, :id_boite_postale, NOW(), NOW())
             ";
             $stmt = $this->db->getPdo()->prepare($insertQuery);
-            $stmt->bindParam(':adresse', $decodedData['adresse'], PDO::PARAM_STR);
+            $stmt->bindParam(':adresse', $decodedData['Adresse_collection'], PDO::PARAM_STR);
             $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
             $stmt->execute();
-    
+
             // Vérification de l'existence d'un paiement avec le type 'mis_a_jour'
             $checkPaymentQuery = "
                 SELECT id 
@@ -1156,15 +1125,15 @@ class BoitePostaleModel
             $stmt = $this->db->getPdo()->prepare($checkPaymentQuery);
             $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
             $stmt->execute();
-    
+
             $paymentResult = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
             if (!$paymentResult) {
                 $this->db->getPdo()->rollBack();
                 echo json_encode(["error" => "Aucun paiement avec le type 'mis_a_jour' trouvé pour ce client."]);
                 return;
             }
-    
+
             // Mise à jour du paiement
             $updatePaymentQuery = "
                 UPDATE paiements 
@@ -1177,29 +1146,29 @@ class BoitePostaleModel
                     numero_wallet_collection = :numero_wallet_collection
                 WHERE id = :id_paiement
             ";
-    
+
             $stmt = $this->db->getPdo()->prepare($updatePaymentQuery);
-    
+
             $stmt->bindParam(':montant_collection', $decodedData['montant_collection'], PDO::PARAM_STR);
             $stmt->bindParam(':methode_paiement_collection', $methodePaiement, PDO::PARAM_STR);
             $stmt->bindParam(':type_wallet_collection', $typeWallet, PDO::PARAM_STR);
             $stmt->bindParam(':reference_ajout_collection', $referenceAjoutCollection, PDO::PARAM_STR);
-            $stmt->bindParam(':numero_wallet_collection', $decodedData['numero_wallet_collection'], PDO::PARAM_STR);
+            $stmt->bindParam(':numero_wallet_collection', $numeroWalletCollection, PDO::PARAM_STR);
             $stmt->bindParam(':id_paiement', $paymentResult['id'], PDO::PARAM_INT);
-    
+
             if ($methodePaiement === 'cheque') {
-                $stmt->bindParam(':numero_cheque_collection', $decodedData['numero_cheque_collection'], PDO::PARAM_STR);
-                $stmt->bindParam(':nom_banque_collection', $decodedData['nom_banque_collection'], PDO::PARAM_STR);
+                $stmt->bindParam(':numero_cheque_collection', $decodedData['Numero_cheque'], PDO::PARAM_STR);
+                $stmt->bindParam(':nom_banque_collection', $decodedData['Nom_Banque'], PDO::PARAM_STR);
             } else {
                 $stmt->bindValue(':numero_cheque_collection', null, PDO::PARAM_NULL);
                 $stmt->bindValue(':nom_banque_collection', null, PDO::PARAM_NULL);
             }
-    
+
             $stmt->execute();
-    
+
             // Validation de la transaction
             $this->db->getPdo()->commit();
-    
+
             // Réponse de succès
             echo json_encode(["success" => "La collection a été ajoutée et le paiement mis à jour avec succès."]);
         } catch (PDOException $e) {
@@ -1208,7 +1177,7 @@ class BoitePostaleModel
             echo json_encode(["error" => "Erreur de base de données : " . $e->getMessage()]);
         }
     }
-    
+
 
 
 
