@@ -33,6 +33,54 @@ class UserModel
             echo json_encode(["error" => "Database error: " . $e->getMessage()]);
         }
     }
+    public function GetAgentsGuichets()
+{
+    try {
+        $sql = "SELECT * FROM users WHERE role = :role";
+        $stmt = $this->db->getPdo()->prepare($sql);
+        $stmt->bindValue(':role', 'agent_guichets', PDO::PARAM_STR);
+        $stmt->execute();
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if ($result) {
+            echo json_encode($result);
+        } else {
+            echo json_encode(["error" => "No users with role 'agent_guichets' found"]);
+        }
+    } catch (PDOException $e) {
+        echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+    }
+}
+
+public function GetBoitesPostales()
+{
+    try {
+        // Requête SQL pour récupérer toutes les boîtes postales
+        $sql = "SELECT * FROM boites_postales";
+        
+        // Préparation de la requête
+        $stmt = $this->db->getPdo()->prepare($sql);
+        
+        // Exécution de la requête
+        $stmt->execute();
+        
+        // Récupération des résultats
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Vérification si des résultats existent
+        if ($result) {
+            // Retourner les résultats sous forme de JSON
+            echo json_encode($result);
+        } else {
+            // Aucun résultat trouvé
+            echo json_encode(["error" => "No postal boxes found"]);
+        }
+    } catch (PDOException $e) {
+        // Gestion des erreurs de base de données
+        echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+    }
+}
+
 
     // Récupérer un utilisateur par son ID
     public function GetUser($id)
