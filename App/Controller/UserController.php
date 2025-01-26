@@ -19,6 +19,16 @@ class UserController
         return $this->userModel->GetAllUsers();
     }
 
+    public function GetAgentsGuichets()
+    {
+        return $this->userModel->GetAgentsGuichets();
+    }
+
+    public function GetBoitesPostales()
+    {
+        return $this->userModel->GetBoitesPostales();
+    }
+
     // Fonction pour récupérer un utilisateur par son ID
     public function getUserById($id)
     {

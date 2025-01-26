@@ -92,6 +92,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo $userModel->GetAllUsers();
             break;
 
+            case 'GetAgentsGuichets':
+                echo $userModel->GetAgentsGuichets();
+                break;
+
+                case 'GetBoitesPostales':
+                    echo $userModel->GetBoitesPostales();
+                    break;
+
 
         default:
             echo json_encode(['error' => 'Invalid method']);
