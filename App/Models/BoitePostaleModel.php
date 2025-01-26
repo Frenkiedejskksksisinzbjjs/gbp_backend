@@ -26,17 +26,17 @@ class BoitePostaleModel
 
             // Vérification des champs obligatoires pour les clients
             if (!isset(
-                $decodedData['nom'],
-                $decodedData['adresse'],
-                $decodedData['type_client'],
-                $decodedData['email'],
-                $decodedData['telephone'],
-                $decodedData['numero_boite_postale'],
+                $decodedData['Nom'],
+                $decodedData['Adresse'],
+                $decodedData['TypeClient'],
+                $decodedData['Email'],
+                $decodedData['Telephone'],
+                $decodedData['BoitePostale'],
                 $decodedData['id_user'],
                 $decodedData['update_by'],
                 $decodedData['date_abonnement'],
-                $decodedData['montant_redevence'],
-                $decodedData['methode_payment']
+                $decodedData['montantRd'],
+                $decodedData['Methode_de_paiement']
             )) {
                 echo json_encode(["error" => "Tous les champs client sont obligatoires."]);
                 return;
