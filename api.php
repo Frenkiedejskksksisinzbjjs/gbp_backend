@@ -99,6 +99,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 case 'GetBoitesPostales':
                     echo $userModel->GetBoitesPostales();
                     break;
+                    case 'GetUser':
+                        if (isset($_GET['id']) && !empty($_GET['id'])) {
+                            $id = (int)$_GET['id']; // On s'assure que l'ID est un entier
+                            // Appeler la méthode GetUser du modèle et l'afficher
+                            echo $userModel->GetUser($id);
+                        } else {
+                            echo json_encode(["error" => "User ID is required"]);
+                        }
+                        break;
+                    
 
 
         default:
@@ -222,6 +232,24 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
                 echo json_encode(['error' => 'Missing client ID or user ID']);
             }
             break;
+            
+            case 'UpdateUser':
+                // Récupération de l'ID de l'utilisateur depuis les paramètres GET
+                $userId = $_GET['id'] ?? null;
+            
+                // Vérification de la présence de l'ID de l'utilisateur
+                if ($userId) {
+                    // Récupération des données JSON depuis le corps de la requête
+                    $jsonData = file_get_contents('php://input');
+            
+                    // Appel de la méthode dans le contrôleur pour mettre à jour l'utilisateur
+                    echo $userModel->updateUser($userId, $jsonData);
+                } else {
+                    // Retourner une erreur si l'ID de l'utilisateur est manquant
+                    echo json_encode(['error' => 'Missing user ID']);
+                }
+                break;
+            
 
 
 
@@ -270,6 +298,22 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
                 echo json_encode(['error' => 'Missing id for DeleteColisNotFound']);
             }
             break;
+
+            case 'DeleteUser':
+                // Récupération de l'ID depuis les paramètres GET
+                $id = $_GET['id'] ?? null;
+            
+                // Vérification de la présence de l'ID
+                if ($id) {
+                    // Appel de la méthode DeleteUser avec l'ID
+                    echo $userModel->DeleteUser($id);
+                } else {
+                    // Retourner une erreur si l'ID est manquant
+                    echo json_encode(['error' => 'User ID is required']);
+                }
+                break;
+            
+            
 
         default:
             echo json_encode(['error' => 'Invalid method']);

@@ -87,25 +87,25 @@ public function GetBoitesPostales()
     {
         try {
             if (!is_numeric($id) || $id <= 0) {
-                echo json_encode(["error" => "Invalid user ID"]);
-                return;
+                return json_encode(["error" => "Invalid user ID"]);
             }
-
+    
             $sql = "SELECT * FROM users WHERE id = :id";
             $stmt = $this->db->getPdo()->prepare($sql);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
+    
             if ($result) {
-                echo json_encode($result);
+                return json_encode($result);
             } else {
-                echo json_encode(["error" => "User not found"]);
+                return json_encode(["error" => "User not found"]);
             }
         } catch (PDOException $e) {
-            echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+            return json_encode(["error" => "Database error: " . $e->getMessage()]);
         }
     }
+    
 
     // Créer un utilisateur
     public function CreateUser($jsonData)
@@ -206,25 +206,30 @@ public function GetBoitesPostales()
     }
 
     // Supprimer un ou plusieurs utilisateurs
-    public function DeleteUser($jsonData)
+    public function DeleteUser($id)
     {
-        $data = json_decode($jsonData, true);
-
-        if (is_array($data) && isset($data['ids']) && !empty($data['ids'])) {
-            $ids = implode(',', array_map('intval', $data['ids']));
-            $sql = "DELETE FROM users WHERE id IN ($ids)";
-            $stmt = $this->db->getPdo()->prepare($sql);
-            $stmt->execute();
-
-            if ($stmt->rowCount() > 0) {
-                echo json_encode(["success" => "Deleted " . count($data['ids']) . " user(s)"]);
-            } else {
-                echo json_encode(["error" => "An error occurred"]);
+        try {
+            if (!is_numeric($id) || $id <= 0) {
+                echo json_encode(["error" => "Invalid user ID"]);
+                return;
             }
-        } else {
-            echo json_encode(["error" => "Invalid JSON data or no ID provided"]);
+    
+            // Si l'ID est un seul nombre
+            $sql = "DELETE FROM users WHERE id = :id";
+            $stmt = $this->db->getPdo()->prepare($sql);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+    
+            if ($stmt->rowCount() > 0) {
+                echo json_encode(["success" => "User with ID $id deleted successfully"]);
+            } else {
+                echo json_encode(["error" => "User not found"]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode(["error" => "Database error: " . $e->getMessage()]);
         }
     }
+    
 }
 
 ?>

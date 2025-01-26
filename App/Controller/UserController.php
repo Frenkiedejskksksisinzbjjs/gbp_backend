@@ -30,7 +30,7 @@ class UserController
     }
 
     // Fonction pour récupérer un utilisateur par son ID
-    public function getUserById($id)
+    public function GetUser($id)
     {
         return $this->userModel->GetUser($id);
     }
@@ -42,15 +42,15 @@ class UserController
     }
 
     // Fonction pour mettre à jour un utilisateur
-    public function updateUser($id, $data)
+    public function UpdateUser($id, $data)
     {
-        return $this->userModel->updateUser($id, $data);
+        return $this->userModel->UpdateUser($id, $data);
     }
 
     // Fonction pour supprimer un utilisateur
-    public function deleteUser($id)
+    public function DeleteUser($id)
     {
-        return $this->userModel->deleteUser($id);
+        return $this->userModel->DeleteUser($id);
     }
 }
 
