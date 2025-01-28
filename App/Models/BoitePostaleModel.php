@@ -17,418 +17,155 @@ class BoitePostaleModel
 
     // une fonction qui affecte une boîte postale à un client en mettant à jour les relations entre les deux. Elle vérifie d'abord si la boîte postale est déjà assignée à un client. Si ce n'est pas le cas, elle l'associe au client spécifié.
 
-    public function insertAndAssignBoitePostaleToClient($data)
+    public function insertAndAssignBoitePostaleToClient($iduser, $data)
     {
         try {
             $this->db->getPdo()->beginTransaction();
-            // Décodage des données JSON
-            $decodedData = json_decode($data, true);
+            $Data = json_decode($data, true);
 
-            // Vérification des champs obligatoires pour les clients
-            if (!isset(
-                $decodedData['Nom'],
-                $decodedData['Adresse'],
-                $decodedData['TypeClient'],
-                $decodedData['Email'],
-                $decodedData['Telephone'],
-                $decodedData['BoitePostale'],
-                $decodedData['id_user'],
-                $decodedData['update_by'],
-                $decodedData['date_abonnement'],
-                $decodedData['montantRd'],
-                $decodedData['Methode_de_paiement']
-            )) {
-                echo json_encode(["error" => "Tous les champs client sont obligatoires."]);
+            // Données principales du client
+            $nom = $Data['Nom'] ?? '';
+            $email = $Data['Email'] ?? '';
+            $telephone = $Data['Telephone'] ?? '';
+            $adresse = $Data['Adresse'] ?? '';
+            $boitePostale = $Data['BoitePostale'] ?? '';
+            $role = $Data['Role'] ?? '';
+            $typeClient = $Data['TypeClient'] ? 1 : 0; // true = 1, false = 0
+
+            // Paiements
+            $montantLd = $Data['montantLd'] ?? 0;
+            $montantCll = $Data['montantCll'] ?? 0;
+            $montantRd = $Data['montantRd'] ?? 0;
+            $montantSC = $Data['montantSC'] ?? 0;
+            $methodePaiement = $Data['Methode_de_paiement'] ?? '';
+            $numeroCheque = $Data['Numero_cheque'] ?? '';
+            $nomBanque = $Data['Nom_Banque'] ?? '';
+            $numeroWallet = $Data['Numero_wallet'] ?? '';
+            $Wallet = $Data['wallet'] ?? '';
+
+            // Références
+            $referenceRdv = $Data['Reference_Rdv'] ?? '';
+            $referenceLd = $Data['reference_Ld'] ?? '';
+            $referenceCll = $Data['reference_collection'] ?? '';
+            $referenceSc = $Data['reference_Sc'] ?? '';
+
+            // Adresses spécifiques
+            $adresseLivraisonDomicile = $Data['Adresse_Livraison_Domicile'] ?? '';
+            $adresseCollection = $Data['Adresse_collection'] ?? '';
+
+            // Fichiers joints
+            $identiter = $Data['Identiter'] ?? null;
+            $abonnement = $Data['Abonnement'] ?? null;
+            $patent_quitance = $Data['patent_quitance'] ?? null;
+
+            // Sous-couvertures
+            $sousCouvertures = $Data['sousCouvertures'] ?? [];
+
+            // Vérification des champs obligatoires
+            if (empty($nom) || empty($email) || empty($telephone)) {
+                echo json_encode(["error" => "Nom, Email, et Téléphone sont obligatoires."]);
                 return;
             }
 
-            // Extraction des données
-            $nom = $decodedData['nom'];
-            $adresse = $decodedData['adresse'];
-            $typeClient = $decodedData['type_client'];
-            $email = $decodedData['email'];
-            $telephone = $decodedData['telephone'];
-            $numeroBoitePostale = $decodedData['numero_boite_postale'];
-            $idUser = $decodedData['id_user'];
-            $updateBy = $decodedData['update_by'];
-            $nomSociete = isset($decodedData['nom_societe']) ? $decodedData['nom_societe'] : null;
-            $dateAbonnement = isset($decodedData['date_abonnement']) ? $decodedData['date_abonnement'] : null;
-            $montantRedevence = $decodedData['montant_redevence']; // Montant de la redevance
-            $methodePayment = $decodedData['methode_payment']; // Méthode de paiement
+            // Avant enregistrer les adresses, récupérer l'id de la boîte postale
+            $stmtbp = $this->db->getPdo()->prepare("SELECT id FROM boites_postales WHERE numero = :numero");
+            $stmtbp->bindParam(':numero', $boitePostale, PDO::PARAM_STR);
+            $stmtbp->execute();
 
+            if ($stmtbp->rowCount() > 0) {
+                $idBoitePostal = $stmtbp->fetch(PDO::FETCH_ASSOC)['id'];
 
-            // Champs supplémentaires pour le sous-couvert
-            $ouvrirSousCouvert = isset($decodedData['ouvrir_sous_couvert']) ? $decodedData['ouvrir_sous_couvert'] : false;
-            $nomPersonneSousCouvert = isset($decodedData['nom_personne_sous_couvert']) ? $decodedData['nom_personne_sous_couvert'] : null;
-            $montantSousCouverte = isset($decodedData['montant_sous_couverte']) ? $decodedData['montant_sous_couverte'] : null;
-            $methodePaymentCouvette = isset($decodedData['methode_payment_couvette']) ? $decodedData['methode_payment_couvette'] : null;
-            $typeWalletCouvette = isset($decodedData['type_wallet_couvette']) ? $decodedData['type_wallet_couvette'] : null;
-            $numeroChequeSousCouvette = isset($decodedData['numero_cheque_sous_couvette']) ? $decodedData['numero_cheque_sous_couvette'] : null;
-            $nomBanqueSousCouvette = isset($decodedData['nom_banque_sous_couvette']) ? $decodedData['nom_banque_sous_couvette'] : null;
-
-            // Récupérer les données supplémentaires si le mode de paiement est un chèque
-            $numero_cheque = isset($decodedData['numero_cheque']) ? $decodedData['numero_cheque'] : null;
-            $nom_banque = isset($decodedData['nom_banque']) ? $decodedData['nom_banque'] : null;
-            // Champs supplémentaires pour la livraison à domicile
-            $livraisonADomicile = isset($decodedData['livraison_a_domicile']) ? $decodedData['livraison_a_domicile'] : false;
-            $adresseLivraison = isset($decodedData['adresse_livraison']) ? $decodedData['adresse_livraison'] : null;
-            $montantLivraisonADomicile = isset($decodedData['montant_livraison_a_domicile']) ? $decodedData['montant_livraison_a_domicile'] : 0;
-            $methodePaiementADomicile = isset($decodedData['methode_paiement_a_domicile']) ? $decodedData['methode_paiement_a_domicile'] : null;
-            $typeWalletLivraisonADomicile = isset($decodedData['type_wallet_livraison_a_domicile']) ? $decodedData['type_wallet_livraison_a_domicile'] : null;
-            $numeroChequeLivraisonADomicile = isset($decodedData['numero_cheque_livraison_a_domicile']) ? $decodedData['numero_cheque_livraison_a_domicile'] : null;
-            $nomBanqueLivraisonADomicile = isset($decodedData['nom_banque_livraison_a_domicile']) ? $decodedData['nom_banque_livraison_a_domicile'] : null;
-
-
-            // Champs supplémentaires pour la collection
-            $collection = isset($decodedData['collection']) ? $decodedData['collection'] : false;
-            $adresseCollection = isset($decodedData['adresseCollection']) ? $decodedData['adresseCollection'] : null;
-            $montant_collection = isset($decodedData['montant_collection']) ? $decodedData['montant_collection'] : 0;
-            $methode_paiement_collection = isset($decodedData['methode_paiement_collection']) ? $decodedData['methode_paiement_collection'] : null;
-            $type_wallet_collection = isset($decodedData['type_wallet_collection']) ? $decodedData['type_wallet_collection'] : null;
-            $numero_cheque_collection = isset($decodedData['numero_cheque_collection']) ? $decodedData['numero_cheque_collection'] : null;
-            $nom_banque_collection = isset($decodedData['nom_banque_collection']) ? $decodedData['nom_banque_collection'] : null;
-
-            //reference ajout sous-couvette
-            $referenceAjoutSousCouvette = $decodedData['reference_ajout_sous_couvette'] ?? null;
-            //reference ajout livraison a domicile 
-            $referenceLivraison = $decodedData['reference_livraison_domicile'] ?? null;
-            //reference ajout collection 
-            $referenceAjoutCollection = $decodedData['reference_ajout_collection'];
-
-            $numeroWalletAjoutSousCouvette = $decodedData['numero_wallet_ajout_sous_couvette'] ?? null;
-            $numeroWalletLivraisonDomicile = $decodedData['numero_wallet_livraison_domicile'] ?? null;
-            $numeroWalletCollection = $decodedData['numero_wallet_collection'];
-
-
-
-
-
-
-
-
-            // Gestion du type de wallet si la méthode de paiement est 'wallet'
-            if ($methodePaymentCouvette === 'wallet' && isset($decodedData['type_wallet_couvette'])) {
-                $typeWalletCouvette = $decodedData['type_wallet_couvette'];
-            }
-
-            // Gestion des informations spécifiques au chèque si la méthode de paiement est 'cheque'
-            if ($methodePaymentCouvette === 'cheque') {
-                // Récupération des données
-                $numeroChequeSousCouvette = isset($decodedData['numero_cheque_sous_couvette']) ? $decodedData['numero_cheque_sous_couvette'] : null;
-                $nomBanqueSousCouvette = isset($decodedData['nom_banque_sous_couvette']) ? $decodedData['nom_banque_sous_couvette'] : null;
-
-                // Validation des champs obligatoires pour le chèque
-                if (empty($numeroChequeSousCouvette) || empty($nomBanqueSousCouvette)) {
-                    throw new \Exception("Les informations du chèque sont requises pour ce mode de paiement.");
-                }
-            }
-
-            // Récupérer le type de wallet si la méthode de paiement est 'wallet'
-            $typeWallet = null;
-            if ($methodePayment === 'wallet' && isset($decodedData['type_wallet'])) {
-                $typeWallet = $decodedData['type_wallet'];
-            }
-            // Vérifiez si le mode de paiement est un chèque
-            if ($decodedData['methode_payment'] === 'cheque') {
-                // Récupérer les informations spécifiques aux chèques
-                $numero_cheque = isset($decodedData['numero_cheque']) ? $decodedData['numero_cheque'] : null;
-                $nom_banque = isset($decodedData['nom_banque']) ? $decodedData['nom_banque'] : null;
-
-                // Valider que les champs requis pour le chèque ne sont pas vides
-                if (empty($numero_cheque) || empty($nom_banque)) {
-                    throw new \Exception("Les informations du chèque sont requises pour ce mode de paiement.");
-                }
-            } else {
-                // Si ce n'est pas un chèque, les valeurs restent nulles
-                $numero_cheque = null;
-                $nom_banque = null;
-            }
-
-
-            // Vérification des documents
-            $patenteQuitance = isset($decodedData['patente_quitance']) ? $decodedData['patente_quitance'] : null;
-            $identiteGerant = isset($decodedData['identite_gerant']) ? $decodedData['identite_gerant'] : null;
-            $abonnementUnique = isset($decodedData['abonnement_unique']) ? $decodedData['abonnement_unique'] : null;
-
-            if (empty($identiteGerant) || empty($abonnementUnique)) {
-                echo json_encode(["error" => "Les documents 'identité du gérant' et 'abonnement unique' sont obligatoires."]);
-                return;
-            }
-
-            if ($typeClient === 'société' && empty($patenteQuitance)) {
-                echo json_encode(["error" => "Le document 'patente/quittance' est obligatoire pour un client de type 'société'."]);
-                return;
-            }
-
-            // Vérification si le numéro de boîte postale existe
-            $checkBoitePostaleQuery = "
-            SELECT id 
-            FROM boites_postales 
-            WHERE numero = :numero_boite_postale
-        ";
-            $stmt = $this->db->getPdo()->prepare($checkBoitePostaleQuery);
-            $stmt->bindParam(':numero_boite_postale', $numeroBoitePostale, PDO::PARAM_STR);
-            $stmt->execute();
-
-            $boitePostale = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$boitePostale) {
-                echo json_encode(["error" => "Le numéro de boîte postale spécifié n'existe pas."]);
-                return;
-            }
-
-            $idBoitePostale = $boitePostale['id'];
-
-            // Vérification du nombre de sous-couverts associés à la boîte postale
-            if ($ouvrirSousCouvert) {
-                $checkSousCouverteQuery = "
-                SELECT COUNT(*) AS total_sous_couvert 
-                FROM sous_couvete 
-                WHERE id_boite_postale = :id_boite_postale
-            ";
-                $stmt = $this->db->getPdo()->prepare($checkSousCouverteQuery);
-                $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
-                $stmt->execute();
-
-                $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                if ($result['total_sous_couvert'] >= 5) {
-                    echo json_encode(["error" => "La boîte postale a déjà 5 sous-couverts assignés."]);
-                    return;
-                }
-            }
-
-            // Vérification si la boîte postale est déjà assignée
-            $checkClientQuery = "
-            SELECT id 
-            FROM clients 
-            WHERE id_boite_postale = :id_boite_postale
-        ";
-            $stmt = $this->db->getPdo()->prepare($checkClientQuery);
-            $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
-            $stmt->execute();
-
-            $clientAssigned = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($clientAssigned) {
-                echo json_encode(["error" => "Cette boîte postale est déjà assignée à un autre client."]);
-                return;
-            }
-
-            if ($typeClient === 'société' && empty($nomSociete)) {
-                echo json_encode(["error" => "Le nom de la société est obligatoire pour un client de type 'société'."]);
-                return;
-            }
-
-            // Insertion du client
-            $insertQuery = "
-            INSERT INTO clients (nom, adresse, type_client, email, telephone, id_boite_postale, id_user, update_by, nom_societe, date_abonnement)
-            VALUES (:nom, :adresse, :type_client, :email, :telephone, :id_boite_postale, :id_user, :update_by, :nom_societe, :date_abonnement)
-        ";
-            $stmt = $this->db->getPdo()->prepare($insertQuery);
-            $stmt->bindParam(':nom', $nom, PDO::PARAM_STR);
-            $stmt->bindParam(':adresse', $adresse, PDO::PARAM_STR);
-            $stmt->bindParam(':type_client', $typeClient, PDO::PARAM_STR);
-            $stmt->bindParam(':email', $email, PDO::PARAM_STR);
-            $stmt->bindParam(':telephone', $telephone, PDO::PARAM_STR);
-            $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
-            $stmt->bindParam(':id_user', $idUser, PDO::PARAM_INT);
-            $stmt->bindParam(':update_by', $updateBy, PDO::PARAM_INT);
-            $stmt->bindParam(':date_abonnement', $dateAbonnement, PDO::PARAM_STR);
-
-            if ($typeClient === 'société') {
-                $stmt->bindParam(':nom_societe', $nomSociete, PDO::PARAM_STR);
-            } else {
-                $stmt->bindValue(':nom_societe', null, PDO::PARAM_NULL);
-            }
-
-            $stmt->execute();
-            $idClient = $this->db->getPdo()->lastInsertId();
-
-            // Insertion des documents
-            $insertDocumentQuery = "
-            INSERT INTO documents (type, patente_quitance, identite_gerant, abonnement_unique, id_client)
-            VALUES (:type, :patente_quitance, :identite_gerant, :abonnement_unique, :id_client)
-        ";
-            $stmt = $this->db->getPdo()->prepare($insertDocumentQuery);
-            $stmt->bindParam(':type', $typeClient, PDO::PARAM_STR);
-            $stmt->bindParam(':patente_quitance', $patenteQuitance, PDO::PARAM_LOB);
-            $stmt->bindParam(':identite_gerant', $identiteGerant, PDO::PARAM_LOB);
-            $stmt->bindParam(':abonnement_unique', $abonnementUnique, PDO::PARAM_LOB);
-            $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
-            $stmt->execute();
-
-            // Insertion du paiement pour le nouveau client
-            $insertPaymentQuery = "
-            INSERT INTO paiements (type, montant_redevence, methode_payment,  numero_cheque, nom_banque,type_wallet, id_client)
-            VALUES ('mis_a_jour', :montant_redevence, :methode_payment,:numero_cheque,:nom_banque, :type_wallet, :id_client)
-        ";
-            $stmt = $this->db->getPdo()->prepare($insertPaymentQuery);
-            $stmt->bindParam(':montant_redevence', $montantRedevence, PDO::PARAM_STR);
-            $stmt->bindParam(':methode_payment', $methodePayment, PDO::PARAM_STR);
-            $stmt->bindParam(':numero_cheque', $numero_cheque, PDO::PARAM_STR);
-            $stmt->bindParam(':nom_banque', $nom_banque, PDO::PARAM_STR);
-            $stmt->bindParam(':type_wallet', $typeWallet, PDO::PARAM_STR);
-            $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
-
-            // Si la méthode de paiement est 'wallet', on insère le type_wallet
-            if ($methodePayment !== 'wallet') {
-                $stmt->bindValue(':type_wallet', null, PDO::PARAM_NULL);
-            }
-
-            $stmt->execute();
-            $idPayment = $this->db->getPdo()->lastInsertId();
-
-            // Création de l'abonnement pour l'année en cours
-            $anneeAbonnement = date('Y');
-            $insertAbonnementQuery = "
-            INSERT INTO abonnement (id_boite_postale, annee_abonnement, id_payments)
-            VALUES (:id_boite_postale, :annee_abonnement, :id_payments)
-        ";
-            $stmt = $this->db->getPdo()->prepare($insertAbonnementQuery);
-            $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
-            $stmt->bindParam(':annee_abonnement', $anneeAbonnement, PDO::PARAM_INT);
-            $stmt->bindParam(':id_payments', $idPayment, PDO::PARAM_INT);
-            $stmt->execute();
-            // Insertion d'un sous-couvert si demandé
-            if ($ouvrirSousCouvert) {
-                $insertSousCouverteQuery = "
-                INSERT INTO sous_couvete (nom_societe, nom_personne, telephone, adresse, id_boite_postale, id_user)
-                VALUES (:nom_societe, :nom_personne, :telephone, :adresse, :id_boite_postale, :id_user)
-            ";
-                $stmt = $this->db->getPdo()->prepare($insertSousCouverteQuery);
-                $stmt->bindParam(':nom_societe', $nomSociete, PDO::PARAM_STR);
-                $stmt->bindParam(':nom_personne', $nomPersonneSousCouvert, PDO::PARAM_STR);
+                // Insertion dans la table client
+                $stmt = $this->db->getPdo()->prepare("INSERT INTO clients (nom, email, telephone, adresse, id_boite_postale,type_client,id_user)
+                VALUES (:nom, :email, :telephone, :adresse, :boite_postale, :type_client,:id_user)");
+                $stmt->bindParam(':nom', $nom, PDO::PARAM_STR);
+                $stmt->bindParam(':email', $email, PDO::PARAM_STR);
                 $stmt->bindParam(':telephone', $telephone, PDO::PARAM_STR);
                 $stmt->bindParam(':adresse', $adresse, PDO::PARAM_STR);
-                $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
-                $stmt->bindParam(':id_user', $idUser, PDO::PARAM_INT);
+                $stmt->bindParam(':boite_postale', $idBoitePostal, PDO::PARAM_STR);
+                $stmt->bindParam(':type_client', $role, PDO::PARAM_STR);
+                $stmt->bindParam(':id_user', $iduser, PDO::PARAM_INT);
                 $stmt->execute();
 
-                // Mise à jour du paiement pour inclure le montant du sous-couvert
-                $updatePaiementQuery = "
-                UPDATE paiements
-                SET montant_sous_couvete = :montant_sous_couvete, 
-                    methode_payment_couvette = :methode_payment_couvette, 
-                    type_wallet_couvette = :type_wallet_couvette,
-                    numero_cheque_sous_couvette = :numero_cheque_sous_couvette,
-                    nom_banque_sous_couvette = :nom_banque_sous_couvette,
-                    reference_ajout_sous_couvette = :reference_ajout_sous_couvette,
-                     numero_wallet_ajout_sous_couvette = :numero_wallet_ajout_sous_couvette
+                // Récupération de l'ID du client créé
+                $idClient = $this->db->getPdo()->lastInsertId();
 
-                WHERE id_client = :id_client
-            ";
-                $stmt = $this->db->getPdo()->prepare($updatePaiementQuery);
-                $stmt->bindParam(':montant_sous_couvete', $montantSousCouverte, PDO::PARAM_STR);
-                $stmt->bindParam(':methode_payment_couvette', $methodePaymentCouvette, PDO::PARAM_STR);
-                $stmt->bindParam(':type_wallet_couvette', $typeWalletCouvette, PDO::PARAM_STR);
-                $stmt->bindParam(':numero_cheque_sous_couvette', $numeroChequeSousCouvette, PDO::PARAM_STR);
-                $stmt->bindParam(':nom_banque_sous_couvette', $nomBanqueSousCouvette, PDO::PARAM_STR);
-                $stmt->bindParam(':reference_ajout_sous_couvette', $referenceAjoutSousCouvette, PDO::PARAM_STR);
-                $stmt->bindParam(':numero_wallet_ajout_sous_couvette', $numeroWalletAjoutSousCouvette, PDO::PARAM_STR);  // Ajout du paramètre pour numero_wallet_ajout_sous_couvette
+                // Insertion des paiements
+                $stmt = $this->db->getPdo()->prepare("INSERT INTO paiements (id_client, montant_livraison_a_domicile, montant_collection, montant_redevence, montant_sous_couvete,
+                methode_payment, numero_cheque, nom_banque, numero_wallet_redevence, reference, reference_livraison_domicile, reference_ajout_collection, reference_ajout_sous_couvette, type_wallet)
+                VALUES (:id_client, :montantLd, :montantCll, :montantRd, :montantSC, :methodePaiement, :numeroCheque, :nomBanque, :numeroWallet, :referenceRdv, :referenceLd, :referenceCll, :referenceSc, :type_wallet)");
                 $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
-
+                $stmt->bindParam(':montantLd', $montantLd, PDO::PARAM_STR);
+                $stmt->bindParam(':montantCll', $montantCll, PDO::PARAM_STR);
+                $stmt->bindParam(':montantRd', $montantRd, PDO::PARAM_STR);
+                $stmt->bindParam(':montantSC', $montantSC, PDO::PARAM_STR);
+                $stmt->bindParam(':methodePaiement', $methodePaiement, PDO::PARAM_STR);
+                $stmt->bindParam(':numeroCheque', $numeroCheque, PDO::PARAM_STR);
+                $stmt->bindParam(':nomBanque', $nomBanque, PDO::PARAM_STR);
+                $stmt->bindParam(':numeroWallet', $numeroWallet, PDO::PARAM_STR);
+                $stmt->bindParam(':referenceRdv', $referenceRdv, PDO::PARAM_STR);
+                $stmt->bindParam(':referenceLd', $referenceLd, PDO::PARAM_STR);
+                $stmt->bindParam(':referenceCll', $referenceCll, PDO::PARAM_STR);
+                $stmt->bindParam(':referenceSc', $referenceSc, PDO::PARAM_STR);
+                $stmt->bindParam(':type_wallet', $Wallet, PDO::PARAM_STR);
                 $stmt->execute();
-            }
 
-            // Vérifier si la livraison à domicile est demandée
-            if ($livraisonADomicile) {
-                // Vérification si l'adresse de livraison est fournie
-                if (empty($adresseLivraison)) {
-                    echo json_encode(["error" => "L'adresse de livraison à domicile est obligatoire."]);
-                    return;
+                // Enregistrer les documents dans la table "documents"
+                if ($identiter) {
+                    $stmt = $this->db->getPdo()->prepare("INSERT INTO documents (patente_quitance, identite_gerant, abonnement_unique, created_at, id_client) 
+                    VALUES (:patenteQuitance, :identiter, :abonnement, CURRENT_TIMESTAMP(), :idClient)");
+                    $stmt->bindParam(':patenteQuitance', $patent_quitance, PDO::PARAM_STR);
+                    $stmt->bindParam(':identiter', $identiter, PDO::PARAM_STR);
+                    $stmt->bindParam(':abonnement', $abonnement, PDO::PARAM_STR);
+                    $stmt->bindParam(':idClient', $idClient, PDO::PARAM_INT);
+                    $stmt->execute();
                 }
 
-                // Insertion de la livraison à domicile dans la table 'livraison_a_domicile'
-                $stmt = $this->db->getPdo()->prepare("
-        INSERT INTO livraison_a_domicile (adresse, id_boite_postale, created_at, updated_at)
-        VALUES (:adresse, :id_boite_postale, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP())
-    ");
-                $stmt->bindParam(':adresse', $adresseLivraison, PDO::PARAM_STR);
-                $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
-                $stmt->execute();
-
-
-                // Mise à jour du paiement pour inclure le montant du sous-couvert
-                $updatePaiementQuery = "
-    UPDATE paiements
-    SET montant_livraison_a_domicile  = :montant_livraison_a_domicile, 
-        methode_paiement_a_domicile  = :methode_paiement_a_domicile, 
-        type_wallet_livraison_a_domicile = :type_wallet_livraison_a_domicile,
-        numero_cheque_livraison_a_domicile = :numero_cheque_livraison_a_domicile,
-       nom_banque_livraison_a_domicile = :nom_banque_livraison_a_domicile,
-       reference_livraison_domicile = :reference_livraison_domicile,
-       numero_wallet_livraison_domicile = :numero_wallet_livraison_domicile
-
-    WHERE id_client = :id_client
-";
-                $stmt = $this->db->getPdo()->prepare($updatePaiementQuery);
-                $stmt->bindParam(':montant_livraison_a_domicile', $montantLivraisonADomicile, PDO::PARAM_STR);
-                $stmt->bindParam(':methode_paiement_a_domicile', $methodePaiementADomicile, PDO::PARAM_STR);
-                $stmt->bindParam(':type_wallet_livraison_a_domicile', $typeWalletLivraisonADomicile, PDO::PARAM_STR);
-                $stmt->bindParam(':numero_cheque_livraison_a_domicile', $numeroChequeLivraisonADomicile, PDO::PARAM_STR);
-                $stmt->bindParam(':nom_banque_livraison_a_domicile', $nomBanqueLivraisonADomicile, PDO::PARAM_STR);
-                $stmt->bindParam(':reference_livraison_domicile', $referenceLivraison, PDO::PARAM_STR);
-                $stmt->bindParam(':numero_wallet_livraison_domicile', $numeroWalletLivraisonDomicile, PDO::PARAM_STR);
-                $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
-
-                $stmt->execute();
-            }
-            // Vérifier si la livraison à domicile est demandée
-            if ($collection) {
-                // Vérification si l'adresse de livraison est fournie
-                if (empty($collection)) {
-                    echo json_encode(["error" => "L'adresse de livraison à domicile est obligatoire."]);
-                    return;
+                // Enregistrer l'adresse de livraison dans la table "livraison_a_domicile"
+                if ($adresseLivraisonDomicile) {
+                    $stmt = $this->db->getPdo()->prepare("INSERT INTO livraison_a_domicile (adresse, id_boite_postale, created_at) 
+                    VALUES (:adresse, :idBoitePostale, CURRENT_TIMESTAMP())");
+                    $stmt->bindParam(':adresse', $adresseLivraisonDomicile, PDO::PARAM_STR);
+                    $stmt->bindParam(':idBoitePostale', $idBoitePostal, PDO::PARAM_INT);
+                    $stmt->execute();
                 }
 
-                // Insertion de la livraison à domicile dans la table 'livraison_a_domicile'
-                $stmt = $this->db->getPdo()->prepare("
-        INSERT INTO collection (adresse, id_boite_postale, created_at, updated_at)
-        VALUES (:adresseCollection, :id_boite_postale, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP())
-    ");
-                $stmt->bindParam(':adresseCollection', $adresseCollection, PDO::PARAM_STR);
-                $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
-                $stmt->execute();
-
-
-                // Mise à jour du paiement pour inclure le montant du sous-couvert
-                $updatePaiementQuery = "
-    UPDATE paiements
-    SET montant_collection  = :montant_collection, 
-        methode_paiement_collection  = :methode_paiement_collection, 
-        type_wallet_collection = :type_wallet_collection,
-        numero_cheque_collection = :numero_cheque_collection,
-       nom_banque_collection = :nom_banque_collection,
-        reference_ajout_collection = :reference_ajout_collection,
-       numero_wallet_collection = :numero_wallet_collection  -- Ajout de numero_wallet_collection
-
-    WHERE id_client = :id_client
-";
-                $stmt = $this->db->getPdo()->prepare($updatePaiementQuery);
-                $stmt->bindParam(':montant_collection', $montant_collection, PDO::PARAM_STR);
-                $stmt->bindParam(':methode_paiement_collection', $methode_paiement_collection, PDO::PARAM_STR);
-                $stmt->bindParam(':type_wallet_collection', $type_wallet_collection, PDO::PARAM_STR);
-                $stmt->bindParam(':numero_cheque_collection', $numero_cheque_collection, PDO::PARAM_STR);
-                $stmt->bindParam(':nom_banque_collection', $nom_banque_collection, PDO::PARAM_STR);
-                $stmt->bindParam(':reference_ajout_collection', $referenceAjoutCollection, PDO::PARAM_STR);
-                $stmt->bindParam(':numero_wallet_collection', $decodedData['numero_wallet_collection'], PDO::PARAM_STR);  // Ajout de numero_wallet_collection
-                $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
-
-                $stmt->execute();
+                // Enregistrer l'adresse de collecte
+                if ($adresseCollection) {
+                    $stmt = $this->db->getPdo()->prepare("INSERT INTO collection (adresse, id_boite_postale, created_at) 
+                    VALUES (:adresse, :idBoitePostale, CURRENT_TIMESTAMP())");
+                    $stmt->bindParam(':adresse', $adresseCollection, PDO::PARAM_STR);
+                    $stmt->bindParam(':idBoitePostale', $idBoitePostal, PDO::PARAM_INT);
+                    $stmt->execute();
+                }
             }
 
 
+
+            // Enregistrement des sous-couvertures (s'il y en a)
+            if ($sousCouvertures) {
+                foreach ($sousCouvertures as $sousCouverture) {
+                    $stmt = $this->db->getPdo()->prepare("INSERT INTO sous_couvete (nom_societe, nom_personne, telephone, adresse, id_boite_postale, id_user)
+                    VALUES (:nom_societe, :nom_personne, :telephone, :adresse, :id_boite_postale, :id_user)");
+                    $stmt->bindParam(':nom_societe', $sousCouverture['societe'], PDO::PARAM_STR);
+                    $stmt->bindParam(':nom_personne', $sousCouverture['personne'], PDO::PARAM_STR);
+                    $stmt->bindParam(':telephone', $sousCouverture['telephone'], PDO::PARAM_STR);
+                    $stmt->bindParam(':adresse', $sousCouverture['adresse'], PDO::PARAM_STR);
+                    $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
+                    $stmt->bindParam(':id_user', $iduser, PDO::PARAM_INT);
+                    $stmt->execute();
+                }
+            }
+
+            // Commit
             $this->db->getPdo()->commit();
-
-
-
-            echo json_encode(["success" => "Le client, ses documents, le paiement, l'abonnement et le sous-couvert ont été insérés avec succès."]);
-        } catch (PDOException $e) {
+            echo json_encode(['status' => 'abonnement avec success']);
+        } catch (\Exception $e) {
             $this->db->getPdo()->rollBack();
-
-            echo json_encode(["error" => $e->getMessage()]);
+            echo json_encode(['error' => 'Erreur : ' . $e->getMessage()]);
         }
     }
+
 
 
 

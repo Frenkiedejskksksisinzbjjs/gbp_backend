@@ -161,7 +161,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
 
         case 'insertAndAssignBoitePostaleToClient':
-            echo $boitePostaleModel->insertAndAssignBoitePostaleToClient($data);
+            echo $boitePostaleModel->insertAndAssignBoitePostaleToClient($id,$data);
             break;
         case 'insererLivraisonEtMettreAJourPaiement':
             echo $boitePostaleModel->insererLivraisonEtMettreAJourPaiement($id, $data);
