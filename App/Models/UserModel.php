@@ -229,6 +229,172 @@ public function GetBoitesPostales()
             echo json_encode(["error" => "Database error: " . $e->getMessage()]);
         }
     }
+
+    public function getPetitBoitesPostalesCount()
+    {
+        try {
+            // Préparer la requête SQL pour compter les boîtes postales de type 'petit'
+            $sql = "SELECT COUNT(*) AS total FROM boites_postales WHERE type = 'petit'";
+            $stmt = $this->db->getPdo()->prepare($sql);
+            $stmt->execute();
+    
+            // Récupérer le résultat
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+            if ($result && isset($result['total'])) {
+                // Retourner le total au format JSON
+                echo json_encode(["success" => true, "count" => (int)$result['total']]);
+            } else {
+                echo json_encode(["success" => false, "message" => "No boites postales of type 'petit' found"]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+        }
+    }
+    
+    
+
+    public function getMoyenBoitesPostalesCount()
+{
+    try {
+        // Préparer la requête SQL pour compter les boîtes postales de type 'moyen'
+        $sql = "SELECT COUNT(*) AS total FROM boites_postales WHERE type = 'moyen'";
+        $stmt = $this->db->getPdo()->prepare($sql);
+        $stmt->execute();
+
+        // Récupérer le résultat
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($result && isset($result['total'])) {
+            // Retourner le total au format JSON
+            echo json_encode(["success" => true, "count" => (int)$result['total']]);
+        } else {
+            echo json_encode(["success" => false, "message" => "No boites postales of type 'moyen' found"]);
+        }
+    } catch (PDOException $e) {
+        echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+    }
+}
+
+public function getGrandeBoitesPostalesCount()
+{
+    try {
+        // Préparer la requête SQL pour compter les boîtes postales de type 'grand'
+        $sql = "SELECT COUNT(*) AS total FROM boites_postales WHERE type = 'grand'";
+        $stmt = $this->db->getPdo()->prepare($sql);
+        $stmt->execute();
+
+        // Récupérer le résultat
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($result && isset($result['total'])) {
+            // Retourner le total au format JSON
+            echo json_encode(["success" => true, "count" => (int)$result['total']]);
+        } else {
+            echo json_encode(["success" => false, "message" => "No boites postales of type 'grand' found"]);
+        }
+    } catch (PDOException $e) {
+        echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+    }
+}
+
+
+public function getClientCount()
+{
+    try {
+        // Préparer la requête SQL pour compter tous les clients
+        $sql = "SELECT COUNT(*) AS total FROM clients";
+        $stmt = $this->db->getPdo()->prepare($sql);
+        $stmt->execute();
+
+        // Récupérer le résultat
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($result && isset($result['total'])) {
+            // Retourner le total au format JSON
+            echo json_encode(["success" => true, "count" => (int)$result['total']]);
+        } else {
+            echo json_encode(["success" => false, "message" => "No clients found"]);
+        }
+    } catch (PDOException $e) {
+        echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+    }
+}
+
+public function countClientsWithUpdatedPayments()
+{
+    try {
+        // Obtenir l'année en cours
+        $currentYear = date('Y');
+
+        // Requête SQL pour compter les clients avec les conditions spécifiées
+        $sql = "
+            SELECT COUNT(DISTINCT c.id) AS total_clients
+            FROM clients c
+            INNER JOIN abonnement a ON c.id_boite_postale = a.id_boite_postale
+            INNER JOIN paiements p ON a.id_payments = p.id
+            WHERE p.type = 'mis_a_jour' AND a.annee_abonnement = :currentYear
+        ";
+
+        // Préparer la requête
+        $stmt = $this->db->getPdo()->prepare($sql);
+        $stmt->bindParam(':currentYear', $currentYear, PDO::PARAM_INT);
+        $stmt->execute();
+
+        // Récupérer le résultat
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Retourner le résultat au format JSON
+        if ($result && isset($result['total_clients'])) {
+            echo json_encode(["success" => true, "count" => (int)$result['total_clients']]);
+        } else {
+            echo json_encode(["success" => false, "message" => "No matching clients found"]);
+        }
+    } catch (PDOException $e) {
+        echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+    }
+}
+
+
+public function countClientsWithoutPaymentsOrWithNonUpdatedPayments()
+{
+    try {
+        // Obtenir l'année en cours
+        $currentYear = date('Y');
+
+        // Requête SQL pour compter les clients qui n'ont pas de paiement,
+        // ou qui ont un paiement de type 'non_mis_a_jour' et une année d'abonnement différente de l'année en cours
+        $sql = "
+            SELECT COUNT(DISTINCT c.id) AS total_clients
+            FROM clients c
+            LEFT JOIN abonnement a ON c.id_boite_postale = a.id_boite_postale
+            LEFT JOIN paiements p ON a.id_payments = p.id
+            WHERE (p.id IS NULL OR (p.type = 'non_mis_a_jour' AND a.annee_abonnement != :currentYear))
+        ";
+
+        // Préparer la requête
+        $stmt = $this->db->getPdo()->prepare($sql);
+        $stmt->bindParam(':currentYear', $currentYear, PDO::PARAM_INT);
+        $stmt->execute();
+
+        // Récupérer le résultat
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Retourner le résultat au format JSON
+        if ($result && isset($result['total_clients'])) {
+            echo json_encode(["success" => true, "count" => (int)$result['total_clients']]);
+        } else {
+            echo json_encode(["success" => false, "message" => "No matching clients found"]);
+        }
+    } catch (PDOException $e) {
+        echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+    }
+}
+
+
+
+
+
     
 }
 

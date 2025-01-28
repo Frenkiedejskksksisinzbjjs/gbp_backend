@@ -72,6 +72,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         case 'getLastReference':
             echo $boitePostaleModel->getLastReference();
             break;
+            case 'getPetitBoitesPostalesCount':
+                echo $userModel->getPetitBoitesPostalesCount();
+                break;
+                case 'getMoyenBoitesPostalesCount':
+                    echo $userModel->getMoyenBoitesPostalesCount();
+                    break;
+                    case 'getGrandeBoitesPostalesCount':
+                        echo $userModel->getGrandeBoitesPostalesCount();
+                        break;
+                        case 'getClientCount':
+                            echo $userModel->getClientCount();
+                            break;
+                            case 'countClientsWithUpdatedPayments':
+                                echo $userModel->countClientsWithUpdatedPayments();
+                                break;
+                                case 'countClientsWithoutPaymentsOrWithNonUpdatedPayments':
+                                    echo $userModel->countClientsWithoutPaymentsOrWithNonUpdatedPayments();
+                                    break;
+    
 
 
 

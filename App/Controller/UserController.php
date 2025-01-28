@@ -52,6 +52,36 @@ class UserController
     {
         return $this->userModel->DeleteUser($id);
     }
+    public function getPetitBoitesPostales()
+    {
+        return $this->userModel->getPetitBoitesPostales();
+    }
+    public function getMoyenBoitesPostales()
+    {
+        return $this->userModel->getMoyenBoitesPostales();
+    }
+
+    public function getGrandeBoitesPostalesCount()
+    {
+        return $this->userModel->getGrandeBoitesPostalesCount();
+    }
+
+    public function getClientCount()
+    {
+        return $this->userModel->getClientCount();
+    }
+
+    public function countClientsWithUpdatedPayments()
+    {
+        return $this->userModel->countClientsWithUpdatedPayments();
+    }
+
+    public function countClientsNotUpdatedPayments()
+    {
+        return $this->userModel->countClientsNotUpdatedPayments();
+    }
+
+
 }
 
 ?>
