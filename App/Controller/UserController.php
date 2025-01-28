@@ -36,9 +36,9 @@ class UserController
     }
 
     // Fonction pour créer un nouvel utilisateur
-    public function createUser($jsonData)
+    public function CreateUser()
     {
-        return $this->userModel->createUser($jsonData);
+        return $this->userModel-> CreateUser();
     }
 
     // Fonction pour mettre à jour un utilisateur
@@ -76,9 +76,9 @@ class UserController
         return $this->userModel->countClientsWithUpdatedPayments();
     }
 
-    public function countClientsNotUpdatedPayments()
+    public function countClientsWithoutPaymentsOrWithNonUpdatedPayments()
     {
-        return $this->userModel->countClientsNotUpdatedPayments();
+        return $this->userModel->countClientsWithoutPaymentsOrWithNonUpdatedPayments();
     }
 
 

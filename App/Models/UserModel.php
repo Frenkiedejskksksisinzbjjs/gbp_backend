@@ -108,36 +108,50 @@ public function GetBoitesPostales()
     
 
     // Créer un utilisateur
-    public function CreateUser($jsonData)
-    {
-        try {
-            $data = json_decode($jsonData, true);
+    public function CreateUser()
+{
+    try {
+        // Récupérer les données JSON envoyées via la requête HTTP
+        $jsonData = file_get_contents("php://input");
 
-            if (is_array($data) && isset($data['nom']) && isset($data['email']) && isset($data['password']) && isset($data['role'])) {
-                // Hacher le mot de passe avant de l'enregistrer
-                $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
+        $data = json_decode($jsonData, true);
 
-                $sql = "INSERT INTO users (nom, email, password, role) VALUES (:nom, :email, :password, :role)";
-                $stmt = $this->db->getPdo()->prepare($sql);
-
-                $stmt->bindParam(':nom', $data['nom']);
-                $stmt->bindParam(':email', $data['email']);
-                $stmt->bindParam(':password', $hashedPassword);
-                $stmt->bindParam(':role', $data['role']);
-                $stmt->execute();
-
-                if ($stmt->rowCount() > 0) {
-                    echo json_encode(["success" => "User added successfully"]);
-                } else {
-                    echo json_encode(["error" => "User not added"]);
-                }
-            } else {
-                echo json_encode(["error" => "Invalid input format"]);
+        // Vérifier que les données sont valides et que le rôle n'est pas 'responsable'
+        if (is_array($data) && isset($data['nom']) && isset($data['email']) && isset($data['password']) && isset($data['role'])) {
+            // Condition pour empêcher la création d'un utilisateur avec le rôle 'responsable'
+            if ($data['role'] === 'responsable') {
+                echo json_encode(["error" => "Cannot create user with role 'responsable'"]);
+                return; // Arrêter l'exécution si le rôle est 'responsable'
             }
-        } catch (PDOException $e) {
-            echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+
+            // Hacher le mot de passe avant de l'enregistrer
+            $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
+
+            // Préparer et exécuter la requête SQL pour insérer l'utilisateur
+            $sql = "INSERT INTO users (nom, email, password, role) VALUES (:nom, :email, :password, :role)";
+            $stmt = $this->db->getPdo()->prepare($sql);
+
+            $stmt->bindParam(':nom', $data['nom']);
+            $stmt->bindParam(':email', $data['email']);
+            $stmt->bindParam(':password', $hashedPassword);
+            $stmt->bindParam(':role', $data['role']);
+            $stmt->execute();
+
+            if ($stmt->rowCount() > 0) {
+                echo json_encode(["success" => "User added successfully"]);
+            } else {
+                echo json_encode(["error" => "User not added"]);
+            }
+        } else {
+            echo json_encode(["error" => "Invalid input format"]);
         }
+    } catch (PDOException $e) {
+        echo json_encode(["error" => "Database error: " . $e->getMessage()]);
     }
+}
+
+
+
 
     // Mettre à jour un utilisateur
     public function UpdateUser($id, $data)

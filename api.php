@@ -173,6 +173,10 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo $boitePostaleModel->updateClientNameAndAddPayment($id,$data);
             break;
 
+            case 'CreateUser':
+                echo $userModel->CreateUser();
+                break;
+
         case 'insertAndAssignBoitePostaleToClient':
             echo $boitePostaleModel->insertAndAssignBoitePostaleToClient($data);
             break;
