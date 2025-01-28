@@ -72,6 +72,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         case 'getLastReference':
             echo $boitePostaleModel->getLastReference();
             break;
+            case 'getPetitBoitesPostalesCount':
+                echo $userModel->getPetitBoitesPostalesCount();
+                break;
+                case 'getMoyenBoitesPostalesCount':
+                    echo $userModel->getMoyenBoitesPostalesCount();
+                    break;
+                    case 'getGrandeBoitesPostalesCount':
+                        echo $userModel->getGrandeBoitesPostalesCount();
+                        break;
+                        case 'getClientCount':
+                            echo $userModel->getClientCount();
+                            break;
+                            case 'countClientsWithUpdatedPayments':
+                                echo $userModel->countClientsWithUpdatedPayments();
+                                break;
+                                case 'countClientsWithoutPaymentsOrWithNonUpdatedPayments':
+                                    echo $userModel->countClientsWithoutPaymentsOrWithNonUpdatedPayments();
+                                    break;
+    
+                                    case 'getAllResilations':
+                                        echo $userModel->getAllResilations();
+                                        break;
+                                        case 'getClientsWithPayments':
+                                            echo $userModel->getClientsWithPayments();
+                                            break;
+        
 
 
 
@@ -159,6 +185,10 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'updateClientNameAndAddPayment':
             echo $boitePostaleModel->updateClientNameAndAddPayment($id,$data);
             break;
+
+            case 'CreateUser':
+                echo $userModel->CreateUser();
+                break;
 
         case 'insertAndAssignBoitePostaleToClient':
             echo $boitePostaleModel->insertAndAssignBoitePostaleToClient($id,$data);

@@ -36,9 +36,9 @@ class UserController
     }
 
     // Fonction pour créer un nouvel utilisateur
-    public function createUser($jsonData)
+    public function CreateUser()
     {
-        return $this->userModel->createUser($jsonData);
+        return $this->userModel-> CreateUser();
     }
 
     // Fonction pour mettre à jour un utilisateur
@@ -52,6 +52,46 @@ class UserController
     {
         return $this->userModel->DeleteUser($id);
     }
+    public function getPetitBoitesPostales()
+    {
+        return $this->userModel->getPetitBoitesPostales();
+    }
+    public function getMoyenBoitesPostales()
+    {
+        return $this->userModel->getMoyenBoitesPostales();
+    }
+
+    public function getGrandeBoitesPostalesCount()
+    {
+        return $this->userModel->getGrandeBoitesPostalesCount();
+    }
+
+    public function getClientCount()
+    {
+        return $this->userModel->getClientCount();
+    }
+
+    public function countClientsWithUpdatedPayments()
+    {
+        return $this->userModel->countClientsWithUpdatedPayments();
+    }
+
+    public function countClientsWithoutPaymentsOrWithNonUpdatedPayments()
+    {
+        return $this->userModel->countClientsWithoutPaymentsOrWithNonUpdatedPayments();
+    }
+
+    public function getAllResilations()
+    {
+        return $this->userModel->getAllResilations();
+    }
+
+    public function getClientsWithPayments()
+    {
+        return $this->userModel->getClientsWithPayments();
+    }
+
+
 }
 
 ?>
