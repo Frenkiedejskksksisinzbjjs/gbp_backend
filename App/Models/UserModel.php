@@ -405,6 +405,35 @@ public function countClientsWithoutPaymentsOrWithNonUpdatedPayments()
     }
 }
 
+public function getAllResilations()
+{
+    try {
+        // Requête SQL pour obtenir toutes les résiliations
+        $sql = "SELECT r.id, r.id_user, r.id_client, r.date_resiliation, u.nom AS user_name, c.nom AS client_name
+                FROM resilies r
+                LEFT JOIN users u ON r.id_user = u.id
+                LEFT JOIN clients c ON r.id_client = c.id
+                ORDER BY r.date_resiliation DESC"; // Tri par date de résiliation (du plus récent au plus ancien)
+
+        // Préparer et exécuter la requête SQL
+        $stmt = $this->db->getPdo()->prepare($sql);
+        $stmt->execute();
+
+        // Récupérer les résultats sous forme de tableau associatif
+        $resilations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Vérifier si des résultats ont été trouvés
+        if ($resilations) {
+            echo json_encode(["success" => true, "resilations" => $resilations]);
+        } else {
+            echo json_encode(["success" => false, "message" => "No resiliations found"]);
+        }
+    } catch (PDOException $e) {
+        echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+    }
+}
+
+
 
 
 

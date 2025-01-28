@@ -91,6 +91,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                     echo $userModel->countClientsWithoutPaymentsOrWithNonUpdatedPayments();
                                     break;
     
+                                    case 'getAllResilations':
+                                        echo $userModel->getAllResilations();
+                                        break;
+        
 
 
 

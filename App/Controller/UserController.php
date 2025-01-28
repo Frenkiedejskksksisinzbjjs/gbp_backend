@@ -81,6 +81,11 @@ class UserController
         return $this->userModel->countClientsWithoutPaymentsOrWithNonUpdatedPayments();
     }
 
+    public function getAllResilations()
+    {
+        return $this->userModel->getAllResilations();
+    }
+
 
 }
 
