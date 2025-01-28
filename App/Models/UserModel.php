@@ -433,6 +433,51 @@ public function getAllResilations()
     }
 }
 
+public function getClientsWithPayments()
+{
+    try {
+        // Requête SQL pour récupérer les clients ayant un paiement avec 'reference_changer_nom' non null
+        $sql = "
+            SELECT 
+                c.id AS client_id,
+                c.nom AS client_nom,
+                c.email AS client_email,
+                c.telephone AS client_telephone,
+                c.adresse AS client_adresse,
+                p.id AS paiement_id,
+                p.montant_changement_nom,
+                p.reference_changer_nom
+            FROM 
+                clients c
+            INNER JOIN 
+                paiements p 
+            ON 
+                c.id = p.id_client
+            WHERE 
+                p.reference_changer_nom IS NOT NULL
+            ORDER BY 
+                c.nom ASC
+        ";
+
+        // Préparation et exécution de la requête
+        $stmt = $this->db->getPdo()->prepare($sql);
+        $stmt->execute();
+
+        // Récupérer les résultats sous forme de tableau associatif
+        $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Vérifier s'il y a des résultats
+        if ($clients) {
+            return json_encode(["success" => true, "clients" => $clients]);
+        } else {
+            return json_encode(["success" => false, "message" => "No clients with payments found."]);
+        }
+    } catch (PDOException $e) {
+        return json_encode(["error" => "Database error: " . $e->getMessage()]);
+    }
+}
+
+
 
 
 

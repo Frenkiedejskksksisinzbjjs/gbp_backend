@@ -86,6 +86,11 @@ class UserController
         return $this->userModel->getAllResilations();
     }
 
+    public function getClientsWithPayments()
+    {
+        return $this->userModel->getClientsWithPayments();
+    }
+
 
 }
 
