@@ -110,61 +110,47 @@ class BoitePostaleModel
                 $stmt->bindParam(':type_wallet', $Wallet, PDO::PARAM_STR);
                 $stmt->execute();
 
-                // Enregistrer les documents dans la table "documents"
-                if ($identiter) {
+                // Enregistrer les documents dans la table "documents" après avoir déplacé les fichiers
+                if ($identiter || $abonnement || $patent_quitance) {
+                    $filePath = "AllFiles/";
+
+                    // Fonction pour déplacer le fichier et obtenir son chemin
+                    function moveFile($file, $path)
+                    {
+                        $filename = basename($file['name']);
+                        $targetPath = $path . $filename;
+
+                        // Déplacer le fichier
+                        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+                            return $targetPath;
+                        }
+                        return null;
+                    }
+
+                    $identiterPath = $identiter ? moveFile($identiter, $filePath) : null;
+                    $abonnementPath = $abonnement ? moveFile($abonnement, $filePath) : null;
+                    $patentQuitancePath = $patent_quitance ? moveFile($patent_quitance, $filePath) : null;
+
+                    // Insertion dans la table documents avec les chemins des fichiers
                     $stmt = $this->db->getPdo()->prepare("INSERT INTO documents (patente_quitance, identite_gerant, abonnement_unique, created_at, id_client) 
                     VALUES (:patenteQuitance, :identiter, :abonnement, CURRENT_TIMESTAMP(), :idClient)");
-                    $stmt->bindParam(':patenteQuitance', $patent_quitance, PDO::PARAM_STR);
-                    $stmt->bindParam(':identiter', $identiter, PDO::PARAM_STR);
-                    $stmt->bindParam(':abonnement', $abonnement, PDO::PARAM_STR);
+                    $stmt->bindParam(':patenteQuitance', $patentQuitancePath, PDO::PARAM_STR);
+                    $stmt->bindParam(':identiter', $identiterPath, PDO::PARAM_STR);
+                    $stmt->bindParam(':abonnement', $abonnementPath, PDO::PARAM_STR);
                     $stmt->bindParam(':idClient', $idClient, PDO::PARAM_INT);
                     $stmt->execute();
                 }
 
-                // Enregistrer l'adresse de livraison dans la table "livraison_a_domicile"
-                if ($adresseLivraisonDomicile) {
-                    $stmt = $this->db->getPdo()->prepare("INSERT INTO livraison_a_domicile (adresse, id_boite_postale, created_at) 
-                    VALUES (:adresse, :idBoitePostale, CURRENT_TIMESTAMP())");
-                    $stmt->bindParam(':adresse', $adresseLivraisonDomicile, PDO::PARAM_STR);
-                    $stmt->bindParam(':idBoitePostale', $idBoitePostal, PDO::PARAM_INT);
-                    $stmt->execute();
-                }
-
-                // Enregistrer l'adresse de collecte
-                if ($adresseCollection) {
-                    $stmt = $this->db->getPdo()->prepare("INSERT INTO collection (adresse, id_boite_postale, created_at) 
-                    VALUES (:adresse, :idBoitePostale, CURRENT_TIMESTAMP())");
-                    $stmt->bindParam(':adresse', $adresseCollection, PDO::PARAM_STR);
-                    $stmt->bindParam(':idBoitePostale', $idBoitePostal, PDO::PARAM_INT);
-                    $stmt->execute();
-                }
+                // Commit
+                $this->db->getPdo()->commit();
+                echo json_encode(['status' => 'Abonnement avec succès']);
             }
-
-
-
-            // Enregistrement des sous-couvertures (s'il y en a)
-            if ($sousCouvertures) {
-                foreach ($sousCouvertures as $sousCouverture) {
-                    $stmt = $this->db->getPdo()->prepare("INSERT INTO sous_couvete (nom_societe, nom_personne, telephone, adresse, id_boite_postale, id_user)
-                    VALUES (:nom_societe, :nom_personne, :telephone, :adresse, :id_boite_postale, :id_user)");
-                    $stmt->bindParam(':nom_societe', $sousCouverture['societe'], PDO::PARAM_STR);
-                    $stmt->bindParam(':nom_personne', $sousCouverture['personne'], PDO::PARAM_STR);
-                    $stmt->bindParam(':telephone', $sousCouverture['telephone'], PDO::PARAM_STR);
-                    $stmt->bindParam(':adresse', $sousCouverture['adresse'], PDO::PARAM_STR);
-                    $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
-                    $stmt->bindParam(':id_user', $iduser, PDO::PARAM_INT);
-                    $stmt->execute();
-                }
-            }
-
-            // Commit
-            $this->db->getPdo()->commit();
-            echo json_encode(['status' => 'abonnement avec success']);
         } catch (\Exception $e) {
             $this->db->getPdo()->rollBack();
             echo json_encode(['error' => 'Erreur : ' . $e->getMessage()]);
         }
     }
+
 
 
 
