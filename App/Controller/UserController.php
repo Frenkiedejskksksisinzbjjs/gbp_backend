@@ -91,6 +91,15 @@ class UserController
         return $this->userModel->getClientsWithPayments();
     }
 
+    public function getClientsWithcouvette()
+    {
+        return $this->userModel->getClientsWithcouvette();
+    }
+    public function getClientsWithPaymentsachatcle()
+    {
+        return $this->userModel->getClientsWithPaymentsachatcle();
+    }
+
 
 }
 

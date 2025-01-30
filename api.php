@@ -97,6 +97,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                         case 'getClientsWithPayments':
                                             echo $userModel->getClientsWithPayments();
                                             break;
+                                            case 'getClientsWithcouvette':
+                                                echo $userModel->getClientsWithcouvette();
+                                                break;
+                                                case 'getClientsWithPaymentsachatcle':
+                                                    echo $userModel->getClientsWithPaymentsachatcle();
+                                                    break;
         
 
 

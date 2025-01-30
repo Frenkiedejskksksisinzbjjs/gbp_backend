@@ -468,14 +468,24 @@ class UserModel
             // Récupérer les résultats sous forme de tableau associatif
             $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Vérifier s'il y a des résultats
-            if ($clients) {
-                return json_encode(["success" => true, "clients" => $clients]);
-            } else {
-                return json_encode(["success" => false, "message" => "No clients with payments found."]);
-            }
-        } catch (PDOException $e) {
-            return json_encode(["error" => "Database error: " . $e->getMessage()]);
+        // Vérifier s'il y a des résultats
+        if ($clients) {
+            return json_encode(["success" => true, "clients" => $clients]);
+        } else {
+            return json_encode(["success" => false, "message" => "No clients with payments found."]);
         }
+    } catch (PDOException $e) {
+        return json_encode(["error" => "Database error: " . $e->getMessage()]);
     }
 }
+
+
+
+
+
+
+
+    
+}
+
+?>
