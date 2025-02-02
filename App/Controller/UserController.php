@@ -18,6 +18,10 @@ class UserController
     {
         return $this->userModel->GetAllUsers();
     }
+    public function GetChangementName()
+    {
+        return $this->userModel->GetChangementName();
+    }
 
     public function GetAgentsGuichets()
     {
@@ -38,7 +42,7 @@ class UserController
     // Fonction pour créer un nouvel utilisateur
     public function CreateUser()
     {
-        return $this->userModel-> CreateUser();
+        return $this->userModel->CreateUser();
     }
 
     // Fonction pour mettre à jour un utilisateur

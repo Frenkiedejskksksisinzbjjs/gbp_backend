@@ -259,7 +259,7 @@ class UserModel
 
             if ($result && isset($result['total'])) {
                 // Retourner le total au format JSON
-                echo json_encode(["success" => true, "count" => (int)$result['total']]);
+                echo json_encode(["success" => true, "count" => (int) $result['total']]);
             } else {
                 echo json_encode(["success" => false, "message" => "No boites postales of type 'petit' found"]);
             }
@@ -283,7 +283,7 @@ class UserModel
 
             if ($result && isset($result['total'])) {
                 // Retourner le total au format JSON
-                echo json_encode(["success" => true, "count" => (int)$result['total']]);
+                echo json_encode(["success" => true, "count" => (int) $result['total']]);
             } else {
                 echo json_encode(["success" => false, "message" => "No boites postales of type 'moyen' found"]);
             }
@@ -305,7 +305,7 @@ class UserModel
 
             if ($result && isset($result['total'])) {
                 // Retourner le total au format JSON
-                echo json_encode(["success" => true, "count" => (int)$result['total']]);
+                echo json_encode(["success" => true, "count" => (int) $result['total']]);
             } else {
                 echo json_encode(["success" => false, "message" => "No boites postales of type 'grand' found"]);
             }
@@ -328,7 +328,7 @@ class UserModel
 
             if ($result && isset($result['total'])) {
                 // Retourner le total au format JSON
-                echo json_encode(["success" => true, "count" => (int)$result['total']]);
+                echo json_encode(["success" => true, "count" => (int) $result['total']]);
             } else {
                 echo json_encode(["success" => false, "message" => "No clients found"]);
             }
@@ -362,7 +362,7 @@ class UserModel
 
             // Retourner le résultat au format JSON
             if ($result && isset($result['total_clients'])) {
-                echo json_encode(["success" => true, "count" => (int)$result['total_clients']]);
+                echo json_encode(["success" => true, "count" => (int) $result['total_clients']]);
             } else {
                 echo json_encode(["success" => false, "message" => "No matching clients found"]);
             }
@@ -398,7 +398,7 @@ class UserModel
 
             // Retourner le résultat au format JSON
             if ($result && isset($result['total_clients'])) {
-                echo json_encode(["success" => true, "count" => (int)$result['total_clients']]);
+                echo json_encode(["success" => true, "count" => (int) $result['total_clients']]);
             } else {
                 echo json_encode(["success" => false, "message" => "No matching clients found"]);
             }
@@ -435,6 +435,92 @@ class UserModel
         }
     }
 
+    public function GetChangementCle()
+    {
+        try {
+            // Requête SQL pour récupérer les clients ayant un paiement avec 'reference_changer_nom' non null
+            $sql = "
+            SELECT 
+                c.id AS client_id,
+                c.nom AS client_nom,
+                c.email AS client_email,
+                c.telephone AS client_telephone,
+                c.adresse AS client_adresse,
+                p.id AS paiement_id,
+                p.montant_achats_cle,
+                p.reference_achat_cle
+            FROM 
+                clients c
+            INNER JOIN 
+                paiements p 
+            ON 
+                c.id = p.id_client
+            WHERE 
+                p.reference_achat_cle IS NOT NULL
+            ORDER BY 
+                c.nom ASC
+        ";
+
+            // Préparation et exécution de la requête
+            $stmt = $this->db->getPdo()->prepare($sql);
+            $stmt->execute();
+
+            // Récupérer les résultats sous forme de tableau associatif
+            $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Vérifier s'il y a des résultats
+            if ($clients) {
+                return json_encode(["success" => true, "clients" => $clients]);
+            } else {
+                return json_encode(["success" => false, "message" => "No clients with payments found."]);
+            }
+        } catch (PDOException $e) {
+            return json_encode(["error" => "Database error: " . $e->getMessage()]);
+        }
+    }
+    public function GetChangementLivraison()
+    {
+        try {
+            // Requête SQL pour récupérer les clients ayant un paiement avec 'reference_changer_nom' non null
+            $sql = "
+            SELECT 
+                c.id AS client_id,
+                c.nom AS client_nom,
+                c.email AS client_email,
+                c.telephone AS client_telephone,
+                c.adresse AS client_adresse,
+                p.id AS paiement_id,
+                p.montant_livraison_a_domicile,
+                p.reference_livraison_domicile
+            FROM 
+                clients c
+            INNER JOIN 
+                paiements p 
+            ON 
+                c.id = p.id_client
+            WHERE 
+                p.reference_livraison_domicile IS NOT NULL
+            ORDER BY 
+                c.nom ASC
+        ";
+
+            // Préparation et exécution de la requête
+            $stmt = $this->db->getPdo()->prepare($sql);
+            $stmt->execute();
+
+            // Récupérer les résultats sous forme de tableau associatif
+            $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Vérifier s'il y a des résultats
+            if ($clients) {
+                return json_encode(["success" => true, "clients" => $clients]);
+            } else {
+                return json_encode(["success" => false, "message" => "No clients with payments found."]);
+            }
+        } catch (PDOException $e) {
+            return json_encode(["error" => "Database error: " . $e->getMessage()]);
+        }
+    }
     public function getClientsWithPayments()
     {
         try {
@@ -468,16 +554,16 @@ class UserModel
             // Récupérer les résultats sous forme de tableau associatif
             $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Vérifier s'il y a des résultats
-        if ($clients) {
-            return json_encode(["success" => true, "clients" => $clients]);
-        } else {
-            return json_encode(["success" => false, "message" => "No clients with payments found."]);
+            // Vérifier s'il y a des résultats
+            if ($clients) {
+                return json_encode(["success" => true, "clients" => $clients]);
+            } else {
+                return json_encode(["success" => false, "message" => "No clients with payments found."]);
+            }
+        } catch (PDOException $e) {
+            return json_encode(["error" => "Database error: " . $e->getMessage()]);
         }
-    } catch (PDOException $e) {
-        return json_encode(["error" => "Database error: " . $e->getMessage()]);
     }
-}
 
 
 
@@ -485,7 +571,7 @@ class UserModel
 
 
 
-    
+
 }
 
 ?>
