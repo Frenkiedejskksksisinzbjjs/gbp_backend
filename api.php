@@ -123,6 +123,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         case 'GetAllUsers':
             echo $userModel->GetAllUsers();
             break;
+        case 'GetAllUsersWithOutAdminProperty':
+            echo $userModel->GetAllUsersWithOutAdminProperty();
+            break;
 
         case 'GetAgentsGuichets':
             echo $userModel->GetAgentsGuichets();
@@ -136,6 +139,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         case 'GetBoitesPostales':
             echo $userModel->GetBoitesPostales();
+            break;
+        case 'CountResilations':
+            echo $userModel->CountResilations();
             break;
         case 'GetUser':
             if (isset($_GET['id']) && !empty($_GET['id'])) {
@@ -157,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 // Gestion des requêtes POST
 elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = file_get_contents('php://input');
-    $id = $_GET['id'];
+    $id = isset($_GET['id']) ? $_GET['id'] : null;
 
     switch ($method) {
         case 'createColisNoFound':

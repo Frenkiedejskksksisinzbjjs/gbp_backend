@@ -33,6 +33,24 @@ class UserModel
             echo json_encode(["error" => "Database error: " . $e->getMessage()]);
         }
     }
+    // Récupérer tous les utilisateurs qui ne sont pas admin et responsable
+    public function GetAllUsersWithOutAdminProperty()
+    {
+        try {
+            $sql = "SELECT * FROM users WHERE role NOT IN ('responsable', 'admin');";
+            $stmt = $this->db->getPdo()->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if ($result) {
+                echo json_encode($result);
+            } else {
+                echo json_encode(["error" => "No users found"]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+        }
+    }
 
 
     public function GetAgentsGuichets()
@@ -119,7 +137,7 @@ class UserModel
             $data = json_decode($jsonData, true);
 
             // Vérifier que les données sont valides et que le rôle n'est pas 'responsable'
-            if (is_array($data) && isset($data['nom']) && isset($data['email']) && isset($data['password']) && isset($data['role'])) {
+            if (is_array($data) && isset($data['Nom']) && isset($data['Email']) && isset($data['Password']) && isset($data['role']) && isset($data['Telephone']) && isset($data['Adresse'])) {
                 // Condition pour empêcher la création d'un utilisateur avec le rôle 'responsable'
                 if ($data['role'] === 'responsable') {
                     echo json_encode(["error" => "Cannot create user with role 'responsable'"]);
@@ -127,16 +145,18 @@ class UserModel
                 }
 
                 // Hacher le mot de passe avant de l'enregistrer
-                $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
+                $hashedPassword = password_hash($data['Password'], PASSWORD_DEFAULT);
 
                 // Préparer et exécuter la requête SQL pour insérer l'utilisateur
-                $sql = "INSERT INTO users (nom, email, password, role) VALUES (:nom, :email, :password, :role)";
+                $sql = "INSERT INTO users (nom, email, password, role,Telephone,Adresse) VALUES (:nom, :email, :password, :role,:Telephone,:Adresse)";
                 $stmt = $this->db->getPdo()->prepare($sql);
 
-                $stmt->bindParam(':nom', $data['nom']);
-                $stmt->bindParam(':email', $data['email']);
+                $stmt->bindParam(':nom', $data['Nom']);
+                $stmt->bindParam(':email', $data['Email']);
                 $stmt->bindParam(':password', $hashedPassword);
                 $stmt->bindParam(':role', $data['role']);
+                $stmt->bindParam(':Telephone', $data['Telephone']);
+                $stmt->bindParam(':Adresse', $data['Adresse']);
                 $stmt->execute();
 
                 if ($stmt->rowCount() > 0) {
@@ -156,18 +176,20 @@ class UserModel
 
 
     // Mettre à jour un utilisateur
-    public function UpdateUser($id, $data)
+    public function UpdateUser($id)
     {
         try {
+            // Vérifier si l'ID est valide
             if (!is_numeric($id) || $id <= 0) {
                 echo json_encode(["error" => "Invalid user ID"]);
                 return;
             }
 
-            if (is_string($data)) {
-                $data = json_decode($data, true);
-            }
+            // Récupérer les données JSON envoyées via la requête HTTP
+            $jsonData = file_get_contents("php://input");
+            $data = json_decode($jsonData, true);
 
+            // Vérifier que les données sont valides
             if (!is_array($data) || empty($data)) {
                 echo json_encode(["error" => "Invalid input data"]);
                 return;
@@ -176,50 +198,71 @@ class UserModel
             $fields = [];
             $params = [':id' => $id];
 
-            if (isset($data['nom']) && !empty($data['nom'])) {
+            if (isset($data['Nom']) && !empty($data['Nom'])) {
                 $fields[] = 'nom = :nom';
-                $params[':nom'] = $data['nom'];
+                $params[':nom'] = $data['Nom'];
             }
 
-            if (isset($data['email']) && !empty($data['email'])) {
+            if (isset($data['Email']) && !empty($data['Email'])) {
                 $fields[] = 'email = :email';
-                $params[':email'] = $data['email'];
+                $params[':email'] = $data['Email'];
             }
 
-            if (isset($data['password']) && !empty($data['password'])) {
+            if (isset($data['Password']) && !empty($data['Password'])) {
                 // Hacher le mot de passe avant de l'enregistrer
-                $params[':password'] = password_hash($data['password'], PASSWORD_DEFAULT);
                 $fields[] = 'password = :password';
+                $params[':password'] = password_hash($data['Password'], PASSWORD_DEFAULT);
             }
 
             if (isset($data['role']) && !empty($data['role'])) {
+                // Empêcher la mise à jour vers le rôle "responsable"
+                if ($data['role'] === 'responsable') {
+                    echo json_encode(["error" => "Cannot update user to role 'responsable'"]);
+                    return;
+                }
                 $fields[] = 'role = :role';
                 $params[':role'] = $data['role'];
             }
 
+            if (isset($data['Telephone']) && !empty($data['Telephone'])) {
+                $fields[] = 'Telephone = :Telephone';
+                $params[':Telephone'] = $data['Telephone'];
+            }
+
+            if (isset($data['Adresse']) && !empty($data['Adresse'])) {
+                $fields[] = 'Adresse = :Adresse';
+                $params[':Adresse'] = $data['Adresse'];
+            }
+
+            // Vérifier s'il y a des champs à mettre à jour
             if (empty($fields)) {
                 echo json_encode(["error" => "No valid fields to update"]);
                 return;
             }
 
+            // Construire la requête SQL
             $sql = "UPDATE users SET " . implode(', ', $fields) . " WHERE id = :id";
             $stmt = $this->db->getPdo()->prepare($sql);
 
-            foreach ($params as $key => &$val) {
-                $stmt->bindParam($key, $val);
+            // Liaison des paramètres
+            foreach ($params as $key => $val) {
+                $stmt->bindValue($key, $val);
             }
 
+            // Exécuter la requête
             $stmt->execute();
 
+            // Vérifier si la mise à jour a été effectuée
             if ($stmt->rowCount() > 0) {
                 echo json_encode(["success" => "User updated successfully"]);
             } else {
-                echo json_encode(["error" => "User not updated"]);
+                echo json_encode(["error" => "No changes made or user not found"]);
             }
         } catch (PDOException $e) {
             echo json_encode(["error" => "Database error: " . $e->getMessage()]);
         }
     }
+
 
     // Supprimer un ou plusieurs utilisateurs
     public function DeleteUser($id)
@@ -407,6 +450,30 @@ class UserModel
         }
     }
 
+    public function CountResilations()
+    {
+        try {
+            // Requête SQL pour compter le nombre total de résiliations
+            $sql = "SELECT COUNT(*) AS total_resilies FROM resilies";
+
+            // Préparer et exécuter la requête SQL
+            $stmt = $this->db->getPdo()->prepare($sql);
+            $stmt->execute();
+
+            // Récupérer le résultat
+            $resilation = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Vérifier si un résultat a été trouvé
+            if ($resilation && isset($resilation['total_resilies'])) {
+                echo json_encode(["success" => true, "count" => (int) $resilation['total_resilies']]);
+            } else {
+                echo json_encode(["success" => false, "message" => "No resiliations found"]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+        }
+    }
+
     public function getAllResilations()
     {
         try {
@@ -565,13 +632,56 @@ class UserModel
         }
     }
 
+// la fonction inspiration pour enregistre des fichiers 
+    public function insertionUploadImages($id, $file)
+    {
+        try {
+            // Vérifier que l'ID est valide
+            if (empty($id)) {
+                return json_encode(["error" => "ID invalide"]);
+            }
 
+            // Vérifier que le fichier est présent
+            if (isset($file['photo']) && $file['photo']['error'] === UPLOAD_ERR_OK) {
+                // Définir le répertoire de destination
+                $targetDir = "uploads/photos/";
 
+                // Créer le répertoire si nécessaire
+                if (!is_dir($targetDir)) {
+                    mkdir($targetDir, 0777, true);
+                }
 
+                // Générer un nom unique pour la photo
+                $fileName = uniqid('photo_', true) . '.' . pathinfo($file['photo']['name'], PATHINFO_EXTENSION);
+                $targetFile = $targetDir . $fileName;
 
+                // Déplacer le fichier téléchargé
+                if (move_uploaded_file($file['photo']['tmp_name'], $targetFile)) {
+                    // Préparer la requête pour mettre à jour la base de données
+                    $sql = "UPDATE cartin SET photo = :photo WHERE id = :id";
+                    $stmt = $this->db->getPdo()->prepare($sql);
 
+                    // Lier les paramètres
+                    $stmt->bindParam(':photo', $targetFile);
+                    $stmt->bindParam(':id', $id);
 
+                    // Exécuter la requête
+                    $stmt->execute();
 
+                    // Vérifier si la mise à jour a réussi
+                    if ($stmt->rowCount() > 0) {
+                        echo json_encode(["success" => "Photo ajoutée avec succès", "photo_path" => $targetFile]);
+                    } else {
+                        echo json_encode(["error" => "Aucune modification n'a été effectuée"]);
+                    }
+                } else {
+                    echo json_encode(["error" => "Erreur lors du déplacement du fichier"]);
+                }
+            } else {
+                echo json_encode(["error" => "Fichier non valide ou non reçu"]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode(["error" => "Erreur de base de données : " . $e->getMessage()]);
+        }
+    }
 }
-
-?>
