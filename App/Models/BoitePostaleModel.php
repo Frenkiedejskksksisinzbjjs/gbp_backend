@@ -922,66 +922,107 @@ class BoitePostaleModel
 
     // une fonction qui récupére les informations des clients
     public function GetAllClients()
-    {
-        try {
-            // Récupérer l'année en cours
-            $currentYear = date("Y");
+{
+    try {
+        // Récupérer l'année en cours
+        $currentYear = date("Y");
 
-            // Requête SQL pour récupérer les informations des clients avec vérification de l'année d'abonnement
-            $sql = "
-            SELECT 
+        // Requête SQL pour récupérer les informations des clients avec vérification de l'année d'abonnement
+        $sql = "
+        SELECT 
             DISTINCT
-                c.id AS id,
-                c.nom AS Nom,
-                c.adresse AS Adresse,
-                c.type_client AS TypeClient,
-                bp.numero AS NBp,
-                bp.type AS Type_boite_postale,
-                c.telephone AS Telephone,
-                a.annee_abonnement AS Redevance,
-                (
-                    CASE 
-                        WHEN a.annee_abonnement = :currentYear THEN 'mis_a_jour'
-                        ELSE 'non_mis_a_jour'
-                    END
-                ) AS Etat,
-                (
-                    SELECT COUNT(*) 
-                    FROM sous_couvete sc 
-                    WHERE sc.id_boite_postale = bp.id
-                ) AS sous_couvert
-            FROM 
-                clients c
-            LEFT JOIN 
-                boites_postales bp ON c.id_boite_postale = bp.id
-            LEFT JOIN 
-                abonnement a ON bp.id = a.id_boite_postale
-            LEFT JOIN 
-                collection col ON col.id_boite_postale = bp.id
-            LEFT JOIN 
-                livraison_a_domicile ld ON ld.id_boite_postale = bp.id
+            c.id AS id,
+            c.nom AS Nom,
+            c.adresse AS Adresse,
+            c.type_client AS TypeClient,
+            bp.numero AS NBp,
+            bp.type AS Type_boite_postale,
+            c.telephone AS Telephone,
+            a.annee_abonnement AS annee_abonnement,
+            p.type AS Paiement_Type,
+            p.penalites AS Penalites,
+            p.montant_redevence AS Montant_Redevance,
+            p.methode_payment AS Methode_Paiement,
+            p.reference_general AS Reference_General,
+            p.date_paiement AS Date_Paiement,
+
+            (
+                CASE 
+                    WHEN a.annee_abonnement = :currentYear THEN 'mis_a_jour'
+                    ELSE 'non_mis_a_jour'
+                END
+            ) AS Etat,
+            (
+                SELECT COUNT(*) 
+                FROM sous_couvete sc 
+                WHERE sc.id_boite_postale = bp.id
+            ) AS sous_couvert,
+            
+            -- Champs de la table documents
+            d.type AS Document_Type,
+            d.patente_quitance AS Patente_Quitance,
+            d.identite_gerant AS Identite_Gerant,
+            d.abonnement_unique AS Abonnement_Unique,
+            d.created_at AS Document_Created_At,
+
+            -- Ajout du statut de résiliation
+            CASE 
+                WHEN r.id_client IS NOT NULL THEN true
+                ELSE false
+            END AS status_resilation,
+
+            -- Champs de la table details_paiements
+            dp.categorie AS Paiement_Categorie,
+            dp.montant AS Paiement_Montant,
+            dp.methode_payment AS Paiement_Methode,
+            dp.type_wallet AS Type_Wallet,
+            dp.numero_wallet AS Numero_Wallet,
+            dp.numero_cheque AS Numero_Cheque,
+            dp.nom_banque AS Nom_Banque,
+            dp.reference AS Paiement_Reference
+        FROM 
+            clients c
+        LEFT JOIN 
+            boites_postales bp ON c.id_boite_postale = bp.id
+        LEFT JOIN 
+            abonnement a ON bp.id = a.id_boite_postale
+        LEFT JOIN 
+            collection col ON col.id_boite_postale = bp.id
+        LEFT JOIN 
+            livraison_a_domicile ld ON ld.id_boite_postale = bp.id
+        LEFT JOIN 
+            documents d ON c.id = d.id_client
+        LEFT JOIN 
+            paiements p ON c.id = p.id_client
+        LEFT JOIN 
+            resilies r ON c.id = r.id_client
+        LEFT JOIN 
+            details_paiements dp ON p.id = dp.paiement_id
         ";
 
-            // Préparation et exécution de la requête
-            $stmt = $this->db->getPdo()->prepare($sql);
-            $stmt->bindParam(':currentYear', $currentYear, PDO::PARAM_INT);
-            $stmt->execute();
+        // Préparation et exécution de la requête
+        $stmt = $this->db->getPdo()->prepare($sql);
+        $stmt->bindParam(':currentYear', $currentYear, PDO::PARAM_INT);
+        $stmt->execute();
 
-            // Récupération des résultats
-            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Récupération des résultats
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            if ($results) {
-                // Retourner les données au format JSON
-                echo json_encode($results);
-            } else {
-                // Retourner une erreur si aucun client n'est trouvé
-                echo json_encode(["error" => "No clients found"]);
-            }
-        } catch (PDOException $e) {
-            // Gestion des erreurs de base de données
-            echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+        if ($results) {
+            // Retourner les données au format JSON
+            echo json_encode($results);
+        } else {
+            // Retourner une erreur si aucun client n'est trouvé
+            echo json_encode(["error" => "No clients found"]);
         }
+    } catch (PDOException $e) {
+        // Gestion des erreurs de base de données
+        echo json_encode(["error" => "Database error: " . $e->getMessage()]);
     }
+}
+
+    
+    
 
     public function getLastReferenceAchatCle()
     {
