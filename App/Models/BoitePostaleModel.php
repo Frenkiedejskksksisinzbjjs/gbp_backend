@@ -761,145 +761,97 @@ class BoitePostaleModel
         try {
             // Décodage des données JSON
             $decodedData = json_decode($data, true);
-
+    
+            if (!$decodedData) {
+                return json_encode(["error" => "Format JSON invalide."]);
+            }
+    
             // Validation des champs obligatoires
-            if (!isset($decodedData['Adresse_collection'], $decodedData['NBp'], $decodedData['Methode_de_paiement'], $decodedData['Montant'], $decodedData['ReferenceId'])) {
-                echo json_encode(["error" => "Tous les champs obligatoires doivent être fournis."]);
-                return;
+            $requiredFields = ['Adresse_collection', 'NBp', 'Methode_de_paiement', 'Montant', 'ReferenceId'];
+            foreach ($requiredFields as $field) {
+                if (empty($decodedData[$field])) {
+                    return json_encode(["error" => "Le champ '$field' est obligatoire."]);
+                }
             }
-            if (!isset($decodedData['ReferenceId'])) {
-                echo json_encode(["error" => "La référence d'ajout de collection est requise."]);
-                return;
-            }
-
-            $referenceAjoutCollection = $decodedData['ReferenceId'];
-            $numeroWalletCollection = $decodedData['Numero_wallet'];
+    
+            // Initialisation des valeurs
             $methodePaiement = $decodedData['Methode_de_paiement'];
+            $montant = $decodedData['Montant'];
+            $reference = $decodedData['ReferenceId'];
             $typeWallet = $decodedData['Wallet'] ?? null;
-
+            $numeroWallet = $decodedData['Numero_wallet'] ?? null;
+    
             // Validation de la méthode de paiement
-            $validPaymentMethods = ['wallet', 'cash', 'cheque'];
+            $validPaymentMethods = ['wallet', 'cash', 'cheque', 'carte_credits'];
             if (!in_array($methodePaiement, $validPaymentMethods)) {
-                echo json_encode(["error" => "Méthode de paiement invalide."]);
-                return;
+                return json_encode(["error" => "Méthode de paiement invalide."]);
             }
-
-            // Validation du type de wallet si 'wallet' est sélectionné
+    
+            // Vérification spécifique pour les wallets
             if ($methodePaiement === 'wallet') {
-                $validWalletTypes = ['waafi', 'cac_pay', 'd_money', 'sabpay', 'dahabplaces'];
-                if (!in_array($typeWallet, $validWalletTypes)) {
-                    echo json_encode(["error" => "Type de wallet invalide."]);
-                    return;
-                }
-                if (empty($decodedData['Numero_wallet'])) {
-                    echo json_encode(["error" => "Le champ 'Numero_wallet' est obligatoire pour la méthode de paiement 'wallet'."]);
-                    return;
+                $validWalletTypes = ['wafi', 'cac-pay', 'd-money', 'sab-pay'];
+                if (!in_array($typeWallet, $validWalletTypes) || empty($numeroWallet)) {
+                    return json_encode(["error" => "Type de wallet invalide ou numéro wallet manquant."]);
                 }
             }
-
-            // Validation des informations de chèque si 'cheque' est sélectionné
-            if ($methodePaiement === 'cheque') {
-                if (!isset($decodedData['Numero_cheque'], $decodedData['Nom_Banque'])) {
-                    echo json_encode(["error" => "Si le paiement est par chèque, le numéro de chèque et le nom de la banque sont requis."]);
-                    return;
-                }
-            }
-
+    
             // Démarrage de la transaction
             $this->db->getPdo()->beginTransaction();
-
-            // Vérification de l'existence de la boîte postale
-            $numeroBoitePostale = $decodedData['NBp'];
-            $checkBoxQuery = "
-                SELECT id 
-                FROM boites_postales 
-                WHERE numero = :numero
-            ";
-            $stmt = $this->db->getPdo()->prepare($checkBoxQuery);
-            $stmt->bindParam(':numero', $numeroBoitePostale, PDO::PARAM_STR);
+    
+            // Vérification de l'existence du paiement actif
+            $stmt = $this->db->getPdo()->prepare("SELECT id FROM paiements WHERE id_client = :id_client AND type = 'mis_a_jour'");
+            $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
             $stmt->execute();
-
+            $paymentResult = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+            if (!$paymentResult) {
+                $this->db->getPdo()->rollBack();
+                return json_encode(["error" => "Aucun paiement mis à jour trouvé pour ce client."]);
+            }
+    
+            $paiementId = $paymentResult['id'];
+    
+            // Vérification de l'existence de la boîte postale
+            $stmt = $this->db->getPdo()->prepare("SELECT id FROM boites_postales WHERE numero = :numero");
+            $stmt->bindParam(':numero', $decodedData['NBp'], PDO::PARAM_STR);
+            $stmt->execute();
             $boitePostaleResult = $stmt->fetch(PDO::FETCH_ASSOC);
-
+    
             if (!$boitePostaleResult) {
                 $this->db->getPdo()->rollBack();
-                echo json_encode(["error" => "Aucune boîte postale trouvée avec ce numéro."]);
-                return;
+                return json_encode(["error" => "Aucune boîte postale trouvée avec ce numéro."]);
             }
-
+    
             $idBoitePostale = $boitePostaleResult['id'];
-
+    
             // Insertion de la collection
-            $insertQuery = "
-                INSERT INTO collection (adresse, id_boite_postale, created_at, updated_at)
-                VALUES (:adresse, :id_boite_postale, NOW(), NOW())
-            ";
-            $stmt = $this->db->getPdo()->prepare($insertQuery);
+            $stmt = $this->db->getPdo()->prepare("INSERT INTO collection (adresse, id_boite_postale, created_at, updated_at) VALUES (:adresse, :id_boite_postale, NOW(), NOW())");
             $stmt->bindParam(':adresse', $decodedData['Adresse_collection'], PDO::PARAM_STR);
             $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
             $stmt->execute();
-
-            // Vérification de l'existence d'un paiement avec le type 'mis_a_jour'
-            $checkPaymentQuery = "
-                SELECT id 
-                FROM paiements 
-                WHERE id_client = :id_client AND type = 'mis_a_jour'
-            ";
-            $stmt = $this->db->getPdo()->prepare($checkPaymentQuery);
-            $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
+    
+            // Insertion des détails du paiement
+            $stmt = $this->db->getPdo()->prepare("INSERT INTO details_paiements (paiement_id, categorie, montant, methode_payment, type_wallet, numero_wallet, reference) VALUES (:paiement_id, 'collection', :montant, :methode_payment, :type_wallet, :numero_wallet, :reference)");
+            $stmt->bindParam(':paiement_id', $paiementId, PDO::PARAM_INT);
+            $stmt->bindParam(':montant', $montant, PDO::PARAM_STR);
+            $stmt->bindParam(':methode_payment', $methodePaiement, PDO::PARAM_STR);
+            $stmt->bindParam(':type_wallet', $typeWallet, PDO::PARAM_STR);
+            $stmt->bindParam(':numero_wallet', $numeroWallet, PDO::PARAM_STR);
+            $stmt->bindParam(':reference', $reference, PDO::PARAM_STR);
             $stmt->execute();
-
-            $paymentResult = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$paymentResult) {
-                $this->db->getPdo()->rollBack();
-                echo json_encode(["error" => "Aucun paiement avec le type 'mis_a_jour' trouvé pour ce client."]);
-                return;
-            }
-
-            // Mise à jour du paiement
-            $updatePaymentQuery = "
-                UPDATE paiements 
-                SET montant_collection =  :montant_collection,
-                    methode_paiement_collection = :methode_paiement_collection,
-                    type_wallet_collection = :type_wallet_collection,
-                    numero_cheque_collection = :numero_cheque_collection,
-                    nom_banque_collection = :nom_banque_collection,
-                    reference_ajout_collection = :reference_ajout_collection,
-                    numero_wallet_collection = :numero_wallet_collection
-                WHERE id = :id_paiement
-            ";
-
-            $stmt = $this->db->getPdo()->prepare($updatePaymentQuery);
-
-            $stmt->bindParam(':montant_collection', $decodedData['montant_collection'], PDO::PARAM_STR);
-            $stmt->bindParam(':methode_paiement_collection', $methodePaiement, PDO::PARAM_STR);
-            $stmt->bindParam(':type_wallet_collection', $typeWallet, PDO::PARAM_STR);
-            $stmt->bindParam(':reference_ajout_collection', $referenceAjoutCollection, PDO::PARAM_STR);
-            $stmt->bindParam(':numero_wallet_collection', $numeroWalletCollection, PDO::PARAM_STR);
-            $stmt->bindParam(':id_paiement', $paymentResult['id'], PDO::PARAM_INT);
-
-            if ($methodePaiement === 'cheque') {
-                $stmt->bindParam(':numero_cheque_collection', $decodedData['Numero_cheque'], PDO::PARAM_STR);
-                $stmt->bindParam(':nom_banque_collection', $decodedData['Nom_Banque'], PDO::PARAM_STR);
-            } else {
-                $stmt->bindValue(':numero_cheque_collection', null, PDO::PARAM_NULL);
-                $stmt->bindValue(':nom_banque_collection', null, PDO::PARAM_NULL);
-            }
-
-            $stmt->execute();
-
+    
             // Validation de la transaction
             $this->db->getPdo()->commit();
-
-            // Réponse de succès
-            echo json_encode(["success" => "La collection a été ajoutée et le paiement mis à jour avec succès."]);
+    
+            return json_encode(["success" => "La collection a été ajoutée et le paiement mis à jour avec succès."]);
         } catch (PDOException $e) {
-            // Annulation de la transaction en cas d'erreur
             $this->db->getPdo()->rollBack();
-            echo json_encode(["error" => "Erreur de base de données : " . $e->getMessage()]);
+            return json_encode(["error" => "Erreur de base de données : " . $e->getMessage()]);
         }
     }
+    
+
+    
 
 
 

@@ -214,21 +214,30 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'insererLivraisonEtMettreAJourPaiement':
             echo $boitePostaleModel->insererLivraisonEtMettreAJourPaiement($id, $data);
             break;
-        case 'insererCollectionEtMettreAJourPaiement':
-            // Vérifiez si $idClient est passé correctement
-            if (isset($id)) {  // Assurez-vous que la variable vient de la requête GET, POST ou session
-                $idClient = $id;  // Ou $_POST['idClient'], ou $_SESSION['idClient']
-
-                // Vérification que les données sont bien reçues
-                if (!empty($data)) {
-                    echo $boitePostaleModel->insererCollectionEtMettreAJourPaiement($idClient, $data);
-                } else {
-                    echo json_encode(["error" => "Les données sont vides."]);
+            case 'insererCollectionEtMettreAJourPaiement':
+                // Vérifiez si l'ID client est passé correctement
+                $idClient = $_GET['id_client'] ?? $_POST['id_client'] ?? null;
+            
+                // Vérification que l'ID client est présent
+                if (!$idClient) {
+                    echo json_encode(["error" => "idClient est manquant."]);
+                    exit;
                 }
-            } else {
-                echo json_encode(["error" => "idClient est manquant."]);
-            }
-            break;
+            
+                // Récupération des données envoyées en POST (JSON)
+                $data = file_get_contents("php://input");
+            
+                // Vérification que les données sont bien reçues
+                if (empty($data)) {
+                    echo json_encode(["error" => "Les données sont vides."]);
+                    exit;
+                }
+            
+                // Appel de la fonction dans le modèle
+                $result = $boitePostaleModel->insererCollectionEtMettreAJourPaiement($idClient, $data);
+                echo $result;
+                break;
+            
 
 
 

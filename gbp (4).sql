@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : mer. 05 fév. 2025 à 06:55
+-- Généré le : mer. 05 fév. 2025 à 13:34
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.2.12
 
@@ -225,53 +225,8 @@ CREATE TABLE `collection` (
   `adresse` varchar(255) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `id_boite_postale` int(11) NOT NULL
+  `id_client` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Déchargement des données de la table `collection`
---
-
-INSERT INTO `collection` (`id`, `adresse`, `created_at`, `updated_at`, `id_boite_postale`) VALUES
-(1, '123 rue exemple', '2024-12-24 06:44:06', '2024-12-24 06:44:06', 2),
-(2, 'Avenue Centrale', '2024-12-24 06:46:38', '2024-12-24 06:46:38', 18),
-(3, '123 Rue de Paris', '2024-12-31 06:03:18', '2024-12-31 06:03:18', 37),
-(4, '123 Rue de Paris', '2025-01-02 05:58:47', '2025-01-02 05:58:47', 38),
-(5, '123 Rue de Paris', '2025-01-02 06:10:19', '2025-01-02 06:10:19', 40),
-(6, '123 Rue de Paris', '2025-01-02 06:14:02', '2025-01-02 06:14:02', 41),
-(8, '123 Rue de Paris', '2025-01-05 08:25:46', '2025-01-05 08:25:46', 42),
-(9, '123 Rue de Paris', '2025-01-05 08:27:49', '2025-01-05 08:27:49', 43),
-(10, '123 Rue de Paris', '2025-01-05 08:30:00', '2025-01-05 08:30:00', 44),
-(11, '123 Rue Principale', '2025-01-07 08:08:44', '2025-01-07 08:08:44', 26),
-(12, '123 Rue Principale', '2025-01-07 08:10:07', '2025-01-07 08:10:07', 26),
-(13, '123 Rue Principale', '2025-01-07 08:14:05', '2025-01-07 08:14:05', 26),
-(14, '123 Rue Principale', '2025-01-07 08:14:27', '2025-01-07 08:14:27', 26),
-(15, '123 Rue Principale', '2025-01-07 08:15:40', '2025-01-07 08:15:40', 26),
-(16, '123 Rue Principale', '2025-01-07 08:21:07', '2025-01-07 08:21:07', 26),
-(17, '123 Rue Principale', '2025-01-07 08:25:47', '2025-01-07 08:25:47', 26),
-(18, '123 Rue Principale', '2025-01-07 08:26:01', '2025-01-07 08:26:01', 26),
-(19, '123 Rue Principale', '2025-01-07 08:26:42', '2025-01-07 08:26:42', 26),
-(20, '123 Rue Principale', '2025-01-07 08:27:48', '2025-01-07 08:27:48', 26),
-(21, '123 Rue Principale', '2025-01-07 08:28:08', '2025-01-07 08:28:08', 26),
-(22, '123 Rue Principale', '2025-01-07 08:28:34', '2025-01-07 08:28:34', 26),
-(23, '123 Rue Principale', '2025-01-07 08:28:41', '2025-01-07 08:28:41', 26),
-(24, '123 Rue Principale', '2025-01-07 08:28:43', '2025-01-07 08:28:43', 26),
-(25, '123 Rue Principale', '2025-01-07 08:28:46', '2025-01-07 08:28:46', 26),
-(26, '123 Rue Principale', '2025-01-07 08:33:22', '2025-01-07 08:33:22', 26),
-(27, '123 Rue Principale', '2025-01-07 08:33:41', '2025-01-07 08:33:41', 26),
-(28, '123 Rue de Exemple, Ville, Pays', '2025-01-12 08:35:20', '2025-01-12 08:35:20', 42),
-(29, '123 Rue de Exemple, Ville, Pays', '2025-01-12 09:15:18', '2025-01-12 09:15:18', 43),
-(30, '789 Boulevard Exemple, Ville, Pays', '2025-01-14 05:41:54', '2025-01-14 05:41:54', 46),
-(31, '789 Boulevard Exemple, Ville, Pays', '2025-01-14 05:52:39', '2025-01-14 05:52:39', 47),
-(32, '789 Boulevard Exemple, Ville, Pays', '2025-01-14 06:00:27', '2025-01-14 06:00:27', 48),
-(33, '789 Boulevard Exemple, Ville, Pays', '2025-01-14 06:07:31', '2025-01-14 06:07:31', 49),
-(34, '789 Boulevard Exemple, Ville, Pays', '2025-01-14 08:36:19', '2025-01-14 08:36:19', 50),
-(35, '789 Boulevard Exemple, Ville, Pays', '2025-01-14 08:41:41', '2025-01-14 08:41:41', 51),
-(37, '123 Rue Exemple', '2025-01-20 12:46:50', '2025-01-20 12:46:50', 3),
-(38, '123 Rue Exemple', '2025-01-20 12:48:44', '2025-01-20 12:48:44', 5),
-(39, '123 Rue Exemple', '2025-01-21 05:56:41', '2025-01-21 05:56:41', 5),
-(40, '123 Rue Exemple', '2025-01-21 06:00:23', '2025-01-21 06:00:23', 5),
-(41, '123 Rue Exemple', '2025-01-21 06:02:00', '2025-01-21 06:02:00', 5);
 
 -- --------------------------------------------------------
 
@@ -311,7 +266,13 @@ CREATE TABLE `details_paiements` (
 --
 
 INSERT INTO `details_paiements` (`id`, `paiement_id`, `categorie`, `montant`, `methode_payment`, `type_wallet`, `numero_wallet`, `numero_cheque`, `nom_banque`, `reference`) VALUES
-(0, 1, 'changement_nom', 20.25, 'cheque', 'wafi', '', '12345785', 'salam', 'ref12345');
+(1, 1, 'changement_nom', 20.25, 'cheque', 'wafi', '', '12345785', 'salam', 'ref12345'),
+(2, 1, 'collection', 15000.00, 'wallet', 'wafi', '252123456', NULL, NULL, 'REF-20240205'),
+(3, 1, 'collection', 15000.00, 'wallet', 'wafi', '252123456', NULL, NULL, 'REF-20240205'),
+(4, 2, 'collection', 15000.00, 'wallet', 'wafi', '252123456', NULL, NULL, 'REF-20240205'),
+(5, 2, 'collection', 15000.00, 'wallet', 'wafi', '252123456', NULL, NULL, 'REF-20240205'),
+(6, 2, 'collection', 15000.00, 'wallet', 'wafi', '252123456', NULL, NULL, 'REF-20240205'),
+(7, 2, 'collection', 15000.00, 'wallet', 'wafi', '252123456', NULL, NULL, 'REF-20240205');
 
 -- --------------------------------------------------------
 
@@ -396,47 +357,10 @@ CREATE TABLE `exaunore` (
 CREATE TABLE `livraison_a_domicile` (
   `id` int(11) NOT NULL,
   `adresse` varchar(255) NOT NULL,
-  `id_boite_postale` int(11) NOT NULL,
+  `id_client` int(11) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Déchargement des données de la table `livraison_a_domicile`
---
-
-INSERT INTO `livraison_a_domicile` (`id`, `adresse`, `id_boite_postale`, `created_at`, `updated_at`) VALUES
-(1, '123 rue exemple', 10, '2024-12-22 08:44:33', '2024-12-22 08:44:33'),
-(2, '123 rue exemple', 22, '2024-12-22 08:47:47', '2024-12-22 08:47:47'),
-(3, '123 rue exemple', 20, '2024-12-22 08:52:27', '2024-12-22 08:52:27'),
-(4, '123 rue exemple', 20, '2024-12-22 08:53:27', '2024-12-22 08:53:27'),
-(5, '123 rue exemple', 2, '2024-12-22 11:57:56', '2024-12-22 11:57:56'),
-(6, '456 Rue de la Poste', 26, '2024-12-29 12:09:35', '2024-12-29 12:09:35'),
-(7, '123 Rue de Paris, 75001 Paris', 27, '2024-12-30 05:48:05', '2024-12-30 05:48:05'),
-(8, '123 Rue de Paris, 75001 Paris', 28, '2024-12-30 05:52:26', '2024-12-30 05:52:26'),
-(9, '123 Rue de Paris, 75001 Paris', 29, '2024-12-30 05:54:34', '2024-12-30 05:54:34'),
-(10, '123 Rue de Paris, 75001 Paris', 30, '2024-12-30 05:58:14', '2024-12-30 05:58:14'),
-(11, '123 Rue de Paris, 75001 Paris', 31, '2024-12-30 06:01:46', '2024-12-30 06:01:46'),
-(12, '123 Rue de Paris, 75001 Paris', 32, '2024-12-30 06:03:36', '2024-12-30 06:03:36'),
-(13, '123 Rue de Paris, 75001 Paris', 33, '2024-12-30 06:08:33', '2024-12-30 06:08:33'),
-(14, '123 Rue de Paris, 75001 Paris', 34, '2024-12-30 06:34:51', '2024-12-30 06:34:51'),
-(15, '123 Rue de Paris, 75001 Paris', 37, '2024-12-31 06:03:18', '2024-12-31 06:03:18'),
-(16, '123 Rue de Paris, 75001 Paris', 38, '2025-01-02 05:58:47', '2025-01-02 05:58:47'),
-(17, '123 Rue de Paris, 75001 Paris', 40, '2025-01-02 06:10:19', '2025-01-02 06:10:19'),
-(18, '56 Place de la Gare', 26, '2025-01-07 08:17:51', '2025-01-07 08:17:51'),
-(19, '56 Place de la Gare', 26, '2025-01-07 08:20:32', '2025-01-07 08:20:32'),
-(24, '123 Rue Exemple', 42, '2025-01-07 08:45:24', '2025-01-07 08:45:24'),
-(25, '123 Rue Exemple, Ville, Code Postal', 43, '2025-01-12 08:11:32', '2025-01-12 08:11:32'),
-(28, '123 Rue Exemple, Ville, Code Postal', 42, '2025-01-12 08:16:35', '2025-01-12 08:16:35'),
-(31, '123 Rue Exemple, Ville, Code Postal', 42, '2025-01-12 08:22:06', '2025-01-12 08:22:06'),
-(32, '123 Rue Exemple, Ville, Code Postal', 42, '2025-01-12 08:24:34', '2025-01-12 08:24:34'),
-(33, '456 Avenue Exemple, Ville, Pays', 46, '2025-01-14 05:41:54', '2025-01-14 05:41:54'),
-(34, '456 Avenue Exemple, Ville, Pays', 47, '2025-01-14 05:52:39', '2025-01-14 05:52:39'),
-(35, '456 Avenue Exemple, Ville, Pays', 48, '2025-01-14 06:00:27', '2025-01-14 06:00:27'),
-(36, '456 Avenue Exemple, Ville, Pays', 49, '2025-01-14 06:07:31', '2025-01-14 06:07:31'),
-(37, '456 Avenue Exemple, Ville, Pays', 50, '2025-01-14 08:36:19', '2025-01-14 08:36:19'),
-(38, '456 Avenue Exemple, Ville, Pays', 51, '2025-01-14 08:41:41', '2025-01-14 08:41:41'),
-(39, '456 Avenue Test', 3, '2025-01-20 12:14:18', '2025-01-20 12:14:18');
 
 -- --------------------------------------------------------
 
@@ -460,7 +384,8 @@ CREATE TABLE `paiements` (
 --
 
 INSERT INTO `paiements` (`id`, `id_client`, `type`, `penalites`, `montant_redevence`, `methode_payment`, `reference_general`, `date_paiement`) VALUES
-(1, 2, 'mis_a_jour', 0.00, 0.00, 'wallet', 'REF123456', '2025-02-04 10:37:52');
+(1, 2, 'mis_a_jour', 0.00, 0.00, 'wallet', 'REF123456', '2025-02-04 10:37:52'),
+(2, 3, 'mis_a_jour', 0.00, 50.00, 'wallet', 'ref1245p', '2025-02-05 12:15:37');
 
 -- --------------------------------------------------------
 
@@ -494,89 +419,9 @@ CREATE TABLE `sous_couvete` (
   `nom_personne` varchar(255) NOT NULL,
   `telephone` varchar(20) NOT NULL,
   `adresse` text NOT NULL,
-  `id_boite_postale` int(11) NOT NULL,
+  `id_client` int(11) NOT NULL,
   `id_user` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Déchargement des données de la table `sous_couvete`
---
-
-INSERT INTO `sous_couvete` (`id`, `nom_societe`, `nom_personne`, `telephone`, `adresse`, `id_boite_postale`, `id_user`) VALUES
-(1, 'societé', 'jakwar', '7775865', 'test', 5, NULL),
-(2, 'societé', 'test', '7775865', 'test', 5, NULL),
-(3, 'societé', 'jakwar', '0123456789', '123 Rue Exemple', 6, 1),
-(4, 'societé', 'frenkie', '0123456789', '123 Rue Exemple', 6, 1),
-(6, 'societé', 'iniesta', '0123456789', '123 Rue Exemple', 6, 1),
-(7, 'societé', 'xavi', '0123456789', '123 Rue Exemple', 6, 1),
-(9, 'XYZ Ltd', 'Jane Doe', '987654321', '456 Elm St', 2, 2),
-(10, 'XYZ Ltd', 'Jane Doe', '987654321', '456 Elm St', 2, 2),
-(14, 'Entreprise XYZ', 'Alice Dupont', '123456789', '456 Avenue Exemple', 3, NULL),
-(16, 'Entreprise XYZ', 'Alice Dupont', '123456789', '456 Avenue Exemple', 3, NULL),
-(18, 'Entreprise XYZ', 'Alice Dupont', '123456789', '456 Avenue Exemple', 3, NULL),
-(19, 'Entreprise XYZ', 'Alice Dupont', '123456789', '456 Avenue Exemple', 3, NULL),
-(20, 'Entreprise XYZ', 'Alice Dupont', '123456789', '456 Avenue Exemple', 3, NULL),
-(22, 'Entreprise XYZ', 'Alice Dupont', '123456789', '456 Avenue Exemple', 2, NULL),
-(27, 'Ma Société', 'Jean Dupont', '123456789', '123 Rue Exemple', 2, 2),
-(28, 'Ma Société', 'Jean Dupont', '123456789', '123 Rue Exemple', 2, 2),
-(29, 'Ma Société', 'Jean Dupont', '123456789', '123 Rue Exemple', 5, 2),
-(30, 'Ma Société', 'Jean Dupont', '123456789', '123 Rue Exemple', 5, 2),
-(31, NULL, 'Marie Dupont', '0612345678', '123 Rue Principale', 20, 1),
-(32, NULL, 'Marie Dupont', '0612345678', '123 Rue Principale', 21, 1),
-(33, NULL, 'Marie Dupont', '0612345678', '123 Rue Principale', 22, 1),
-(35, 'Exemple Société', 'Jean Dupont', '123456789', '123 Rue Exemple', 1, 1),
-(36, 'Exemple Société', 'Jean Dupont', '123456789', '123 Rue Exemple', 1, 1),
-(37, 'Exemple Société', 'Jean Dupont', '123456789', '123 Rue Exemple', 1, 1),
-(38, 'Exemple Société', 'Jean Dupont', '123456789', '123 Rue Exemple', 1, 1),
-(39, 'Exemple Société', 'Jean Dupont', '123456789', '123 Rue Exemple', 22, 1),
-(40, 'Exemple Société', 'Jean Dupont', '123456789', '123 Rue Exemple', 22, 1),
-(41, 'Exemple Société', 'Jean Dupont', '123456789', '123 Rue Exemple', 22, 1),
-(42, 'Exemple Société', 'Jean Dupont', '123456789', '123 Rue Exemple', 22, 1),
-(43, 'Exemple Société', 'Jean Dupont', '123456789', '123 Rue Exemple', 20, 1),
-(44, 'Exemple Société', 'Jean Dupont', '123456789', '123 Rue Exemple', 20, 1),
-(45, 'tir Société', 'Jeanenne Dupont', '123456789', '123 Rue Exemple', 20, 1),
-(46, 'Societe XYZ', 'John Doe', '1234567890', '123 Rue Exemple, Ville, Pays', 23, 1),
-(47, 'Societe XYZ', 'John Doe', '1234567890', '123 Rue Exemple, Ville, Pays', 23, 1),
-(48, 'Societe XYZ', 'John Doe', '1234567890', '123 Rue Exemple, Ville, Pays', 23, 1),
-(49, 'Societe XYZ', 'John Doe', '1234567890', '123 Rue Exemple, Ville, Pays', 23, 1),
-(50, 'Societe XYZ', 'John Doe', '1234567890', '123 Rue Exemple, Ville, Pays', 23, 1),
-(51, 'Societe XYZ', 'John Doe', '1234567890', '123 Rue Exemple, Ville, Pays', 14, 1),
-(52, 'Societe XYZ', 'John Doe', '1234567890', '123 Rue Exemple, Ville, Pays', 20, 1),
-(53, 'Societe XYZ', 'John Doe', '1234567890', '123 Rue Exemple, Ville, Pays', 19, 1),
-(54, 'Societe XYZ', 'John Doe', '1234567890', '123 Rue Exemple, Ville, Pays', 1, 1),
-(55, 'test', 'test', '7775865', 'test', 20, 2),
-(56, 'Societe XYZ', 'John Doe', '1234567890', '123 Rue Exemple, Ville, Pays', 21, 1),
-(57, 'Societe XYZ', 'John Doe', '1234567890', '123 Rue Exemple, Ville, Pays', 21, 1),
-(58, 'Societe XYZ', 'John Doe', '1234567890', '123 Rue Exemple, Ville, Pays', 21, 1),
-(59, 'Societe XYZ', 'John Doe', '1234567890', '123 Rue Exemple, Ville, Pays', 21, 1),
-(60, NULL, 'Marie Curie', '0612345678', '123 Rue Principale', 24, 1),
-(61, NULL, 'Marie Curie', '0612345678', '123 Rue Principale', 26, 1),
-(62, NULL, 'Marie Curie', '0612345678', '123 Rue Principale', 27, 1),
-(63, NULL, 'Marie Curie', '0612345678', '123 Rue Principale', 28, 1),
-(64, NULL, 'Marie Curie', '0612345678', '123 Rue Principale', 29, 1),
-(65, NULL, 'Marie Curie', '0612345678', '123 Rue Principale', 30, 1),
-(66, NULL, 'Marie Curie', '0612345678', '123 Rue Principale', 31, 1),
-(67, NULL, 'Marie Curie', '0612345678', '123 Rue Principale', 32, 1),
-(68, NULL, 'Marie Curie', '0612345678', '123 Rue Principale', 33, 1),
-(69, NULL, 'Marie Curie', '0612345678', '123 Rue Principale', 34, 1),
-(70, NULL, 'Marie Curie', '0612345678', '123 Rue Principale', 35, 1),
-(71, NULL, 'Marie Curie', '0612345678', '123 Rue Principale', 36, 1),
-(72, NULL, 'Marie Curie', '0612345678', '123 Rue Principale', 37, 1),
-(73, NULL, 'Marie Curie', '0612345678', '123 Rue Principale', 38, 1),
-(74, NULL, 'Marie Curie', '0612345678', '123 Rue Principale', 41, 1),
-(76, NULL, 'Marie Curie', '0612345678', '123 Rue Principale', 42, 1),
-(77, NULL, 'Marie Curie', '0612345678', '123 Rue Principale', 43, 1),
-(78, NULL, 'Marie Curie', '0612345678', '123 Rue Principale', 44, 1),
-(79, 'Nom Société', 'Nom Personne', '123456789', 'Adresse complète', 42, 1),
-(80, 'Nom Société', 'Nom Personne', '123456789', 'Adresse complète', 42, 1),
-(81, 'Nom Société', 'Nom Personne', '123456789', 'Adresse complète', 42, 1),
-(82, 'Nom Société', 'Nom Personne', '123456789', 'Adresse complète', 42, 1),
-(83, NULL, 'Marie Dupont', '+123456789', '123 Rue Exemple, Ville, Pays', 46, 1),
-(84, NULL, 'Marie Dupont', '+123456789', '123 Rue Exemple, Ville, Pays', 47, 1),
-(85, NULL, 'Marie Dupont', '+123456789', '123 Rue Exemple, Ville, Pays', 48, 1),
-(86, NULL, 'Marie Dupont', '+123456789', '123 Rue Exemple, Ville, Pays', 49, 1),
-(87, NULL, 'Marie Dupont', '+123456789', '123 Rue Exemple, Ville, Pays', 50, 1),
-(88, NULL, 'Marie Dupont', '+123456789', '123 Rue Exemple, Ville, Pays', 51, 1);
 
 -- --------------------------------------------------------
 
@@ -634,8 +479,7 @@ ALTER TABLE `clients`
 -- Index pour la table `collection`
 --
 ALTER TABLE `collection`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `id_boite_postale` (`id_boite_postale`);
+  ADD KEY `collection_ibfk_1` (`id_client`);
 
 --
 -- Index pour la table `depot`
@@ -648,6 +492,7 @@ ALTER TABLE `depot`
 -- Index pour la table `details_paiements`
 --
 ALTER TABLE `details_paiements`
+  ADD PRIMARY KEY (`id`),
   ADD KEY `details_paiements_ibfk_1` (`paiement_id`);
 
 --
@@ -668,8 +513,7 @@ ALTER TABLE `exaunore`
 -- Index pour la table `livraison_a_domicile`
 --
 ALTER TABLE `livraison_a_domicile`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `id_boite_postale` (`id_boite_postale`);
+  ADD KEY `livraison_a_domicile_ibfk_1` (`id_client`);
 
 --
 -- Index pour la table `paiements`
@@ -690,9 +534,8 @@ ALTER TABLE `resilies`
 -- Index pour la table `sous_couvete`
 --
 ALTER TABLE `sous_couvete`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `id_boite_postale` (`id_boite_postale`),
-  ADD KEY `id_user` (`id_user`) USING BTREE;
+  ADD KEY `sous_couvete_ibfk_1` (`id_client`),
+  ADD KEY `sous_couvete_ibfk_2` (`id_user`);
 
 --
 -- Index pour la table `users`
@@ -724,16 +567,16 @@ ALTER TABLE `clients`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
 
 --
--- AUTO_INCREMENT pour la table `collection`
---
-ALTER TABLE `collection`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
-
---
 -- AUTO_INCREMENT pour la table `depot`
 --
 ALTER TABLE `depot`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT pour la table `details_paiements`
+--
+ALTER TABLE `details_paiements`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT pour la table `documents`
@@ -748,28 +591,16 @@ ALTER TABLE `exaunore`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `livraison_a_domicile`
---
-ALTER TABLE `livraison_a_domicile`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
-
---
 -- AUTO_INCREMENT pour la table `paiements`
 --
 ALTER TABLE `paiements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT pour la table `resilies`
 --
 ALTER TABLE `resilies`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT pour la table `sous_couvete`
---
-ALTER TABLE `sous_couvete`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
 
 --
 -- AUTO_INCREMENT pour la table `users`
@@ -799,7 +630,7 @@ ALTER TABLE `clients`
 -- Contraintes pour la table `collection`
 --
 ALTER TABLE `collection`
-  ADD CONSTRAINT `collection_ibfk_1` FOREIGN KEY (`id_boite_postale`) REFERENCES `boites_postales` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `collection_ibfk_1` FOREIGN KEY (`id_client`) REFERENCES `clients` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Contraintes pour la table `depot`
@@ -829,7 +660,7 @@ ALTER TABLE `exaunore`
 -- Contraintes pour la table `livraison_a_domicile`
 --
 ALTER TABLE `livraison_a_domicile`
-  ADD CONSTRAINT `livraison_a_domicile_ibfk_1` FOREIGN KEY (`id_boite_postale`) REFERENCES `boites_postales` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `livraison_a_domicile_ibfk_1` FOREIGN KEY (`id_client`) REFERENCES `clients` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Contraintes pour la table `paiements`
@@ -848,8 +679,8 @@ ALTER TABLE `resilies`
 -- Contraintes pour la table `sous_couvete`
 --
 ALTER TABLE `sous_couvete`
-  ADD CONSTRAINT `fk_id_user` FOREIGN KEY (`id_user`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `sous_couvete_ibfk_1` FOREIGN KEY (`id_boite_postale`) REFERENCES `boites_postales` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `sous_couvete_ibfk_1` FOREIGN KEY (`id_client`) REFERENCES `clients` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `sous_couvete_ibfk_2` FOREIGN KEY (`id_user`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

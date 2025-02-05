@@ -22,10 +22,9 @@ class BoitePostaleController
 
     public function insererCollectionEtMettreAJourPaiement($idClient, $data)
     {
-        return $this->boitePostaleModel->insererCollectionEtMettreAJourPaiement($idClient, $data) ;
-
-        // A implémenter si nécessaire
+        return $this->boitePostaleModel->insererCollectionEtMettreAJourPaiement($idClient, $data);
     }
+    
 
     public function enregistrerPaiement($idClient, $data)
     {
