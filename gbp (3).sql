@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : jeu. 30 jan. 2025 à 09:06
+-- Généré le : mer. 05 fév. 2025 à 06:55
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.2.12
 
@@ -70,7 +70,8 @@ INSERT INTO `abonnement` (`id`, `id_boite_postale`, `annee_abonnement`, `id_paym
 (32, 48, '2025', 54),
 (33, 49, '2025', 55),
 (34, 50, '2025', 56),
-(35, 51, '2025', 57);
+(35, 51, '2025', 57),
+(36, 1, '2025', 2);
 
 -- --------------------------------------------------------
 
@@ -289,6 +290,32 @@ CREATE TABLE `depot` (
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `details_paiements`
+--
+
+CREATE TABLE `details_paiements` (
+  `id` int(11) NOT NULL,
+  `paiement_id` int(11) NOT NULL,
+  `categorie` enum('sous_couvette','changement_nom','achats_cle','redevence','livraison_domicile','collection') NOT NULL,
+  `montant` decimal(10,2) NOT NULL,
+  `methode_payment` enum('wallet','cash','cheque','carte_credits') DEFAULT NULL,
+  `type_wallet` enum('wafi','cac-pay','d-money','sab-pay') DEFAULT NULL,
+  `numero_wallet` varchar(255) DEFAULT NULL,
+  `numero_cheque` varchar(50) DEFAULT NULL,
+  `nom_banque` varchar(100) DEFAULT NULL,
+  `reference` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Déchargement des données de la table `details_paiements`
+--
+
+INSERT INTO `details_paiements` (`id`, `paiement_id`, `categorie`, `montant`, `methode_payment`, `type_wallet`, `numero_wallet`, `numero_cheque`, `nom_banque`, `reference`) VALUES
+(0, 1, 'changement_nom', 20.25, 'cheque', 'wafi', '', '12345785', 'salam', 'ref12345');
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `documents`
 --
 
@@ -296,8 +323,8 @@ CREATE TABLE `documents` (
   `id` int(11) NOT NULL,
   `type` enum('particulier','société') NOT NULL,
   `patente_quitance` longblob DEFAULT NULL,
-  `identite_gerant` longblob NOT NULL,
-  `abonnement_unique` longblob NOT NULL,
+  `identite_gerant` longblob DEFAULT NULL,
+  `abonnement_unique` longblob DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `id_client` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -419,106 +446,21 @@ INSERT INTO `livraison_a_domicile` (`id`, `adresse`, `id_boite_postale`, `create
 
 CREATE TABLE `paiements` (
   `id` int(11) NOT NULL,
-  `id_client` int(11) DEFAULT NULL,
+  `id_client` int(11) NOT NULL,
   `type` enum('mis_a_jour','non_mis_a_jour') NOT NULL,
   `penalites` decimal(10,2) DEFAULT 0.00,
-  `montant_sous_couvete` decimal(10,2) DEFAULT 0.00,
-  `montant_changement_nom` decimal(10,2) DEFAULT 0.00,
-  `montant_achats_cle` decimal(10,2) DEFAULT 0.00,
-  `montant_redevence` decimal(10,2) DEFAULT 0.00,
+  `montant_redevence` decimal(10,2) NOT NULL,
   `methode_payment` enum('wallet','cash','cheque','carte_credits') DEFAULT NULL,
-  `domicile` text DEFAULT NULL,
-  `type_wallet` enum('wafi','cac-pay','d-money','sab-pay') DEFAULT NULL,
-  `numero_wallet_redevence` varchar(255) DEFAULT NULL,
-  `methode_payment_nom` enum('wallet','cash','cheque','carte_credits') DEFAULT NULL,
-  `methode_payment_cle` enum('wallet','cash','cheque','carte_credits') DEFAULT NULL,
-  `methode_payment_couvette` enum('wallet','cash','cheque','carte_credits') DEFAULT NULL,
-  `type_wallet_nom` enum('wafi','cac-pay','d-money','sab-pay') DEFAULT NULL,
-  `type_wallet_cle` enum('wafi','cac-pay','d-money','sab-pay') DEFAULT NULL,
-  `type_wallet_couvette` enum('wafi','cac-pay','d-money','sab-pay') DEFAULT NULL,
-  `reference` varchar(255) DEFAULT NULL,
-  `reference_ajout_sous_couvette` varchar(255) DEFAULT NULL,
-  `reference_livraison_domicile` varchar(255) DEFAULT NULL,
-  `reference_changer_nom` varchar(255) DEFAULT NULL,
-  `reference_achat_cle` varchar(255) DEFAULT NULL,
-  `reference_ajout_collection` varchar(255) DEFAULT NULL,
-  `numero_cheque` varchar(50) DEFAULT NULL,
-  `nom_banque` varchar(100) DEFAULT NULL,
-  `montant_livraison_a_domicile` decimal(10,2) DEFAULT NULL,
-  `montant_collection` decimal(10,2) NOT NULL,
-  `methode_paiement_a_domicile` enum('wallet','cash','cheque','carte_credits') DEFAULT NULL,
-  `methode_paiement_collection` enum('wallet','cash','cheque','carte_credits') DEFAULT NULL,
-  `type_wallet_collection` enum('wafi','cac-pay','d-money','sab-pay') DEFAULT NULL,
-  `numero_cheque_collection` varchar(50) DEFAULT NULL,
-  `nom_banque_collection` varchar(255) DEFAULT NULL,
-  `type_wallet_livraison_a_domicile` enum('wafi','cac-pay','d-money','sab-pay') DEFAULT NULL,
-  `reference_livraison_a_domicile` varchar(255) DEFAULT NULL,
-  `numero_cheque_livraison_a_domicile` varchar(50) DEFAULT NULL,
-  `nom_banque_livraison_a_domicile` varchar(255) DEFAULT NULL,
-  `numero_cheque_sous_couvette` varchar(255) DEFAULT NULL,
-  `nom_banque_sous_couvette` varchar(255) DEFAULT NULL,
-  `numero_cheque_achat_cle` varchar(255) DEFAULT NULL,
-  `nom_banque_achat_cle` varchar(255) DEFAULT NULL,
-  `numero_cheque_changment_nom` varchar(255) DEFAULT NULL,
-  `nom_banque_changment_nom` varchar(255) DEFAULT NULL,
-  `numero_wallet_achat_cle` varchar(255) DEFAULT NULL,
-  `numero_wallet_changement_nom` varchar(255) DEFAULT NULL,
-  `numero_wallet_ajout_sous_couvette` varchar(255) DEFAULT NULL,
-  `numero_wallet_livraison_domicile` varchar(255) DEFAULT NULL,
-  `numero_wallet_collection` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `reference_general` varchar(255) DEFAULT NULL,
+  `date_paiement` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Déchargement des données de la table `paiements`
 --
 
-INSERT INTO `paiements` (`id`, `id_client`, `type`, `penalites`, `montant_sous_couvete`, `montant_changement_nom`, `montant_achats_cle`, `montant_redevence`, `methode_payment`, `domicile`, `type_wallet`, `numero_wallet_redevence`, `methode_payment_nom`, `methode_payment_cle`, `methode_payment_couvette`, `type_wallet_nom`, `type_wallet_cle`, `type_wallet_couvette`, `reference`, `reference_ajout_sous_couvette`, `reference_livraison_domicile`, `reference_changer_nom`, `reference_achat_cle`, `reference_ajout_collection`, `numero_cheque`, `nom_banque`, `montant_livraison_a_domicile`, `montant_collection`, `methode_paiement_a_domicile`, `methode_paiement_collection`, `type_wallet_collection`, `numero_cheque_collection`, `nom_banque_collection`, `type_wallet_livraison_a_domicile`, `reference_livraison_a_domicile`, `numero_cheque_livraison_a_domicile`, `nom_banque_livraison_a_domicile`, `numero_cheque_sous_couvette`, `nom_banque_sous_couvette`, `numero_cheque_achat_cle`, `nom_banque_achat_cle`, `numero_cheque_changment_nom`, `nom_banque_changment_nom`, `numero_wallet_achat_cle`, `numero_wallet_changement_nom`, `numero_wallet_ajout_sous_couvette`, `numero_wallet_livraison_domicile`, `numero_wallet_collection`) VALUES
-(3, 5, 'non_mis_a_jour', 0.00, 5000.00, 23000.00, 51000.00, 0.00, 'cash', NULL, NULL, NULL, 'cheque', 'cheque', 'wallet', NULL, NULL, 'wafi', NULL, NULL, NULL, 'rf123456789123456', NULL, 'REF54321', NULL, NULL, NULL, 75.50, NULL, 'cash', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CHQ123456', 'Banque Nationale', '123456789', 'Banque Nationale', NULL, NULL, NULL, NULL, ''),
-(13, 3, 'mis_a_jour', 0.00, 0.00, 8000.00, 15000.00, 5000.00, 'cash', NULL, NULL, NULL, 'wallet', 'cash', NULL, 'wafi', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1500.00, 1500.00, 'cash', 'cash', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(14, 2, '', 0.00, 5000.00, 0.00, 0.00, 0.00, 'wallet', NULL, NULL, NULL, NULL, NULL, 'cheque', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, NULL, 'wallet', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '58659', 'salam', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(20, 24, 'mis_a_jour', 0.00, 0.00, 0.00, 0.00, 1000.52, 'wallet', NULL, 'sab-pay', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, NULL, 'wallet', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(21, 25, 'mis_a_jour', 0.00, 16000.02, 0.00, 0.00, 1000.52, 'wallet', NULL, 'sab-pay', NULL, NULL, NULL, 'cheque', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 15000.00, NULL, 'cheque', NULL, 'CHQ202312345', 'Banque Internationale', NULL, NULL, NULL, NULL, '7845666', 'wafinhos', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(22, 26, 'mis_a_jour', 0.00, 5000.00, 0.00, 0.00, 1000.52, 'wallet', NULL, 'sab-pay', NULL, NULL, NULL, 'cheque', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, NULL, 'wallet', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '58659', 'salam', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(23, 27, 'mis_a_jour', 0.00, 5000.00, 0.00, 0.00, 1000.52, 'wallet', NULL, 'sab-pay', NULL, NULL, NULL, 'cheque', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1500.00, 0.00, 'cash', 'wallet', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '58659', 'salam', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(24, 29, 'mis_a_jour', 0.00, 15000.00, 0.00, 0.00, 1000.52, 'cheque', NULL, NULL, NULL, NULL, NULL, 'cheque', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'cheque', 'cheque', NULL, 0.00, NULL, 'wallet', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '58659', 'salam', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(25, 30, 'mis_a_jour', 0.00, 15000.00, 0.00, 0.00, 1000.52, 'cheque', NULL, NULL, NULL, NULL, NULL, 'cheque', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '123456789', 'Société Générale', 1500.00, 0.00, 'cheque', 'wallet', NULL, NULL, NULL, NULL, NULL, '123456', 'Banque XYZ', '7845666', 'wafinhos', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(26, 31, 'mis_a_jour', 0.00, 5000.00, 0.00, 0.00, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, 'cheque', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '58659', 'salam', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(28, 34, 'mis_a_jour', 0.00, 75.00, 0.00, 0.00, 150.00, 'cheque', NULL, NULL, NULL, NULL, NULL, 'wallet', NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '987654321', 'Banque Centrale', NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(29, 36, 'mis_a_jour', 0.00, 75.00, 0.00, 0.00, 150.00, 'cheque', NULL, NULL, NULL, NULL, NULL, 'wallet', NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, 'ahmed123', '987654321', 'Banque Centrale', 7500.00, 300.00, 'carte_credits', 'wallet', 'wafi', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(30, 37, 'mis_a_jour', 0.00, 75.00, 0.00, 0.00, 150.00, 'cheque', NULL, NULL, NULL, NULL, NULL, 'wallet', NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '987654321', 'Banque Centrale', NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(31, 38, 'mis_a_jour', 0.00, 75.00, 0.00, 0.00, 150.00, 'cheque', NULL, NULL, NULL, NULL, NULL, 'wallet', NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '987654321', 'Banque Centrale', NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(32, 40, 'mis_a_jour', 0.00, 75.00, 0.00, 0.00, 150.00, 'cheque', NULL, NULL, NULL, NULL, NULL, 'wallet', NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '987654321', 'Banque Centrale', NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(33, 41, 'mis_a_jour', 0.00, 75.00, 0.00, 0.00, 150.00, 'cheque', NULL, NULL, NULL, NULL, NULL, 'wallet', NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '987654321', 'Banque Centrale', NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(34, 42, 'mis_a_jour', 0.00, 75.00, 0.00, 0.00, 150.00, 'cheque', NULL, NULL, NULL, NULL, NULL, 'wallet', NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '987654321', 'Banque Centrale', NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(35, 43, 'mis_a_jour', 0.00, 75.00, 0.00, 0.00, 150.00, 'cheque', NULL, NULL, NULL, NULL, NULL, 'wallet', NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '987654321', 'Banque Centrale', NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(36, 44, 'mis_a_jour', 0.00, 75.00, 0.00, 0.00, 150.00, 'cheque', NULL, NULL, NULL, NULL, NULL, 'wallet', NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '987654321', 'Banque Centrale', NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(37, 45, 'mis_a_jour', 0.00, 75.00, 0.00, 0.00, 150.00, 'cheque', NULL, NULL, NULL, NULL, NULL, 'wallet', NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '987654321', 'Banque Centrale', 15.50, 0.00, 'wallet', NULL, NULL, NULL, NULL, 'wafi', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(38, 46, 'mis_a_jour', 0.00, 75.00, 0.00, 0.00, 150.00, 'cheque', NULL, NULL, NULL, NULL, NULL, 'wallet', NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '987654321', 'Banque Centrale', NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(39, 47, 'mis_a_jour', 0.00, 75.00, 0.00, 0.00, 150.00, 'cheque', NULL, NULL, NULL, NULL, NULL, 'wallet', NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '987654321', 'Banque Centrale', NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(40, 48, 'mis_a_jour', 0.00, 75.00, 0.00, 0.00, 150.00, 'cheque', NULL, NULL, NULL, NULL, NULL, 'wallet', NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '987654321', 'Banque Centrale', 15.50, 15.50, 'wallet', 'wallet', 'wafi', NULL, NULL, 'wafi', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(41, 50, 'mis_a_jour', 0.00, 75.00, 0.00, 0.00, 150.00, 'cheque', NULL, NULL, NULL, NULL, NULL, 'wallet', NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '987654321', 'Banque Centrale', 15.50, 15.50, 'wallet', 'wallet', 'wafi', NULL, NULL, 'wafi', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(42, 52, 'mis_a_jour', 0.00, 0.00, 0.00, 0.00, 150.00, 'cheque', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ggggggggggg585588h', NULL, '987654321', 'Banque Centrale', NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(43, 53, 'mis_a_jour', 0.00, 0.00, 0.00, 0.00, 150.00, 'cheque', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '987654321', 'Banque Centrale', 15.50, 15.50, 'wallet', 'wallet', 'wafi', NULL, NULL, 'wafi', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(44, 54, 'mis_a_jour', 0.00, 75.00, 0.00, 0.00, 150.00, 'cheque', NULL, NULL, NULL, NULL, NULL, 'wallet', NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '987654321', 'Banque Centrale', NULL, 15.50, NULL, 'wallet', 'wafi', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(46, 56, 'mis_a_jour', 0.00, 15075.00, 4219.50, 7500.00, 150.00, 'cheque', NULL, NULL, NULL, 'wallet', 'wallet', 'cheque', 'wafi', 'wafi', NULL, NULL, 'REF12345', 'REF1234', 'REF12345', 'REF12345', 'REF123456', '987654321', 'Banque Centrale', 7902.00, 1016.00, 'wallet', 'wallet', 'wafi', NULL, NULL, 'wafi', NULL, NULL, NULL, 'CHQ12345', 'Nom Banque', NULL, NULL, NULL, NULL, '1234567890', 'WALLET12345', NULL, '1234567890', '1234567890'),
-(47, 57, 'mis_a_jour', 0.00, 75.00, 0.00, 0.00, 150.00, 'cheque', NULL, NULL, NULL, NULL, NULL, 'wallet', NULL, NULL, '', NULL, NULL, 'REF1234', NULL, 'moham123', 'REF123456', '987654321', 'Banque Centrale', NULL, 1016.00, 'wallet', 'wallet', 'wafi', NULL, NULL, 'wafi', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1234567890'),
-(52, 61, 'mis_a_jour', 0.00, 20.00, 0.00, 0.00, 50.00, 'wallet', NULL, '', NULL, NULL, NULL, 'cheque', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 10.00, 15.00, 'wallet', 'cheque', NULL, 'CH67890', 'Banque Collection', '', NULL, NULL, NULL, 'CH12345', 'Banque Exemple', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(53, 62, 'mis_a_jour', 0.00, 20.00, 0.00, 0.00, 50.00, 'wallet', NULL, '', NULL, NULL, NULL, 'cheque', NULL, NULL, NULL, NULL, 'RF12345', NULL, NULL, NULL, NULL, NULL, NULL, 10.00, 15.00, 'wallet', 'cheque', NULL, 'CH67890', 'Banque Collection', '', NULL, NULL, NULL, 'CH12345', 'Banque Exemple', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(54, 63, 'mis_a_jour', 0.00, 20.00, 0.00, 0.00, 50.00, 'wallet', NULL, '', NULL, NULL, NULL, 'cheque', NULL, NULL, NULL, NULL, 'RF12345', '1234', NULL, NULL, 'REF54321', NULL, NULL, 40.00, 75.50, 'cash', 'cash', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CH12345', 'Banque Exemple', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ''),
-(55, 64, 'mis_a_jour', 0.00, 20.00, 0.00, 0.00, 50.00, 'wallet', NULL, '', NULL, NULL, NULL, 'cheque', NULL, NULL, NULL, NULL, 'RF12345', 'RF77777', NULL, NULL, 'RF77420616', NULL, NULL, 10.00, 15.00, 'wallet', 'cheque', NULL, 'CH67890', 'Banque Collection', '', NULL, NULL, NULL, 'CH12345', 'Banque Exemple', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(56, 65, 'mis_a_jour', 0.00, 20.00, 0.00, 0.00, 50.00, 'wallet', NULL, '', NULL, NULL, NULL, 'wallet', NULL, NULL, 'wafi', NULL, 'RF12345', 'RF77777', NULL, NULL, 'RF77420616', NULL, NULL, 10.00, 15.00, 'wallet', 'cheque', NULL, 'CH67890', 'Banque Collection', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '12345jiji', NULL, NULL),
-(57, 66, 'mis_a_jour', 0.00, 20.00, 0.00, 0.00, 250.00, 'cash', NULL, NULL, NULL, NULL, NULL, 'wallet', NULL, NULL, 'wafi', NULL, 'RF12345', 'RF77777', NULL, NULL, 'RF77420616', NULL, NULL, 10.00, 15.00, 'wallet', 'cheque', NULL, 'CH67890', 'Banque Collection', 'wafi', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '12345jiji', '456897', NULL),
-(58, 66, 'mis_a_jour', 0.00, 0.00, 0.00, 50.35, 250.00, 'cash', NULL, NULL, NULL, NULL, 'wallet', NULL, NULL, 'wafi', NULL, NULL, NULL, NULL, NULL, 'RF12345678', NULL, NULL, NULL, NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '123456', NULL, NULL, NULL, NULL),
-(59, 66, '', 0.00, 0.00, 58.37, 0.00, 250.00, 'cash', NULL, NULL, NULL, 'wallet', NULL, NULL, 'wafi', NULL, NULL, NULL, NULL, NULL, 'RF77400616', NULL, NULL, NULL, NULL, NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '77087058', NULL, NULL, NULL),
-(61, 66, 'mis_a_jour', 0.00, 0.00, 0.00, 0.00, 200.00, 'cash', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(62, 66, 'mis_a_jour', 0.00, 0.00, 0.00, 0.00, 200.00, 'cash', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ref123', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(63, NULL, 'mis_a_jour', 0.00, 0.00, 0.00, 0.00, 200.00, 'cash', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(64, NULL, 'mis_a_jour', 0.00, 0.00, 0.00, 0.00, 200.00, 'cash', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(65, NULL, 'mis_a_jour', 0.00, 0.00, 0.00, 0.00, 100.50, 'wallet', NULL, 'wafi', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(66, NULL, 'mis_a_jour', 0.00, 0.00, 0.00, 0.00, 100.50, 'wallet', NULL, 'wafi', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(67, 66, 'mis_a_jour', 0.00, 0.00, 0.00, 0.00, 100.50, 'wallet', NULL, 'wafi', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(68, 63, 'mis_a_jour', 0.00, 0.00, 0.00, 0.00, 100.50, 'wallet', NULL, 'wafi', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1234', NULL, NULL, NULL, NULL, NULL, 40.00, 0.00, 'cash', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(69, 63, 'mis_a_jour', 0.00, 0.00, 0.00, 0.00, 100.50, 'wallet', NULL, 'wafi', '987654321', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1234', NULL, NULL, NULL, NULL, NULL, 40.00, 0.00, 'cash', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `paiements` (`id`, `id_client`, `type`, `penalites`, `montant_redevence`, `methode_payment`, `reference_general`, `date_paiement`) VALUES
+(1, 2, 'mis_a_jour', 0.00, 0.00, 'wallet', 'REF123456', '2025-02-04 10:37:52');
 
 -- --------------------------------------------------------
 
@@ -703,6 +645,12 @@ ALTER TABLE `depot`
   ADD KEY `id_client` (`id_client`);
 
 --
+-- Index pour la table `details_paiements`
+--
+ALTER TABLE `details_paiements`
+  ADD KEY `details_paiements_ibfk_1` (`paiement_id`);
+
+--
 -- Index pour la table `documents`
 --
 ALTER TABLE `documents`
@@ -728,7 +676,7 @@ ALTER TABLE `livraison_a_domicile`
 --
 ALTER TABLE `paiements`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `id_client` (`id_client`);
+  ADD KEY `paiements_ibfk_1` (`id_client`);
 
 --
 -- Index pour la table `resilies`
@@ -761,7 +709,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT pour la table `abonnement`
 --
 ALTER TABLE `abonnement`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT pour la table `boites_postales`
@@ -791,7 +739,7 @@ ALTER TABLE `depot`
 -- AUTO_INCREMENT pour la table `documents`
 --
 ALTER TABLE `documents`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT pour la table `exaunore`
@@ -809,13 +757,13 @@ ALTER TABLE `livraison_a_domicile`
 -- AUTO_INCREMENT pour la table `paiements`
 --
 ALTER TABLE `paiements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=70;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT pour la table `resilies`
 --
 ALTER TABLE `resilies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT pour la table `sous_couvete`
@@ -837,8 +785,7 @@ ALTER TABLE `users`
 -- Contraintes pour la table `abonnement`
 --
 ALTER TABLE `abonnement`
-  ADD CONSTRAINT `abonnement_ibfk_1` FOREIGN KEY (`id_boite_postale`) REFERENCES `boites_postales` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `abonnement_ibfk_2` FOREIGN KEY (`id_payments`) REFERENCES `paiements` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `abonnement_ibfk_1` FOREIGN KEY (`id_boite_postale`) REFERENCES `boites_postales` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Contraintes pour la table `clients`
@@ -859,6 +806,12 @@ ALTER TABLE `collection`
 --
 ALTER TABLE `depot`
   ADD CONSTRAINT `depot_ibfk_1` FOREIGN KEY (`id_client`) REFERENCES `clients` (`id`) ON DELETE CASCADE;
+
+--
+-- Contraintes pour la table `details_paiements`
+--
+ALTER TABLE `details_paiements`
+  ADD CONSTRAINT `details_paiements_ibfk_1` FOREIGN KEY (`paiement_id`) REFERENCES `paiements` (`id`) ON DELETE CASCADE;
 
 --
 -- Contraintes pour la table `documents`
