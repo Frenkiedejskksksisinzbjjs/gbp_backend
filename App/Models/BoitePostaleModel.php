@@ -767,7 +767,7 @@ class BoitePostaleModel
             }
     
             // Validation des champs obligatoires
-            $requiredFields = ['Adresse_collection', 'NBp', 'Methode_de_paiement', 'Montant', 'ReferenceId'];
+            $requiredFields = ['Adresse_collection', 'NBp', 'Methode_de_paiement', 'Montant', 'ReferenceId', 'id_user'];
             foreach ($requiredFields as $field) {
                 if (empty($decodedData[$field])) {
                     return json_encode(["error" => "Le champ '$field' est obligatoire."]);
@@ -778,6 +778,7 @@ class BoitePostaleModel
             $methodePaiement = $decodedData['Methode_de_paiement'];
             $montant = $decodedData['Montant'];
             $reference = $decodedData['ReferenceId'];
+            $idUser = $decodedData['id_user']; // Ajout de l'id_user
             $typeWallet = $decodedData['Wallet'] ?? null;
             $numeroWallet = $decodedData['Numero_wallet'] ?? null;
     
@@ -811,7 +812,7 @@ class BoitePostaleModel
     
             $paiementId = $paymentResult['id'];
     
-            // Vérification de l'existence de la boîte postale
+            // Vérification de l'existence de la boîte postale et récupération de son ID
             $stmt = $this->db->getPdo()->prepare("SELECT id FROM boites_postales WHERE numero = :numero");
             $stmt->bindParam(':numero', $decodedData['NBp'], PDO::PARAM_STR);
             $stmt->execute();
@@ -824,10 +825,23 @@ class BoitePostaleModel
     
             $idBoitePostale = $boitePostaleResult['id'];
     
-            // Insertion de la collection
-            $stmt = $this->db->getPdo()->prepare("INSERT INTO collection (adresse, id_boite_postale, created_at, updated_at) VALUES (:adresse, :id_boite_postale, NOW(), NOW())");
-            $stmt->bindParam(':adresse', $decodedData['Adresse_collection'], PDO::PARAM_STR);
+            // Vérification si l'ID client possède bien cette boîte postale
+            $stmt = $this->db->getPdo()->prepare("SELECT id FROM clients WHERE id = :id_client AND id_boite_postale = :id_boite_postale");
+            $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
             $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
+            $stmt->execute();
+            $clientResult = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+            if (!$clientResult) {
+                $this->db->getPdo()->rollBack();
+                return json_encode(["error" => "Ce client ne possède pas cette boîte postale."]);
+            }
+    
+            // Insertion de la collection avec l'ajout de l'id_user
+            $stmt = $this->db->getPdo()->prepare("INSERT INTO collection (adresse, id_client, id_user, created_at, updated_at) VALUES (:adresse, :id_client, :id_user, NOW(), NOW())");
+            $stmt->bindParam(':adresse', $decodedData['Adresse_collection'], PDO::PARAM_STR);
+            $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
+            $stmt->bindParam(':id_user', $idUser, PDO::PARAM_INT); // Ajout du paramètre id_user
             $stmt->execute();
     
             // Insertion des détails du paiement
@@ -849,6 +863,10 @@ class BoitePostaleModel
             return json_encode(["error" => "Erreur de base de données : " . $e->getMessage()]);
         }
     }
+    
+    
+    
+
     
 
     
