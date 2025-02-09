@@ -86,9 +86,9 @@ class BoitePostaleController
         // A implémenter si nécessaire
     }
 
-    public function getLastReferenceAjoutSousCouvette()
+    public function getLastReferenceSousCouvette()
     {
-        return $this->boitePostaleModel->getLastReferenceAjoutSousCouvette() ;
+        return $this->boitePostaleModel->getLastReferenceSousCouvette() ;
 
         // A implémenter si nécessaire
     }

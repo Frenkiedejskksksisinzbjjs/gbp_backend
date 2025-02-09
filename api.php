@@ -57,8 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         case 'getLastReferenceAchatCle':
             echo $boitePostaleModel->getLastReferenceAchatCle();
             break;
-        case 'getLastReferenceAjoutSousCouvette':
-            echo $boitePostaleModel->getLastReferenceAjoutSousCouvette();
+        case 'getLastReferenceSousCouvette':
+            echo $boitePostaleModel->getLastReferenceSousCouvette();
             break;
         case 'getLastReferenceChangerNom':
             echo $boitePostaleModel->getLastReferenceChangerNom();
