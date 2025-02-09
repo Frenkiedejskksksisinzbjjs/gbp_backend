@@ -17,11 +17,14 @@ class BoitePostaleModel
 
     // une fonction qui affecte une boîte postale à un client en mettant à jour les relations entre les deux. Elle vérifie d'abord si la boîte postale est déjà assignée à un client. Si ce n'est pas le cas, elle l'associe au client spécifié.
 
-    public function insertAndAssignBoitePostaleToClient($iduser, $data)
+    public function insertAndAssignBoitePostaleToClient($iduser, $data, $files)
     {
         try {
+            $jsData = json_encode($data);
+            // var_dump($files);
             $this->db->getPdo()->beginTransaction();
-            $Data = json_decode($data, true);
+            $Data = json_decode($jsData, true);
+
             // var_dump($Data);
             $dateActuelle = date('Y-m-d H:i:s');
             $anneeActuelle = date('Y');
@@ -98,7 +101,7 @@ class BoitePostaleModel
 
             // Insérer les sous-couverts
             if (!empty($Data['sousCouvertures'])) {
-                foreach ($Data['sousCouvertures'] as $sousCouvert) {
+                foreach (array($Data['sousCouvertures']) as $sousCouvert) {
                     $stmt = $this->db->getPdo()->prepare("
                         INSERT INTO sous_couvete (nom_societe, nom_personne, telephone, adresse, id_client, id_user)
                         VALUES (:nom_societe, :nom_personne, :telephone, :adresse, :id_client, :id_user)");
@@ -143,10 +146,10 @@ class BoitePostaleModel
             }
 
             // Gérer les documents
-            $this->handleDocuments($idClient, $Data, uploadPath: 'upload/documents');
+            $this->handleDocuments($idClient, $files, $Data['Role'], uploadPath: 'upload/documents');
 
             $this->db->getPdo()->commit();
-            echo json_encode(['status' => 'Abonnement avec succès']);
+            echo json_encode(['success' => 'Abonnement avec succès']);
         } catch (\Exception $e) {
             $this->db->getPdo()->rollBack();
             echo json_encode(['error' => 'Erreur : ' . $e->getMessage()]);
@@ -178,7 +181,7 @@ class BoitePostaleModel
         ]);
     }
 
-    private function handleDocuments($idClient, $Data, $uploadPath)
+    private function handleDocuments($idClient, $Data, $Role, $uploadPath)
     {
         if (!is_dir($uploadPath)) {
             mkdir($uploadPath, 0777, true);
@@ -186,15 +189,15 @@ class BoitePostaleModel
 
         // Liste des fichiers attendus avec leurs noms de colonnes corrects
         $filesMapping = [
-            'patent_quitance' => 'patente_quitance',
-            'Identiter' => 'identite_gerant',
-            'Abonnement' => 'abonnement_unique'
+            'patent_quitance1' => 'patente_quitance',
+            'Identiter1' => 'identite_gerant',
+            'Abonnement1' => 'abonnement_unique'
         ];
 
         // Construire l'insertion dynamique des fichiers
         $insertData = [];
         $params = [
-            ':type' => $Data['Role'],
+            ':type' => $Role,
             ':idClient' => $idClient
         ];
 
@@ -719,25 +722,25 @@ class BoitePostaleModel
     {
         try {
             $decodedData = json_decode($data, true);
-    
+
             // Validation des champs obligatoires
             if (!isset($id, $decodedData['Adresse_Livraison_Domicile'], $decodedData['Methode_de_paiement'], $decodedData['Montant'], $decodedData['NBp'], $decodedData['ReferenceId'], $decodedData['id_user'])) {
                 echo json_encode(["error" => "Tous les champs sont obligatoires."]);
                 return;
             }
-    
+
             $methodePaiement = $decodedData['Methode_de_paiement'];
             $validPaymentMethods = ['wallet', 'cash', 'cheque', 'carte_credits'];
             if (!in_array($methodePaiement, $validPaymentMethods)) {
                 echo json_encode(["error" => "Méthode de paiement invalide."]);
                 return;
             }
-    
+
             // Validation des données spécifiques à la méthode de paiement
             if ($methodePaiement === 'wallet') {
                 $typeWallet = $decodedData['Wallet'] ?? null;
                 $validWalletTypes = ['wafi', 'cac-pay', 'd-money', 'sab-pay'];
-    
+
                 if (!in_array($typeWallet, $validWalletTypes) || empty($decodedData['Numero_wallet'])) {
                     echo json_encode(["error" => "Données de wallet invalides."]);
                     return;
@@ -748,39 +751,39 @@ class BoitePostaleModel
                     return;
                 }
             }
-    
+
             // Vérifier si le client possède un paiement de type 'mis_a_jour'
             $paymentCheckQuery = "SELECT id, montant_redevence FROM paiements WHERE id_client = :id_client AND type = 'mis_a_jour'";
             $stmt = $this->db->getPdo()->prepare($paymentCheckQuery);
             $stmt->bindParam(':id_client', $id, PDO::PARAM_INT);
             $stmt->execute();
-    
+
             $payment = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
             if (!$payment) {
                 echo json_encode(["error" => "Le client n'a pas de paiement avec le type 'mis_a_jour'. Modification non autorisée."]);
                 return;
             }
-    
+
             // Récupérer l'id de la boîte postale
             $NBp = $decodedData['NBp'];
             $stmtidBp = $this->db->getPdo()->prepare("SELECT id FROM boites_postales WHERE numero = :Nbp");
             $stmtidBp->bindParam(':Nbp', $NBp, PDO::PARAM_INT);
             $stmtidBp->execute();
-    
+
             if ($stmtidBp->rowCount() > 0) {
                 $this->db->getPdo()->beginTransaction(); // Démarrage de la transaction
-    
+
                 try {
                     $idBpostal = $stmtidBp->fetch(PDO::FETCH_ASSOC)['id'];
-    
+
                     // Insertion dans 'livraison_a_domicile', avec id_user ajouté à l'insertion
                     $stmt = $this->db->getPdo()->prepare("INSERT INTO livraison_a_domicile (adresse, id_client, id_user) VALUES (:adresse, :id_client, :id_user)");
                     $stmt->bindParam(':adresse', $decodedData['Adresse_Livraison_Domicile'], PDO::PARAM_STR);
-                    $stmt->bindParam(':id_client', $id, PDO::PARAM_INT);  
+                    $stmt->bindParam(':id_client', $id, PDO::PARAM_INT);
                     $stmt->bindParam(':id_user', $decodedData['id_user'], PDO::PARAM_INT);  // Ajout de l'id_user dans l'insertion
                     $stmt->execute();
-    
+
                     // Préparation des données pour les détails du paiement dans 'details_paiements'
                     $montantLivraison = $decodedData['Montant'];
                     $numeroWallet = $decodedData['Numero_wallet'] ?? null;
@@ -788,7 +791,7 @@ class BoitePostaleModel
                     $nomBanque = $decodedData['Nom_Banque'] ?? null;
                     $typeWallet = $decodedData['Wallet'] ?? null;
                     $ReferenceId = $decodedData['ReferenceId'];
-    
+
                     // Insertion dans 'details_paiements'
                     $stmt = $this->db->getPdo()->prepare("INSERT INTO details_paiements (paiement_id, categorie, montant, methode_payment, type_wallet, numero_wallet, numero_cheque, nom_banque, reference) 
                     VALUES (:paiement_id, 'livraison_domicile', :montant, :methode_payment, :type_wallet, :numero_wallet, :numero_cheque, :nom_banque, :reference)");
@@ -801,16 +804,16 @@ class BoitePostaleModel
                     $stmt->bindParam(':nom_banque', $nomBanque, PDO::PARAM_STR);
                     $stmt->bindParam(':reference', $ReferenceId, PDO::PARAM_STR);
                     $stmt->execute();
-    
+
                     // Mise à jour du montant du paiement
                     $nouveauMontant = $payment['montant_redevence'] + $montantLivraison;
                     $stmt = $this->db->getPdo()->prepare("UPDATE paiements SET montant_redevence = :montant WHERE id = :paiement_id");
                     $stmt->bindParam(':montant', $nouveauMontant, PDO::PARAM_STR);
                     $stmt->bindParam(':paiement_id', $payment['id'], PDO::PARAM_INT);
                     $stmt->execute();
-    
+
                     $this->db->getPdo()->commit(); // Validation de la transaction
-    
+
                     echo json_encode(["success" => "Livraison et paiement mis à jour avec succès."]);
                 } catch (PDOException $e) {
                     $this->db->getPdo()->rollBack(); // Annulation de la transaction en cas d'erreur
@@ -823,7 +826,7 @@ class BoitePostaleModel
             echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
         }
     }
-    
+
 
 
 
@@ -887,7 +890,7 @@ class BoitePostaleModel
 
             $paiementId = $paymentResult['id'];
 
-    
+
             // Vérification de l'existence de la boîte postale et récupération de son ID
             $stmt = $this->db->getPdo()->prepare("SELECT id FROM boites_postales WHERE numero = :numero");
             $stmt->bindParam(':numero', $decodedData['NBp'], PDO::PARAM_STR);
@@ -901,26 +904,26 @@ class BoitePostaleModel
 
             $idBoitePostale = $boitePostaleResult['id'];
 
-    
+
             // Vérification si l'ID client possède bien cette boîte postale
             $stmt = $this->db->getPdo()->prepare("SELECT id FROM clients WHERE id = :id_client AND id_boite_postale = :id_boite_postale");
             $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
             $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
             $stmt->execute();
             $clientResult = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
             if (!$clientResult) {
                 $this->db->getPdo()->rollBack();
                 return json_encode(["error" => "Ce client ne possède pas cette boîte postale."]);
             }
-    
+
             // Insertion de la collection avec l'ajout de l'id_user
             $stmt = $this->db->getPdo()->prepare("INSERT INTO collection (adresse, id_client, id_user, created_at, updated_at) VALUES (:adresse, :id_client, :id_user, NOW(), NOW())");
             $stmt->bindParam(':adresse', $decodedData['Adresse_collection'], PDO::PARAM_STR);
             $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
             $stmt->bindParam(':id_user', $idUser, PDO::PARAM_INT); // Ajout du paramètre id_user
             $stmt->execute();
-    
+
             // Insertion des détails du paiement
             $stmt = $this->db->getPdo()->prepare("INSERT INTO details_paiements (paiement_id, categorie, montant, methode_payment, type_wallet, numero_wallet, reference) VALUES (:paiement_id, 'collection', :montant, :methode_payment, :type_wallet, :numero_wallet, :reference)");
             $stmt->bindParam(':paiement_id', $paiementId, PDO::PARAM_INT);

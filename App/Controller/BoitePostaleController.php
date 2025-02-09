@@ -13,9 +13,9 @@ class BoitePostaleController
         $this->boitePostaleModel = new BoitePostaleModel();
     }
        
-    public function insertAndAssignBoitePostaleToClient($id,$data)
+    public function insertAndAssignBoitePostaleToClient($id,$data,$files)
     {
-        return $this->boitePostaleModel->insertAndAssignBoitePostaleToClient($id,$data) ;
+        return $this->boitePostaleModel->insertAndAssignBoitePostaleToClient($id,$data,$files) ;
 
         // A implémenter si nécessaire
     }
