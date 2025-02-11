@@ -219,7 +219,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
         case 'insererCollectionEtMettreAJourPaiement':
             // Vérifiez si l'ID client est passé correctement
-            $idClient = $_GET['id_client'] ?? $_POST['id_client'] ?? null;
+            $idClient = $_GET['id'] ?? $_POST['id'] ?? null;
 
             // Vérification que l'ID client est présent
             if (!$idClient) {

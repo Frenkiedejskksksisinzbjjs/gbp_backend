@@ -257,99 +257,243 @@ class BoitePostaleModel
             // Décoder les données JSON
             $decodedData = json_decode($data, true);
 
-            // Vérifier les champs obligatoires
-            if (!isset($id, $decodedData['Methode_de_paiement'], $decodedData['Montant'])) {
-                echo json_encode(["error" => "Les champs 'id_client', 'methode_payment_cle' et 'montant_achats_cle' sont obligatoires."]);
+            if (!$decodedData) {
+                echo json_encode(["error" => "Format JSON invalide."]);
                 return;
             }
 
-            $idClient = $id;
+            // Vérifier les champs obligatoires
+            if (!isset($id, $decodedData['Methode_de_paiement'], $decodedData['Montant'], $decodedData['id_user'])) {
+                echo json_encode(["error" => "Les champs 'id_client', 'methode_payment_cle', 'montant_achats_cle' et 'id_user' sont obligatoires."]);
+                return;
+            }
+
             $methodePaymentCle = $decodedData['Methode_de_paiement'];
-            $montantAchatsCle = $decodedData['Montant'];
-            $typeWalletCle = isset($decodedData['Wallet']) ? $decodedData['Wallet'] : null;
-
-            $referenceAchatCle = isset($decodedData['ReferenceId']) ? $decodedData['ReferenceId'] : null;
-            $numeroWalletAchatCle = isset($decodedData['Numero_wallet']) ? $decodedData['Numero_wallet'] : null;
-
-
-
-            // Champs supplémentaires pour les paiements par chèque
-            $numeroChequeAchatCle = isset($decodedData['Numero_cheque']) ? $decodedData['Numero_cheque'] : null;
-            $nomBanqueAchatCle = isset($decodedData['Nom_Banque']) ? $decodedData['Nom_Banque'] : null;
+            $typeWalletCle = $decodedData['Wallet'] ?? null;
+            $referenceAchatCle = $decodedData['ReferenceId'] ?? null;
+            $numeroWalletAchatCle = $decodedData['Numero_wallet'] ?? null;
+            $numeroChequeAchatCle = $decodedData['Numero_cheque'] ?? null;
+            $nomBanqueAchatCle = $decodedData['Nom_Banque'] ?? null;
+            $idUser = $decodedData['id_user'];
 
             // Vérifier la validité de methode_payment_cle
-            if (!in_array($methodePaymentCle, ['wallet', 'cash', 'cheque', 'carte_credits'])) {
+            $validPaymentMethods = ['wallet', 'cash', 'cheque'];
+            if (!in_array($methodePaymentCle, $validPaymentMethods)) {
                 echo json_encode(["error" => "La méthode de paiement est invalide."]);
                 return;
             }
 
-            // Si méthode de paiement est 'wallet', vérifier type_wallet_cle
+            // Validation spécifique aux wallets
             if ($methodePaymentCle === 'wallet') {
-                if (!isset($typeWalletCle) || !in_array($typeWalletCle, ['waafi', 'cac_pay', 'd_money', 'sabpay', 'dahabplaces'])) {
-                    echo json_encode(["error" => "Si la méthode de paiement est 'wallet', 'type_wallet_cle' est obligatoire et doit être valide."]);
-                    return;
-                }
-
-                // Vérification de 'numero_wallet_achat_cle'
-                if (!isset($numeroWalletAchatCle) || empty($numeroWalletAchatCle)) {
-                    echo json_encode(["error" => "Si la méthode de paiement est 'wallet', 'numero_wallet_achat_cle' est obligatoire."]);
+                $validWalletTypes = ['waafi', 'cac_pay', 'd_money', 'sabpay', 'dahabplaces'];
+                if (!in_array($typeWalletCle, $validWalletTypes) || empty($numeroWalletAchatCle)) {
+                    echo json_encode(["error" => "Type de wallet ou numéro wallet invalide."]);
                     return;
                 }
             }
 
+            // Validation spécifique aux chèques
+            if ($methodePaymentCle === 'cheque' && (empty($numeroChequeAchatCle) || empty($nomBanqueAchatCle))) {
+                echo json_encode(["error" => "Numéro de chèque et nom de la banque sont obligatoires pour un paiement par chèque."]);
+                return;
+            }
 
-            // Si méthode de paiement est 'cheque', vérifier les champs liés
-            if ($methodePaymentCle === 'cheque') {
-                if (empty($numeroChequeAchatCle) || empty($nomBanqueAchatCle)) {
-                    echo json_encode(["error" => "Pour le paiement par chèque, 'numero_cheque_achat_cle' et 'nom_banque_achat_cle' sont obligatoires."]);
-                    return;
+            // Démarrer une transaction
+            $this->db->getPdo()->beginTransaction();
+
+            // Vérifier si un paiement existe pour ce client
+            $sql = "SELECT id FROM paiements WHERE id_client = :id_client";
+            $stmt2 = $this->db->getPdo()->prepare($sql);
+            $stmt2->execute([':id_client' => $id]);
+            $paiement = $stmt2->fetch(PDO::FETCH_ASSOC);
+
+            if ($paiement) {
+                $idpaiement = $paiement['id'];
+                $sql2 = "INSERT INTO details_paiements 
+                         (paiement_id, categorie, montant, methode_payment, type_wallet, numero_wallet, numero_cheque, nom_banque, reference, created_by_user)
+                         VALUES (:idpaiement, 'achats_cle', :montant, :methode, :type, :numWallet, :numCheque, :nomBank, :reference, :idUser)";
+                $stmt3 = $this->db->getPdo()->prepare($sql2);
+                $stmt3->execute([
+                    ':idpaiement' => $idpaiement,
+                    ':montant' => $decodedData['Montant'],
+                    ':methode' => $methodePaymentCle,
+                    ':type' => $typeWalletCle,
+                    ':numWallet' => $numeroWalletAchatCle,
+                    ':numCheque' => $numeroChequeAchatCle,
+                    ':nomBank' => $nomBanqueAchatCle,
+                    ':reference' => $referenceAchatCle,
+                    ':idUser' => $idUser
+                ]);
+            } else {
+                echo json_encode(["error" => "Aucun paiement trouvé pour ce client."]);
+                $this->db->getPdo()->rollBack();
+                return;
+            }
+
+            // Valider la transaction
+            $this->db->getPdo()->commit();
+            echo json_encode(["success" => "Achats clé ajoutés et paiement mis à jour avec succès."]);
+        } catch (PDOException $e) {
+            $this->db->getPdo()->rollBack();
+            echo json_encode(["error" => "Erreur de base de données : " . $e->getMessage()]);
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    public function insererLivraisonEtMettreAJourPaiement($id, $data)
+    {
+        try {
+            $this->db->getPdo()->beginTransaction();
+            $decodedData = json_decode($data, true);
+
+            // Validation des champs obligatoires
+            $requiredFields = ['Adresse_Livraison_Domicile', 'Methode_de_paiement', 'Montant', 'NBp', 'ReferenceId', 'id_user'];
+            foreach ($requiredFields as $field) {
+                if (!isset($decodedData[$field])) {
+                    throw new \Exception("Le champ '$field' est manquant.");
                 }
             }
 
-            // Vérifier si une entrée existe déjà pour ce client
-            $query = "SELECT montant_achats_cle FROM paiements WHERE id_client = :id_client";
-            $stmt = $this->db->getPdo()->prepare($query);
-            $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
-            $stmt->execute();
+            $methodePaiement = $decodedData['Methode_de_paiement'];
+            $validPaymentMethods = ['wallet', 'cash', 'cheque', 'carte_credits'];
+            if (!in_array($methodePaiement, $validPaymentMethods)) {
+                throw new \Exception("Méthode de paiement invalide.");
+            }
 
+            // Validation des données spécifiques à la méthode de paiement
+            $typeWallet = $decodedData['Wallet'] ?? null;
+            $numeroWallet = $decodedData['Numero_wallet'] ?? null;
+            $numeroCheque = $decodedData['Numero_cheque'] ?? null;
+            $nomBanque = $decodedData['Nom_Banque'] ?? null;
+
+            if ($methodePaiement === 'wallet' && (!in_array($typeWallet, ['waafi', 'cac_pay', 'd_money', 'sabpay']) || empty($numeroWallet))) {
+                throw new \Exception("Données de wallet invalides.");
+            }
+            if ($methodePaiement === 'cheque' && (!$numeroCheque || !$nomBanque)) {
+                throw new \Exception("Données de chèque invalides.");
+            }
+
+            // Vérifier si le client possède un paiement de type 'mis_a_jour'
+            $stmt = $this->db->getPdo()->prepare("SELECT id FROM paiements WHERE id_client = :id_client AND type = 'mis_a_jour'");
+            $stmt->execute([':id_client' => $id]);
+            $payment = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$payment) {
+                throw new \Exception("Le client n'a pas de paiement de type 'mis_a_jour'. Modification non autorisée.");
+            }
+
+            // Insertion de la livraison
+            $stmt = $this->db->getPdo()->prepare("INSERT INTO livraison_a_domicile (adresse, id_client) VALUES (:adresse, :id_client)");
+            $stmt->execute([
+                ':adresse' => $decodedData['Adresse_Livraison_Domicile'],
+                ':id_client' => $id
+            ]);
+
+            // Vérification et mise à jour du paiement
+            $stmt = $this->db->getPdo()->prepare("SELECT id FROM paiements WHERE id_client = :id_client");
+            $stmt->execute([':id_client' => $id]);
             $paiement = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($paiement) {
-                // Mise à jour de montant_achats_cle en ajoutant le montant reçu
-                $nouveauMontant = $paiement['montant_achats_cle'] + $montantAchatsCle;
-
-                $updateQuery = "UPDATE paiements 
-                            SET montant_achats_cle = :nouveau_montant, 
-                                methode_payment_cle = :methode_payment_cle, 
-                                type_wallet_cle = :type_wallet_cle, 
-                                numero_cheque_achat_cle = :numero_cheque_achat_cle, 
-                                nom_banque_achat_cle = :nom_banque_achat_cle,  
-                                reference_achat_cle = :reference_achat_cle,
-                                numero_wallet_achat_cle = :numero_wallet_achat_cle
-                            WHERE id_client = :id_client";
-                $stmt = $this->db->getPdo()->prepare($updateQuery);
-                $stmt->bindParam(':nouveau_montant', $nouveauMontant, PDO::PARAM_STR);
-                $stmt->bindParam(':methode_payment_cle', $methodePaymentCle, PDO::PARAM_STR);
-                $stmt->bindParam(':type_wallet_cle', $typeWalletCle, PDO::PARAM_STR);
-                $stmt->bindParam(':numero_cheque_achat_cle', $numeroChequeAchatCle, PDO::PARAM_STR);
-                $stmt->bindParam(':nom_banque_achat_cle', $nomBanqueAchatCle, PDO::PARAM_STR);
-                $stmt->bindParam(':reference_achat_cle', $decodedData['reference_achat_cle'], PDO::PARAM_STR);
-                $stmt->bindParam(':numero_wallet_achat_cle', $numeroWalletAchatCle, PDO::PARAM_STR);  // Ajout du paramètre pour numero_wallet_achat_cle
-                $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
-                $stmt->execute();
-            } else {
-                // Insérer un nouveau paiement si aucun enregistrement n'existe
-                $insertQuery = "INSERT INTO paiements (id_client, montant_achats_cle, type, methode_payment_cle, type_wallet_cle, numero_cheque_achat_cle, nom_banque_achat_cle)
-                            VALUES (:id_client, :montant_achats_cle, 'mis_a_jour', :methode_payment_cle, :type_wallet_cle, :numero_cheque_achat_cle, :nom_banque_achat_cle)";
-                $stmt = $this->db->getPdo()->prepare($insertQuery);
-                $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
-                $stmt->bindParam(':montant_achats_cle', $montantAchatsCle, PDO::PARAM_STR);
-                $stmt->bindParam(':methode_payment_cle', $methodePaymentCle, PDO::PARAM_STR);
-                $stmt->bindParam(':type_wallet_cle', $typeWalletCle, PDO::PARAM_STR);
-                $stmt->bindParam(':numero_cheque_achat_cle', $numeroChequeAchatCle, PDO::PARAM_STR);
-                $stmt->bindParam(':nom_banque_achat_cle', $nomBanqueAchatCle, PDO::PARAM_STR);
-                $stmt->execute();
+                $stmt = $this->db->getPdo()->prepare(
+                    "INSERT INTO details_paiements (paiement_id, categorie, montant, methode_payment, type_wallet, numero_wallet, numero_cheque, nom_banque, reference, created_by_user)
+           VALUES (:paiement_id, 'livraison_domicile', :montant, :methode, :type_wallet, :numero_wallet, :numero_cheque, :nom_banque, :reference, :id_user)"
+                );
+                $stmt->execute([
+                    ':paiement_id' => $paiement['id'],
+                    ':montant' => $decodedData['Montant'],
+                    ':methode' => $methodePaiement,
+                    ':type_wallet' => $typeWallet,
+                    ':numero_wallet' => $numeroWallet,
+                    ':numero_cheque' => $numeroCheque,
+                    ':nom_banque' => $nomBanque,
+                    ':reference' => $decodedData['ReferenceId'],
+                    ':id_user' => $decodedData['id_user']
+                ]);
             }
+
+            $this->db->getPdo()->commit();
+            echo json_encode(["success" => "Livraison insérée et paiement mis à jour avec succès."]);
+        } catch (\Exception $e) {
+            $this->db->getPdo()->rollBack();
+            echo json_encode(["error" => $e->getMessage()]);
+        }
+    }
+
+
+
+
+
+
+
+
+
+    public function insererCollectionEtMettreAJourPaiement($idClient, $data)
+    {
+        try {
+            // Décodage des données JSON
+            $decodedData = json_decode($data, true);
+            if (!$decodedData) {
+                throw new \Exception("Format JSON invalide.");
+            }
+
+            // Validation des champs obligatoires
+            $requiredFields = ['Adresse_collection', 'NBp', 'Methode_de_paiement', 'Montant', 'ReferenceId', 'id_user'];
+            foreach ($requiredFields as $field) {
+                if (empty($decodedData[$field])) {
+                    throw new \Exception("Le champ '$field' est obligatoire.");
+                }
+            }
+
+            // Initialisation des valeurs
+            $methodePaiement = $decodedData['Methode_de_paiement'];
+            $montant = $decodedData['Montant'];
+            $reference = $decodedData['ReferenceId'];
+            $idUser = $decodedData['id_user'];
+            $typeWallet = $decodedData['Wallet'] ?? null;
+            $numeroWallet = $decodedData['Numero_wallet'] ?? null;
+
+            // Validation de la méthode de paiement
+            $validPaymentMethods = ['wallet', 'cash', 'cheque', 'carte_credits'];
+            if (!in_array($methodePaiement, $validPaymentMethods)) {
+                throw new \Exception("Méthode de paiement invalide.");
+            }
+
+            // Vérification spécifique pour les wallets
+            if ($methodePaiement === 'wallet') {
+                $validWalletTypes = ['wafi', 'cac-pay', 'd-money', 'sab-pay'];
+                if (!in_array($typeWallet, $validWalletTypes) || empty($numeroWallet)) {
+                    throw new \Exception("Type de wallet invalide ou numéro wallet manquant.");
+                }
+            }
+
+            // Démarrage de la transaction
+            $this->db->getPdo()->beginTransaction();
+
+            // Vérification de l'existence du paiement actif
+            $stmt = $this->db->getPdo()->prepare("SELECT id FROM paiements WHERE id_client = :id_client AND type = 'mis_a_jour'");
+            $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
+            $stmt->execute();
+            $paymentResult = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$paymentResult) {
+                throw new \Exception("Aucun paiement mis à jour trouvé pour ce client.");
+            }
+
+            $paiementId = $paymentResult['id'];
+
 
             echo json_encode(["success" => "Paiement ajouté ou mis à jour avec succès."]);
         } catch (PDOException $e) {
@@ -358,7 +502,7 @@ class BoitePostaleModel
     }
 
 
-    public function enregistrerPaiement($idClient, $data)
+    public function enregistrerPaiement($id, $data)
     {
         try {
             // Vérifier si $idClient est présent et valide
@@ -411,18 +555,32 @@ class BoitePostaleModel
                 }
             }
 
-            // Insérer directement un paiement
-            $insertQuery = "INSERT INTO paiements (id_client, montant_redevence, methode_payment, type_wallet, numero_wallet_redevence, numero_cheque, nom_banque)
-                        VALUES (:id_client, :montant_redevence, :methode_payment, :type_wallet, :numero_wallet_redevence, :numero_cheque, :nom_banque)";
-            $stmt = $this->db->getPdo()->prepare($insertQuery);
-            $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
-            $stmt->bindParam(':montant_redevence', $montantRedevence, PDO::PARAM_STR);
-            $stmt->bindParam(':methode_payment', $methodePayment, PDO::PARAM_STR);
-            $stmt->bindParam(':type_wallet', $typeWallet, PDO::PARAM_STR);
-            $stmt->bindParam(':numero_wallet_redevence', $numeroWalletRedevence, PDO::PARAM_STR);
-            $stmt->bindParam(':numero_cheque', $numeroCheque, PDO::PARAM_STR);
-            $stmt->bindParam(':nom_banque', $nomBanque, PDO::PARAM_STR);
-            $stmt->execute();
+            
+
+            // Vérification et mise à jour du paiement
+            $stmt = $this->db->getPdo()->prepare("SELECT id FROM paiements WHERE id_client = :id_client");
+            $stmt->execute([':id_client' => $id]);
+            $paiement = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($paiement) {
+                $stmt = $this->db->getPdo()->prepare(
+                    "INSERT INTO details_paiements (paiement_id, categorie, montant, methode_payment, type_wallet, numero_wallet, numero_cheque, nom_banque, reference, created_by_user)
+           VALUES (:paiement_id, 'redevence', :montant, :methode, :type_wallet, :numero_wallet, :numero_cheque, :nom_banque, :reference, :id_user)"
+                );
+                $stmt->execute([
+                    ':paiement_id' => $paiement['id'],
+                    ':montant' => $decodedData['Montant'],
+                    ':methode' => $methodePayment,
+                    ':type_wallet' => $typeWallet,
+                    ':numero_wallet' => $numeroWalletRedevence,
+                    ':numero_cheque' => $numeroCheque,
+                    ':nom_banque' => $nomBanque,
+                    ':reference' => $decodedData['ReferenceId'],
+                    ':id_user' => $decodedData['id_user']
+                ]);
+            }
+
+
 
             echo json_encode(["success" => "Paiement ajouté avec succès."]);
         } catch (PDOException $e) {
@@ -454,120 +612,95 @@ class BoitePostaleModel
     public function updateClientNameAndAddPayment($id, $data)
     {
         try {
+            // Démarrer une transaction
+            $this->db->getPdo()->beginTransaction();
+
             // Décodage des données JSON
             $decodedData = json_decode($data, true);
 
-            // Vérification que tous les champs nécessaires sont présents dans le JSON
-            if (!isset($id, $decodedData['Nom'], $decodedData['Methode_de_paiement'], $decodedData['Montant'])) {
-                echo json_encode(["error" => "Tous les champs sont obligatoires."]);
-                return;
+            // Vérification que tous les champs nécessaires sont présents
+            if (!isset($id, $decodedData['Nom'], $decodedData['Methode_de_paiement'], $decodedData['Montant'], $decodedData['id_user'])) {
+                throw new \Exception("Tous les champs sont obligatoires.");
             }
 
             $idClient = $id;
             $nouveauNom = $decodedData['Nom'];
             $methodePaymentNom = $decodedData['Methode_de_paiement'];
             $montantChangementNom = $decodedData['Montant'];
-            $typeWalletNom = isset($decodedData['Wallet']) ? $decodedData['Wallet'] : null;
-            $numeroCheque = isset($decodedData['Numero_cheque']) ? $decodedData['Numero_cheque'] : null;
-            $nomBanque = isset($decodedData['Nom_Banque']) ? $decodedData['Nom_Banque'] : null;
+            $typeWalletNom = $decodedData['Wallet'] ?? null;
+            $numeroCheque = $decodedData['Numero_cheque'] ?? null;
+            $nomBanque = $decodedData['Nom_Banque'] ?? null;
+            $Iduser = $decodedData['id_user'];
+            $referenceChangerNom = $decodedData['ReferenceId'] ?? null;
+            $numeroWalletChangementNom = $decodedData['Numero_wallet'] ?? null;
 
-            $referenceChangerNom = isset($decodedData['ReferenceId']) ? $decodedData['ReferenceId'] : null;
-            $numeroWalletChangementNom = isset($decodedData['Numero_wallet']) ? $decodedData['Numero_wallet'] : null;
-
-
-            // Vérification si la référence est fournie (facultative ou obligatoire selon le cas)
+            // Vérifications des valeurs fournies
             if (empty($referenceChangerNom)) {
-                echo json_encode(["error" => "Le champ 'reference_changer_nom' est obligatoire."]);
-                return;
+                throw new \Exception("Le champ 'reference_changer_nom' est obligatoire.");
             }
 
-
-            // Vérification de la validité de methode_payment_nom
             if (!in_array($methodePaymentNom, ['wallet', 'cash', 'cheque', 'carte_credits'])) {
-                echo json_encode(["error" => "La méthode de paiement est invalide."]);
-                return;
+                throw new \Exception("La méthode de paiement est invalide.");
             }
 
-            // Si la méthode de paiement est 'wallet', vérifier type_wallet_nom
             if ($methodePaymentNom === 'wallet') {
-                if (!isset($typeWalletNom) || !in_array($typeWalletNom, ['waafi', 'cac-pay', 'd-money', 'sab-pay'])) {
-                    echo json_encode(["error" => "Si la méthode de paiement est 'wallet', 'type_wallet_nom' est obligatoire et doit être valide."]);
-                    return;
+                if (!isset($typeWalletNom) || !in_array($typeWalletNom, ['waafi', 'cac_pay', 'd_money', 'sabpay'])) {
+                    throw new \Exception("Si la méthode de paiement est 'wallet', 'type_wallet_nom' est obligatoire et doit être valide.");
                 }
-
-                // Ajouter la vérification pour 'numero_wallet_changement_nom'
-                if (!isset($numeroWalletChangementNom) || empty($numeroWalletChangementNom)) {
-                    echo json_encode(["error" => "Si la méthode de paiement est 'wallet', 'numero_wallet_changement_nom' est obligatoire."]);
-                    return;
+                if (empty($numeroWalletChangementNom)) {
+                    throw new \Exception("Si la méthode de paiement est 'wallet', 'numero_wallet_changement_nom' est obligatoire.");
                 }
             }
 
-
-            // Si la méthode de paiement est 'cheque', vérifier numero_cheque et nom_banque
-            if ($methodePaymentNom === 'cheque') {
-                if (empty($numeroCheque) || empty($nomBanque)) {
-                    echo json_encode(["error" => "Si la méthode de paiement est 'cheque', 'numero_cheque_changment_nom' et 'nom_banque_changment_nom' sont obligatoires."]);
-                    return;
-                }
+            if ($methodePaymentNom === 'cheque' && (empty($numeroCheque) || empty($nomBanque))) {
+                throw new \Exception("Si la méthode de paiement est 'cheque', 'numero_cheque' et 'nom_banque' sont obligatoires.");
             }
 
             // Vérifier si le client possède un paiement avec le type "mis_a_jour"
-            $paymentCheckQuery = "SELECT id, montant_changement_nom 
-                              FROM paiements 
-                              WHERE id_client = :id_client AND type = 'mis_a_jour'";
+            $paymentCheckQuery = "SELECT id FROM paiements WHERE id_client = :id_client AND type = 'mis_a_jour'";
             $stmt = $this->db->getPdo()->prepare($paymentCheckQuery);
             $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
             $stmt->execute();
-
             $payment = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$payment) {
-                echo json_encode(["error" => "Le client n'a pas de paiement avec le type 'mis_a_jour'. Modification non autorisée."]);
-                return;
+                throw new \Exception("Le client n'a pas de paiement avec le type 'mis_a_jour'. Modification non autorisée.");
             }
 
             // Mise à jour du nom du client
-            $updateQuery = "UPDATE clients 
-                        SET nom = :nouveau_nom 
-                        WHERE id = :id_client";
+            $updateQuery = "UPDATE clients SET nom = :nouveau_nom WHERE id = :id_client";
             $stmt = $this->db->getPdo()->prepare($updateQuery);
             $stmt->bindParam(':nouveau_nom', $nouveauNom, PDO::PARAM_STR);
             $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
             $stmt->execute();
 
-            // Mettre à jour le montant_changement_nom et autres champs dans la table paiements
-            $nouveauMontant = $payment['montant_changement_nom'] + $montantChangementNom;
-            $updatePaymentQuery = "UPDATE paiements 
-        SET montant_changement_nom = :nouveau_montant, 
-            methode_payment_nom = :methode_payment_nom, 
-            type_wallet_nom = :type_wallet_nom, 
-            numero_cheque_changment_nom = :numero_cheque, 
-            nom_banque_changment_nom = :nom_banque, 
-            reference_changer_nom = :reference_changer_nom,
-            numero_wallet_changement_nom = :numero_wallet_changement_nom  -- Ajout du champ
-        WHERE id = :id_paiement";
+            // Insérer les détails de paiement
+            $insertPaymentQuery = "INSERT INTO details_paiements (paiement_id, categorie, montant, methode_payment, type_wallet, numero_wallet, numero_cheque, nom_banque, reference, created_by_user)
+                VALUES (:paiement_id, 'livraison_domicile', :montant, :methode, :type_wallet, :numero_wallet, :numero_cheque, :nom_banque, :reference, :id_user)";
+            $stmt = $this->db->getPdo()->prepare($insertPaymentQuery);
+            $stmt->execute([
+                ':paiement_id' => $payment['id'],
+                ':montant' => $montantChangementNom,
+                ':methode' => $methodePaymentNom,
+                ':type_wallet' => $typeWalletNom,
+                ':numero_wallet' => $numeroWalletChangementNom,
+                ':numero_cheque' => $numeroCheque,
+                ':nom_banque' => $nomBanque,
+                ':reference' => $referenceChangerNom,
+                ':id_user' => $Iduser
+            ]);
 
-            $stmt = $this->db->getPdo()->prepare($updatePaymentQuery);
+            // Valider la transaction
+            $this->db->getPdo()->commit();
 
-            $stmt->bindParam(':nouveau_montant', $nouveauMontant, PDO::PARAM_STR);
-            $stmt->bindParam(':methode_payment_nom', $methodePaymentNom, PDO::PARAM_STR);
-            $stmt->bindParam(':type_wallet_nom', $typeWalletNom, PDO::PARAM_STR);
-            $stmt->bindParam(':numero_cheque', $numeroCheque, PDO::PARAM_STR);
-            $stmt->bindParam(':nom_banque', $nomBanque, PDO::PARAM_STR);
-            $stmt->bindParam(':reference_changer_nom', $referenceChangerNom, PDO::PARAM_STR);
-            $stmt->bindParam(':numero_wallet_changement_nom', $numeroWalletChangementNom, PDO::PARAM_STR);  // Ajout du paramètre pour numero_wallet_changement_nom
-            $stmt->bindParam(':id_paiement', $payment['id'], PDO::PARAM_INT);
-
-            $stmt->execute();
-
-
-            // Réponse de succès
             echo json_encode(["success" => "Le nom du client a été mis à jour et les informations de paiement enregistrées avec succès."]);
         } catch (PDOException $e) {
-            // Gestion des erreurs
-            echo json_encode(["error" => "Erreur de base de données : " . $e->getMessage()]);
+            // Annuler la transaction en cas d'erreur
+            $this->db->getPdo()->rollBack();
+            echo json_encode(["error" => $e->getMessage()]);
         }
     }
+
 
 
 
@@ -590,6 +723,9 @@ class BoitePostaleModel
     public function addSousCouvette($id, $data)
     {
         try {
+            // Démarrer une transaction
+            $this->db->getPdo()->beginTransaction();
+
             // Décodage des données JSON
             $decodedData = json_decode($data, true);
             if (!$decodedData) {
@@ -598,7 +734,7 @@ class BoitePostaleModel
             }
 
             // Validation des champs requis
-            $requiredFields = ['NBp', 'Methode_de_paiement', 'totalMontant', 'sousCouvertures'];
+            $requiredFields = ['Methode_de_paiement', 'totalMontant', 'sousCouvertures'];
             foreach ($requiredFields as $field) {
                 if (!isset($decodedData[$field])) {
                     echo json_encode(["error" => "Le champ '$field' est manquant."]);
@@ -607,7 +743,6 @@ class BoitePostaleModel
             }
 
             // Assignation des variables
-            $numeroBoitePostale = $decodedData['NBp'];
             $IdUser = $decodedData['id_user'];
             $methodePayment = $decodedData['Methode_de_paiement'];
             $totalMontant = $decodedData['totalMontant'];
@@ -618,27 +753,12 @@ class BoitePostaleModel
             $nomBanque = $decodedData['Nom_Banque'] ?? null;
             $numeroWalletAjoutSousCouvette = $decodedData['Numero_wallet'] ?? null;
 
-            // Étape 1 : Récupération de l'ID de la boîte postale
-            $queryBoitePostale = "SELECT id FROM boites_postales WHERE numero = :numero_boite_postale";
-            $stmt = $this->db->getPdo()->prepare($queryBoitePostale);
-            $stmt->bindParam(':numero_boite_postale', $numeroBoitePostale, PDO::PARAM_STR);
-            $stmt->execute();
-            $boitePostale = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$boitePostale) {
-                echo json_encode(["error" => "Aucune boîte postale trouvée avec ce numéro."]);
-                return;
-            }
-            $idBoitePostale = $boitePostale['id'];
-
-            // Étape 2 : Vérification du nombre de sous-couvertures existantes
-            $queryCountSousCouvette = "SELECT COUNT(*) AS total FROM sous_couvete WHERE id_boite_postale = :id_boite_postale";
+            // Vérification du nombre de sous-couvertures existantes
+            $queryCountSousCouvette = "SELECT COUNT(*) AS total FROM sous_couvete WHERE id_client = :id_clients";
             $stmt = $this->db->getPdo()->prepare($queryCountSousCouvette);
-            $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
+            $stmt->bindParam(':id_clients', $id, PDO::PARAM_INT);
             $stmt->execute();
-            $countResult = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            $currentSousCouvetteCount = $countResult['total'];
+            $currentSousCouvetteCount = $stmt->fetchColumn();
             $remainingSpots = 5 - $currentSousCouvetteCount;
 
             if ($remainingSpots <= 0) {
@@ -646,319 +766,62 @@ class BoitePostaleModel
                 return;
             }
 
-            // Validation si l'utilisateur tente d'ajouter plus que le nombre disponible
             if (count($sousCouvertures) > $remainingSpots) {
-                echo json_encode([
-                    "error" => "Il n'y a que $remainingSpots emplacement(s) disponible(s). Veuillez réduire le nombre de sous-couvertures à ajouter."
-                ]);
+                echo json_encode(["error" => "Il n'y a que $remainingSpots emplacement(s) disponible(s). Veuillez réduire le nombre de sous-couvertures à ajouter."]);
                 return;
             }
 
-            // Étape 3 : Insertion des sous-couvertures
+            // Insertion des sous-couvertures
+            $queryInsertSousCouvette = "
+                INSERT INTO sous_couvete (nom_societe, nom_personne, telephone, adresse, id_client, id_user)
+                VALUES (:nom_societe, :nom_personne, :telephone, :adresse, :id_client, :id_user)
+            ";
+            $stmt = $this->db->getPdo()->prepare($queryInsertSousCouvette);
             foreach ($sousCouvertures as $sousCouverture) {
-                $queryInsertSousCouvette = "
-                    INSERT INTO sous_couvete (nom_societe, nom_personne, telephone, adresse, id_boite_postale, id_user)
-                    VALUES (:nom_societe, :nom_personne, :telephone, :adresse, :id_boite_postale, :id_user)
-                ";
-                $stmt = $this->db->getPdo()->prepare($queryInsertSousCouvette);
-                $stmt->bindParam(':nom_societe', $sousCouverture['societe'], PDO::PARAM_STR);
-                $stmt->bindParam(':nom_personne', $sousCouverture['personne'], PDO::PARAM_STR);
-                $stmt->bindParam(':telephone', $sousCouverture['telephone'], PDO::PARAM_STR);
-                $stmt->bindParam(':adresse', $sousCouverture['adresse'], PDO::PARAM_STR);
-                $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
-                $stmt->bindParam(':id_user', $IdUser, PDO::PARAM_INT);
-                $stmt->execute();
+                $stmt->execute([
+                    ':nom_societe' => $sousCouverture['societe'],
+                    ':nom_personne' => $sousCouverture['personne'],
+                    ':telephone' => $sousCouverture['telephone'],
+                    ':adresse' => $sousCouverture['adresse'],
+                    ':id_client' => $id,
+                    ':id_user' => $IdUser
+                ]);
             }
 
-            // Étape 4 : Mise à jour du montant dans paiements
-            $queryCurrentMontant = "SELECT montant_sous_couvete FROM paiements WHERE id_client = :id_client";
-            $stmt = $this->db->getPdo()->prepare($queryCurrentMontant);
-            $stmt->bindParam(':id_client', $id, PDO::PARAM_INT);
-            $stmt->execute();
-            $currentMontant = $stmt->fetchColumn();
+            // Vérification du paiement existant
+            $sql = "SELECT id FROM paiements WHERE id_client = :id_client";
+            $stmt2 = $this->db->getPdo()->prepare($sql);
+            $stmt2->execute([':id_client' => $id]);
+            $paiement = $stmt2->fetch(PDO::FETCH_ASSOC);
 
-            $newMontant = $currentMontant ? $currentMontant + $totalMontant : $totalMontant;
+            if ($paiement) {
+                $idpaiement = $paiement['id'];
+                $sql2 = "INSERT INTO details_paiements 
+                         (paiement_id, categorie, montant, methode_payment, type_wallet, numero_wallet, numero_cheque, nom_banque, reference, created_by_user)
+                         VALUES (:idpaiement, 'sous_couvette', :montant, :methode, :type, :numWallet, :numCheque, :nomBank, :reference, :idUser)";
+                $stmt3 = $this->db->getPdo()->prepare($sql2);
+                $stmt3->execute([
+                    ':idpaiement' => $idpaiement,
+                    ':montant' => $totalMontant,
+                    ':methode' => $methodePayment,
+                    ':type' => $typeWallet,
+                    ':numWallet' => $numeroWalletAjoutSousCouvette,
+                    ':numCheque' => $numeroCheque,
+                    ':nomBank' => $nomBanque,
+                    ':reference' => $referenceAjoutSousCouvette,
+                    ':idUser' => $IdUser
+                ]);
+            }
 
-            $updatePaiements = "
-                UPDATE paiements 
-                SET montant_sous_couvete = :montant_sous_couvete,
-                    methode_payment_couvette = :methode_payment_couvette,
-                    type_wallet_couvette = :type_wallet_couvette,
-                    numero_cheque_sous_couvette = :numero_cheque_sous_couvette,
-                    nom_banque_sous_couvette = :nom_banque_sous_couvette,
-                    reference_ajout_sous_couvette = :reference_ajout_sous_couvette,
-                    numero_wallet_ajout_sous_couvette = :numero_wallet_ajout_sous_couvette
-                WHERE id_client = :id_client
-            ";
-
-            $stmt = $this->db->getPdo()->prepare($updatePaiements);
-            $stmt->bindParam(':montant_sous_couvete', $newMontant, PDO::PARAM_STR);
-            $stmt->bindParam(':methode_payment_couvette', $methodePayment, PDO::PARAM_STR);
-            $stmt->bindParam(':type_wallet_couvette', $typeWallet, PDO::PARAM_STR);
-            $stmt->bindParam(':numero_cheque_sous_couvette', $numeroCheque, PDO::PARAM_STR);
-            $stmt->bindParam(':nom_banque_sous_couvette', $nomBanque, PDO::PARAM_STR);
-            $stmt->bindParam(':reference_ajout_sous_couvette', $referenceAjoutSousCouvette, PDO::PARAM_STR);
-            $stmt->bindParam(':numero_wallet_ajout_sous_couvette', $numeroWalletAjoutSousCouvette, PDO::PARAM_STR);
-            $stmt->bindParam(':id_client', $id, PDO::PARAM_INT);
-            $stmt->execute();
-
+            // Valider la transaction
+            $this->db->getPdo()->commit();
             echo json_encode(["success" => "Sous-couvette ajoutée et paiement mis à jour avec succès."]);
         } catch (PDOException $e) {
+            // Annuler la transaction en cas d'erreur
+            $this->db->getPdo()->rollBack();
             echo json_encode(["error" => "Erreur de base de données : " . $e->getMessage()]);
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-    public function insererLivraisonEtMettreAJourPaiement($id, $data)
-    {
-        try {
-            $decodedData = json_decode($data, true);
-
-            // Validation des champs obligatoires
-            if (!isset($id, $decodedData['Adresse_Livraison_Domicile'], $decodedData['Methode_de_paiement'], $decodedData['Montant'], $decodedData['NBp'], $decodedData['ReferenceId'], $decodedData['id_user'])) {
-                echo json_encode(["error" => "Tous les champs sont obligatoires."]);
-                return;
-            }
-
-            $methodePaiement = $decodedData['Methode_de_paiement'];
-            $validPaymentMethods = ['wallet', 'cash', 'cheque', 'carte_credits'];
-            if (!in_array($methodePaiement, $validPaymentMethods)) {
-                echo json_encode(["error" => "Méthode de paiement invalide."]);
-                return;
-            }
-
-            // Validation des données spécifiques à la méthode de paiement
-            if ($methodePaiement === 'wallet') {
-                $typeWallet = $decodedData['Wallet'] ?? null;
-                $validWalletTypes = ['wafi', 'cac-pay', 'd-money', 'sab-pay'];
-
-                if (!in_array($typeWallet, $validWalletTypes) || empty($decodedData['Numero_wallet'])) {
-                    echo json_encode(["error" => "Données de wallet invalides."]);
-                    return;
-                }
-            } elseif ($methodePaiement === 'cheque') {
-                if (!isset($decodedData['Numero_cheque'], $decodedData['Nom_Banque'])) {
-                    echo json_encode(["error" => "Données de chèque invalides."]);
-                    return;
-                }
-            }
-
-            // Vérifier si le client possède un paiement de type 'mis_a_jour'
-            $paymentCheckQuery = "SELECT id, montant_redevence FROM paiements WHERE id_client = :id_client AND type = 'mis_a_jour'";
-            $stmt = $this->db->getPdo()->prepare($paymentCheckQuery);
-            $stmt->bindParam(':id_client', $id, PDO::PARAM_INT);
-            $stmt->execute();
-
-            $payment = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$payment) {
-                echo json_encode(["error" => "Le client n'a pas de paiement avec le type 'mis_a_jour'. Modification non autorisée."]);
-                return;
-            }
-
-            // Récupérer l'id de la boîte postale
-            $NBp = $decodedData['NBp'];
-            $stmtidBp = $this->db->getPdo()->prepare("SELECT id FROM boites_postales WHERE numero = :Nbp");
-            $stmtidBp->bindParam(':Nbp', $NBp, PDO::PARAM_INT);
-            $stmtidBp->execute();
-
-            if ($stmtidBp->rowCount() > 0) {
-                $this->db->getPdo()->beginTransaction(); // Démarrage de la transaction
-
-                try {
-                    $idBpostal = $stmtidBp->fetch(PDO::FETCH_ASSOC)['id'];
-
-                    // Insertion dans 'livraison_a_domicile', avec id_user ajouté à l'insertion
-                    $stmt = $this->db->getPdo()->prepare("INSERT INTO livraison_a_domicile (adresse, id_client, id_user) VALUES (:adresse, :id_client, :id_user)");
-                    $stmt->bindParam(':adresse', $decodedData['Adresse_Livraison_Domicile'], PDO::PARAM_STR);
-                    $stmt->bindParam(':id_client', $id, PDO::PARAM_INT);
-                    $stmt->bindParam(':id_user', $decodedData['id_user'], PDO::PARAM_INT);  // Ajout de l'id_user dans l'insertion
-                    $stmt->execute();
-
-                    // Préparation des données pour les détails du paiement dans 'details_paiements'
-                    $montantLivraison = $decodedData['Montant'];
-                    $numeroWallet = $decodedData['Numero_wallet'] ?? null;
-                    $numeroCheque = $decodedData['Numero_cheque'] ?? null;
-                    $nomBanque = $decodedData['Nom_Banque'] ?? null;
-                    $typeWallet = $decodedData['Wallet'] ?? null;
-                    $ReferenceId = $decodedData['ReferenceId'];
-
-                    // Insertion dans 'details_paiements'
-                    $stmt = $this->db->getPdo()->prepare("INSERT INTO details_paiements (paiement_id, categorie, montant, methode_payment, type_wallet, numero_wallet, numero_cheque, nom_banque, reference) 
-                    VALUES (:paiement_id, 'livraison_domicile', :montant, :methode_payment, :type_wallet, :numero_wallet, :numero_cheque, :nom_banque, :reference)");
-                    $stmt->bindParam(':paiement_id', $payment['id'], PDO::PARAM_INT);
-                    $stmt->bindParam(':montant', $montantLivraison, PDO::PARAM_STR);
-                    $stmt->bindParam(':methode_payment', $methodePaiement, PDO::PARAM_STR);
-                    $stmt->bindParam(':type_wallet', $typeWallet, PDO::PARAM_STR);
-                    $stmt->bindParam(':numero_wallet', $numeroWallet, PDO::PARAM_STR);
-                    $stmt->bindParam(':numero_cheque', $numeroCheque, PDO::PARAM_STR);
-                    $stmt->bindParam(':nom_banque', $nomBanque, PDO::PARAM_STR);
-                    $stmt->bindParam(':reference', $ReferenceId, PDO::PARAM_STR);
-                    $stmt->execute();
-
-                    // Mise à jour du montant du paiement
-                    $nouveauMontant = $payment['montant_redevence'] + $montantLivraison;
-                    $stmt = $this->db->getPdo()->prepare("UPDATE paiements SET montant_redevence = :montant WHERE id = :paiement_id");
-                    $stmt->bindParam(':montant', $nouveauMontant, PDO::PARAM_STR);
-                    $stmt->bindParam(':paiement_id', $payment['id'], PDO::PARAM_INT);
-                    $stmt->execute();
-
-                    $this->db->getPdo()->commit(); // Validation de la transaction
-
-                    echo json_encode(["success" => "Livraison et paiement mis à jour avec succès."]);
-                } catch (PDOException $e) {
-                    $this->db->getPdo()->rollBack(); // Annulation de la transaction en cas d'erreur
-                    echo json_encode(["error" => "Erreur pendant la transaction : " . $e->getMessage()]);
-                }
-            } else {
-                echo json_encode(["error" => "Identifiant de la boîte postale introuvable."]);
-            }
-        } catch (PDOException $e) {
-            echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
-        }
-    }
-
-
-
-
-
-
-
-
-    public function insererCollectionEtMettreAJourPaiement($idClient, $data)
-    {
-        try {
-            // Décodage des données JSON
-            $decodedData = json_decode($data, true);
-
-            if (!$decodedData) {
-                return json_encode(["error" => "Format JSON invalide."]);
-            }
-
-            // Validation des champs obligatoires
-            $requiredFields = ['Adresse_collection', 'NBp', 'Methode_de_paiement', 'Montant', 'ReferenceId', 'id_user'];
-            foreach ($requiredFields as $field) {
-                if (empty($decodedData[$field])) {
-                    return json_encode(["error" => "Le champ '$field' est obligatoire."]);
-                }
-            }
-
-            // Initialisation des valeurs
-            $methodePaiement = $decodedData['Methode_de_paiement'];
-            $montant = $decodedData['Montant'];
-            $reference = $decodedData['ReferenceId'];
-            $idUser = $decodedData['id_user']; // Ajout de l'id_user
-            $typeWallet = $decodedData['Wallet'] ?? null;
-            $numeroWallet = $decodedData['Numero_wallet'] ?? null;
-
-            // Validation de la méthode de paiement
-            $validPaymentMethods = ['wallet', 'cash', 'cheque', 'carte_credits'];
-            if (!in_array($methodePaiement, $validPaymentMethods)) {
-                return json_encode(["error" => "Méthode de paiement invalide."]);
-            }
-
-            // Vérification spécifique pour les wallets
-            if ($methodePaiement === 'wallet') {
-                $validWalletTypes = ['wafi', 'cac-pay', 'd-money', 'sab-pay'];
-                if (!in_array($typeWallet, $validWalletTypes) || empty($numeroWallet)) {
-                    return json_encode(["error" => "Type de wallet invalide ou numéro wallet manquant."]);
-                }
-            }
-
-            // Démarrage de la transaction
-            $this->db->getPdo()->beginTransaction();
-
-            // Vérification de l'existence du paiement actif
-            $stmt = $this->db->getPdo()->prepare("SELECT id FROM paiements WHERE id_client = :id_client AND type = 'mis_a_jour'");
-            $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
-            $stmt->execute();
-            $paymentResult = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$paymentResult) {
-                $this->db->getPdo()->rollBack();
-                return json_encode(["error" => "Aucun paiement mis à jour trouvé pour ce client."]);
-            }
-
-            $paiementId = $paymentResult['id'];
-
-
-            // Vérification de l'existence de la boîte postale et récupération de son ID
-            $stmt = $this->db->getPdo()->prepare("SELECT id FROM boites_postales WHERE numero = :numero");
-            $stmt->bindParam(':numero', $decodedData['NBp'], PDO::PARAM_STR);
-            $stmt->execute();
-            $boitePostaleResult = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$boitePostaleResult) {
-                $this->db->getPdo()->rollBack();
-                return json_encode(["error" => "Aucune boîte postale trouvée avec ce numéro."]);
-            }
-
-            $idBoitePostale = $boitePostaleResult['id'];
-
-
-            // Vérification si l'ID client possède bien cette boîte postale
-            $stmt = $this->db->getPdo()->prepare("SELECT id FROM clients WHERE id = :id_client AND id_boite_postale = :id_boite_postale");
-            $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
-            $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
-            $stmt->execute();
-            $clientResult = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$clientResult) {
-                $this->db->getPdo()->rollBack();
-                return json_encode(["error" => "Ce client ne possède pas cette boîte postale."]);
-            }
-
-            // Insertion de la collection avec l'ajout de l'id_user
-            $stmt = $this->db->getPdo()->prepare("INSERT INTO collection (adresse, id_client, id_user, created_at, updated_at) VALUES (:adresse, :id_client, :id_user, NOW(), NOW())");
-            $stmt->bindParam(':adresse', $decodedData['Adresse_collection'], PDO::PARAM_STR);
-            $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
-            $stmt->bindParam(':id_user', $idUser, PDO::PARAM_INT); // Ajout du paramètre id_user
-            $stmt->execute();
-
-            // Insertion des détails du paiement
-            $stmt = $this->db->getPdo()->prepare("INSERT INTO details_paiements (paiement_id, categorie, montant, methode_payment, type_wallet, numero_wallet, reference) VALUES (:paiement_id, 'collection', :montant, :methode_payment, :type_wallet, :numero_wallet, :reference)");
-            $stmt->bindParam(':paiement_id', $paiementId, PDO::PARAM_INT);
-            $stmt->bindParam(':montant', $montant, PDO::PARAM_STR);
-            $stmt->bindParam(':methode_payment', $methodePaiement, PDO::PARAM_STR);
-            $stmt->bindParam(':type_wallet', $typeWallet, PDO::PARAM_STR);
-            $stmt->bindParam(':numero_wallet', $numeroWallet, PDO::PARAM_STR);
-            $stmt->bindParam(':reference', $reference, PDO::PARAM_STR);
-            $stmt->execute();
-
-            // Validation de la transaction
-            $this->db->getPdo()->commit();
-
-            return json_encode(["success" => "La collection a été ajoutée et le paiement mis à jour avec succès."]);
-        } catch (PDOException $e) {
-            $this->db->getPdo()->rollBack();
-            return json_encode(["error" => "Erreur de base de données : " . $e->getMessage()]);
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -970,100 +833,81 @@ class BoitePostaleModel
     public function GetAllClients()
     {
         try {
-            // Récupérer l'année en cours
-            $currentYear = date("Y");
-
-            // Requête SQL pour récupérer les informations des clients avec vérification de l'année d'abonnement
+            // Requête SQL pour récupérer les informations des clients
             $sql = "
-        SELECT 
-            DISTINCT
-            c.id AS id,
-            c.nom AS Nom,
-            c.adresse AS Adresse,
-            c.type_client AS TypeClient,
-            bp.numero AS NBp,
-            bp.type AS Type_boite_postale,
-            c.telephone AS Telephone,
-            a.annee_abonnement AS annee_abonnement,
-            p.type AS Paiement_Type,
-            p.penalites AS Penalites,
-            p.montant_redevence AS Montant_Redevance,
-            p.methode_payment AS Methode_Paiement,
-            p.reference_general AS Reference_General,
-            p.date_paiement AS Date_Paiement,
+            SELECT DISTINCT
+                c.id AS id,
+                c.nom AS Nom,
+                c.adresse AS Adresse,
+                c.type_client AS TypeClient,
+                bp.numero AS NBp,
+                bp.type AS Type_boite_postale,
+                c.telephone AS Telephone,
+                a.annee_abonnement AS annee_abonnement,
+                p.type AS Paiement_Type,
+                p.penalites AS Penalites,
+                p.montant_redevence AS Montant_Redevance,
+                p.methode_payment AS Methode_Paiement,
+                p.reference_general AS Reference_General,
+                p.date_paiement AS Date_Paiement,
 
-            (
+                -- Détermination de l'état de l'abonnement
                 CASE 
-                    WHEN a.annee_abonnement = :currentYear THEN 'mis_a_jour'
+                    WHEN a.annee_abonnement = YEAR(CURDATE()) THEN 'mis_a_jour'
                     ELSE 'non_mis_a_jour'
-                END
-            ) AS Etat,
-            (
-                SELECT COUNT(*) 
-                FROM sous_couvete sc 
-                WHERE sc.id_boite_postale = bp.id
-            ) AS sous_couvert,
-            
-            -- Champs de la table documents
-            d.type AS Document_Type,
-            d.patente_quitance AS Patente_Quitance,
-            d.identite_gerant AS Identite_Gerant,
-            d.abonnement_unique AS Abonnement_Unique,
-            d.created_at AS Document_Created_At,
+                END AS Etat,
 
-            -- Ajout du statut de résiliation
-            CASE 
-                WHEN r.id_client IS NOT NULL THEN true
-                ELSE false
-            END AS status_resilation,
+                -- Nombre de sous-couvertes associées
+                (SELECT COUNT(*) FROM sous_couvete sc WHERE sc.id_client = c.id) AS sous_couvert,
 
-            -- Champs de la table details_paiements
-            dp.categorie AS Paiement_Categorie,
-            dp.montant AS Paiement_Montant,
-            dp.methode_payment AS Paiement_Methode,
-            dp.type_wallet AS Type_Wallet,
-            dp.numero_wallet AS Numero_Wallet,
-            dp.numero_cheque AS Numero_Cheque,
-            dp.nom_banque AS Nom_Banque,
-            dp.reference AS Paiement_Reference
-        FROM 
-            clients c
-        LEFT JOIN 
-            boites_postales bp ON c.id_boite_postale = bp.id
-        LEFT JOIN 
-            abonnement a ON bp.id = a.id_boite_postale
-        LEFT JOIN 
-            collection col ON col.id_boite_postale = bp.id
-        LEFT JOIN 
-            livraison_a_domicile ld ON ld.id_boite_postale = bp.id
-        LEFT JOIN 
-            documents d ON c.id = d.id_client
-        LEFT JOIN 
-            paiements p ON c.id = p.id_client
-        LEFT JOIN 
-            resilies r ON c.id = r.id_client
-        LEFT JOIN 
-            details_paiements dp ON p.id = dp.paiement_id
+                -- Champs de la table documents
+                d.type AS Document_Type,
+                d.patente_quitance AS Patente_Quitance,
+                d.identite_gerant AS Identite_Gerant,
+                d.abonnement_unique AS Abonnement_Unique,
+                d.created_at AS Document_Created_At,
+
+                -- Concaténation des paiements sur une seule ligne
+                GROUP_CONCAT(DISTINCT dp.categorie ORDER BY dp.categorie ASC SEPARATOR ', ') AS Paiement_Categories,
+                GROUP_CONCAT(DISTINCT dp.montant ORDER BY dp.montant ASC SEPARATOR ', ') AS Paiement_Montants,
+                GROUP_CONCAT(DISTINCT dp.methode_payment ORDER BY dp.methode_payment ASC SEPARATOR ', ') AS Paiement_Methodes,
+                GROUP_CONCAT(DISTINCT dp.type_wallet ORDER BY dp.type_wallet ASC SEPARATOR ', ') AS Type_Wallets,
+                GROUP_CONCAT(DISTINCT dp.numero_wallet ORDER BY dp.numero_wallet ASC SEPARATOR ', ') AS Numero_Wallets,
+                GROUP_CONCAT(DISTINCT dp.numero_cheque ORDER BY dp.numero_cheque ASC SEPARATOR ', ') AS Numero_Cheques,
+                GROUP_CONCAT(DISTINCT dp.nom_banque ORDER BY dp.nom_banque ASC SEPARATOR ', ') AS Nom_Banques,
+                GROUP_CONCAT(DISTINCT dp.reference ORDER BY dp.reference ASC SEPARATOR ', ') AS Paiement_References
+
+            FROM clients c
+            LEFT JOIN boites_postales bp ON c.id_boite_postale = bp.id
+            LEFT JOIN abonnement a ON bp.id = a.id_boite_postale
+            LEFT JOIN collection col ON col.id_client = c.id
+            LEFT JOIN livraison_a_domicile ld ON ld.id_client = c.id
+            LEFT JOIN documents d ON c.id = d.id_client
+            LEFT JOIN paiements p ON c.id = p.id_client
+            LEFT JOIN details_paiements dp ON p.id = dp.paiement_id
+
+            GROUP BY c.id, bp.numero, bp.type, a.annee_abonnement, p.id, d.id
         ";
 
-            // Préparation et exécution de la requête
+            // Exécution de la requête
             $stmt = $this->db->getPdo()->prepare($sql);
-            $stmt->bindParam(':currentYear', $currentYear, PDO::PARAM_INT);
             $stmt->execute();
 
             // Récupération des résultats
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            if ($results) {
+            if (!empty($results)) {
                 // Retourner les données au format JSON
-                echo json_encode($results);
+                echo json_encode($results, JSON_PRETTY_PRINT);
             } else {
-                // Retourner une erreur si aucun client n'est trouvé
-                echo json_encode(["error" => "No clients found"]);
+                // Aucun client trouvé
+                http_response_code(404);
+                echo json_encode(["error" => "Aucun client trouvé"]);
             }
         } catch (PDOException $e) {
-            // Gestion des erreurs de base de données
-            echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+            // Gestion des erreurs SQL
+            http_response_code(500);
+            echo json_encode(["error" => "Erreur SQL: " . $e->getMessage()]);
         }
     }
 
