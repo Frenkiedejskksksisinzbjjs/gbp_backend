@@ -104,6 +104,12 @@ class UserController
         return $this->userModel->getClientsWithPaymentsachatcle();
     }
 
+    public function insertExaunoration($idClient, $data)
+{
+    return $this->userModel->insertExaunoration($idClient, $data);
+}
+
+
 
 }
 
