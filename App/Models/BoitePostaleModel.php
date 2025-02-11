@@ -17,139 +17,216 @@ class BoitePostaleModel
 
     // une fonction qui affecte une boîte postale à un client en mettant à jour les relations entre les deux. Elle vérifie d'abord si la boîte postale est déjà assignée à un client. Si ce n'est pas le cas, elle l'associe au client spécifié.
 
-    public function insertAndAssignBoitePostaleToClient($iduser, $data)
+    public function insertAndAssignBoitePostaleToClient($iduser, $data, $files)
     {
         try {
+            $jsData = json_encode($data);
+            // var_dump($files);
             $this->db->getPdo()->beginTransaction();
-            $Data = json_decode($data, true);
+            $Data = json_decode($jsData, true);
 
-            // Données principales du client
+            // var_dump($Data);
+            $dateActuelle = date('Y-m-d H:i:s');
+            $anneeActuelle = date('Y');
+
+            // Récupérer les données du client
             $nom = $Data['Nom'] ?? '';
             $email = $Data['Email'] ?? '';
             $telephone = $Data['Telephone'] ?? '';
             $adresse = $Data['Adresse'] ?? '';
             $boitePostale = $Data['BoitePostale'] ?? '';
             $role = $Data['Role'] ?? '';
-            $typeClient = $Data['TypeClient'] ? 1 : 0; // true = 1, false = 0
-
-            // Paiements
-            $montantLd = $Data['montantLd'] ?? 0;
-            $montantCll = $Data['montantCll'] ?? 0;
-            $montantRd = $Data['montantRd'] ?? 0;
-            $montantSC = $Data['montantSC'] ?? 0;
-            $methodePaiement = $Data['Methode_de_paiement'] ?? '';
-            $numeroCheque = $Data['Numero_cheque'] ?? '';
-            $nomBanque = $Data['Nom_Banque'] ?? '';
-            $numeroWallet = $Data['Numero_wallet'] ?? '';
-            $Wallet = $Data['wallet'] ?? '';
-
-            // Références
-            $referenceRdv = $Data['Reference_Rdv'] ?? '';
-            $referenceLd = $Data['reference_Ld'] ?? '';
-            $referenceCll = $Data['reference_collection'] ?? '';
-            $referenceSc = $Data['reference_Sc'] ?? '';
-
-            // Adresses spécifiques
-            $adresseLivraisonDomicile = $Data['Adresse_Livraison_Domicile'] ?? '';
-            $adresseCollection = $Data['Adresse_collection'] ?? '';
-
-            // Fichiers joints
-            $identiter = $Data['Identiter'] ?? null;
-            $abonnement = $Data['Abonnement'] ?? null;
-            $patent_quitance = $Data['patent_quitance'] ?? null;
-
-            // Sous-couvertures
-            $sousCouvertures = $Data['sousCouvertures'] ?? [];
 
             // Vérification des champs obligatoires
-            if (empty($nom) || empty($email) || empty($telephone)) {
-                echo json_encode(["error" => "Nom, Email, et Téléphone sont obligatoires."]);
+            if (empty($nom) || empty($email) || empty($telephone) || empty($boitePostale)) {
+                echo json_encode(["error" => "Nom, Email, Téléphone et Boîte Postale sont obligatoires."]);
                 return;
             }
 
-            // Avant enregistrer les adresses, récupérer l'id de la boîte postale
+            // Récupération de l'ID de la boîte postale
             $stmtbp = $this->db->getPdo()->prepare("SELECT id FROM boites_postales WHERE numero = :numero");
             $stmtbp->bindParam(':numero', $boitePostale, PDO::PARAM_STR);
             $stmtbp->execute();
 
-            if ($stmtbp->rowCount() > 0) {
-                $idBoitePostal = $stmtbp->fetch(PDO::FETCH_ASSOC)['id'];
-
-                // Insertion dans la table client
-                $stmt = $this->db->getPdo()->prepare("INSERT INTO clients (nom, email, telephone, adresse, id_boite_postale,type_client,id_user)
-                VALUES (:nom, :email, :telephone, :adresse, :boite_postale, :type_client,:id_user)");
-                $stmt->bindParam(':nom', $nom, PDO::PARAM_STR);
-                $stmt->bindParam(':email', $email, PDO::PARAM_STR);
-                $stmt->bindParam(':telephone', $telephone, PDO::PARAM_STR);
-                $stmt->bindParam(':adresse', $adresse, PDO::PARAM_STR);
-                $stmt->bindParam(':boite_postale', $idBoitePostal, PDO::PARAM_STR);
-                $stmt->bindParam(':type_client', $role, PDO::PARAM_STR);
-                $stmt->bindParam(':id_user', $iduser, PDO::PARAM_INT);
-                $stmt->execute();
-
-                // Récupération de l'ID du client créé
-                $idClient = $this->db->getPdo()->lastInsertId();
-
-                // Insertion des paiements
-                $stmt = $this->db->getPdo()->prepare("INSERT INTO paiements (id_client, montant_livraison_a_domicile, montant_collection, montant_redevence, montant_sous_couvete,
-                methode_payment, numero_cheque, nom_banque, numero_wallet_redevence, reference, reference_livraison_domicile, reference_ajout_collection, reference_ajout_sous_couvette, type_wallet)
-                VALUES (:id_client, :montantLd, :montantCll, :montantRd, :montantSC, :methodePaiement, :numeroCheque, :nomBanque, :numeroWallet, :referenceRdv, :referenceLd, :referenceCll, :referenceSc, :type_wallet)");
-                $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
-                $stmt->bindParam(':montantLd', $montantLd, PDO::PARAM_STR);
-                $stmt->bindParam(':montantCll', $montantCll, PDO::PARAM_STR);
-                $stmt->bindParam(':montantRd', $montantRd, PDO::PARAM_STR);
-                $stmt->bindParam(':montantSC', $montantSC, PDO::PARAM_STR);
-                $stmt->bindParam(':methodePaiement', $methodePaiement, PDO::PARAM_STR);
-                $stmt->bindParam(':numeroCheque', $numeroCheque, PDO::PARAM_STR);
-                $stmt->bindParam(':nomBanque', $nomBanque, PDO::PARAM_STR);
-                $stmt->bindParam(':numeroWallet', $numeroWallet, PDO::PARAM_STR);
-                $stmt->bindParam(':referenceRdv', $referenceRdv, PDO::PARAM_STR);
-                $stmt->bindParam(':referenceLd', $referenceLd, PDO::PARAM_STR);
-                $stmt->bindParam(':referenceCll', $referenceCll, PDO::PARAM_STR);
-                $stmt->bindParam(':referenceSc', $referenceSc, PDO::PARAM_STR);
-                $stmt->bindParam(':type_wallet', $Wallet, PDO::PARAM_STR);
-                $stmt->execute();
-
-                // Enregistrer les documents dans la table "documents" après avoir déplacé les fichiers
-                if ($identiter || $abonnement || $patent_quitance) {
-                    $filePath = "AllFiles/";
-
-                    // Fonction pour déplacer le fichier et obtenir son chemin
-                    function moveFile($file, $path)
-                    {
-                        $filename = basename($file['name']);
-                        $targetPath = $path . $filename;
-
-                        // Déplacer le fichier
-                        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-                            return $targetPath;
-                        }
-                        return null;
-                    }
-
-                    $identiterPath = $identiter ? moveFile($identiter, $filePath) : null;
-                    $abonnementPath = $abonnement ? moveFile($abonnement, $filePath) : null;
-                    $patentQuitancePath = $patent_quitance ? moveFile($patent_quitance, $filePath) : null;
-
-                    // Insertion dans la table documents avec les chemins des fichiers
-                    $stmt = $this->db->getPdo()->prepare("INSERT INTO documents (patente_quitance, identite_gerant, abonnement_unique, created_at, id_client) 
-                    VALUES (:patenteQuitance, :identiter, :abonnement, CURRENT_TIMESTAMP(), :idClient)");
-                    $stmt->bindParam(':patenteQuitance', $patentQuitancePath, PDO::PARAM_STR);
-                    $stmt->bindParam(':identiter', $identiterPath, PDO::PARAM_STR);
-                    $stmt->bindParam(':abonnement', $abonnementPath, PDO::PARAM_STR);
-                    $stmt->bindParam(':idClient', $idClient, PDO::PARAM_INT);
-                    $stmt->execute();
-                }
-
-                // Commit
-                $this->db->getPdo()->commit();
-                echo json_encode(['status' => 'Abonnement avec succès']);
+            if ($stmtbp->rowCount() == 0) {
+                echo json_encode(["error" => "Boîte postale introuvable."]);
+                return;
             }
+
+            $idBoitePostal = $stmtbp->fetch(PDO::FETCH_ASSOC)['id'];
+
+            // Insérer le client
+            $stmt = $this->db->getPdo()->prepare("
+                INSERT INTO clients (nom, email, telephone, adresse, id_boite_postale, type_client, id_user, date_abonnement)
+                VALUES (:nom, :email, :telephone, :adresse, :boite_postale, :type_client, :id_user, :date_abonnement)");
+            $stmt->execute([
+                ':nom' => $nom,
+                ':email' => $email,
+                ':telephone' => $telephone,
+                ':adresse' => $adresse,
+                ':boite_postale' => $idBoitePostal,
+                ':type_client' => $role,
+                ':id_user' => $iduser,
+                ':date_abonnement' => $dateActuelle
+            ]);
+
+            $idClient = $this->db->getPdo()->lastInsertId();
+
+            // Insérer le paiement
+            $stmt = $this->db->getPdo()->prepare("
+                INSERT INTO paiements (id_client, reference_general, montant_redevence, type, methode_payment, date_paiement)
+                VALUES (:id_client, :reference, :montantRd, 'mis_a_jour', :methodePaiement, :date_paiement)");
+            $stmt->execute([
+                ':id_client' => $idClient,
+                ':reference' => $Data['Reference_Rdv'] ?? '',
+                ':montantRd' => $Data['montantRd'] ?? 0,
+                ':methodePaiement' => $Data['Methode_de_paiement'] ?? '',
+                ':date_paiement' => $dateActuelle
+            ]);
+
+            $idPaiement = $this->db->getPdo()->lastInsertId();
+
+            // Insérer l'abonnement
+            $stmt = $this->db->getPdo()->prepare("
+                INSERT INTO abonnement (id_boite_postale, annee_abonnement, id_payments)
+                VALUES (:id_boite_postale, :annee_abonnement, :id_payments)");
+            $stmt->execute([
+                ':id_boite_postale' => $idBoitePostal,
+                ':annee_abonnement' => $anneeActuelle,
+                ':id_payments' => $idPaiement
+            ]);
+
+            // Insérer les détails des paiements
+            $this->insertDetailsPaiements($idPaiement, $Data, $iduser, "redevence", $Data['montantRd'] ?? 0, $Data['Reference_Rdv'] ?? '');
+
+            // Insérer les sous-couverts
+            if (!empty($Data['sousCouvertures'])) {
+                foreach (array($Data['sousCouvertures']) as $sousCouvert) {
+                    $stmt = $this->db->getPdo()->prepare("
+                        INSERT INTO sous_couvete (nom_societe, nom_personne, telephone, adresse, id_client, id_user)
+                        VALUES (:nom_societe, :nom_personne, :telephone, :adresse, :id_client, :id_user)");
+                    $stmt->execute([
+                        ':nom_societe' => $sousCouvert['nom_societe'] ?? '',
+                        ':nom_personne' => $sousCouvert['nom_personne'] ?? '',
+                        ':telephone' => $sousCouvert['telephone'] ?? '',
+                        ':adresse' => $sousCouvert['adresse'] ?? '',
+                        ':id_client' => $idClient,
+                        ':id_user' => $iduser
+                    ]);
+                }
+                // Insérer les détails des paiements
+                $this->insertDetailsPaiements($idPaiement, $Data, $iduser, "sous_couvette", $Data['montantSC'] ?? 0, $Data['reference_Sc'] ?? '');
+            }
+
+            // Insérer les adresses de livraison et de collection
+            if (!empty($Data['Adresse_Livraison_Domicile'])) {
+                $stmt = $this->db->getPdo()->prepare("
+                    INSERT INTO livraison_a_domicile (adresse, id_client, created_at)
+                    VALUES (:adresse, :id_client, :created_at)");
+                $stmt->execute([
+                    ':adresse' => $Data['Adresse_Livraison_Domicile'],
+                    ':id_client' => $idClient,
+                    ':created_at' => $dateActuelle
+                ]);
+                // Insérer les détails des paiements
+                $this->insertDetailsPaiements($idPaiement, $Data, $iduser, "livraison_domicile", $Data['montantLd'] ?? 0, $Data['reference_Ld'] ?? '');
+            }
+
+            if (!empty($Data['Adresse_collection'])) {
+                $stmt = $this->db->getPdo()->prepare("
+                    INSERT INTO collection (adresse, id_client, created_at)
+                    VALUES (:adresse, :id_client, :created_at)");
+                $stmt->execute([
+                    ':adresse' => $Data['Adresse_collection'],
+                    ':id_client' => $idClient,
+                    ':created_at' => $dateActuelle
+                ]);
+                // Insérer les détails des paiements
+                $this->insertDetailsPaiements($idPaiement, $Data, $iduser, "collection", $Data['montantCll'] ?? 0, $Data['reference_collection'] ?? '');
+            }
+
+            // Gérer les documents
+            $this->handleDocuments($idClient, $files, $Data['Role'], uploadPath: 'upload/documents');
+
+            $this->db->getPdo()->commit();
+            echo json_encode(['success' => 'Abonnement avec succès']);
         } catch (\Exception $e) {
             $this->db->getPdo()->rollBack();
             echo json_encode(['error' => 'Erreur : ' . $e->getMessage()]);
         }
     }
+
+    private function insertDetailsPaiements($idPaiement, $Data, $iduser, $categories, $montant, $reference)
+    {
+        $methodePaiement = $Data['Methode_de_paiement'] ?? '';
+        $typeWallet = $methodePaiement === 'wallet' ? ($Data['Wallet'] ?? '') : '';
+        $numeroWallet = $methodePaiement === 'wallet' ? ($Data['Numero_wallet'] ?? '') : '';
+        $numeroCheque = $methodePaiement === 'cheque' ? ($Data['Numero_cheque'] ?? '') : '';
+        $nomBanque = $methodePaiement === 'cheque' ? ($Data['Nom_Banque'] ?? '') : '';
+
+        $stmt = $this->db->getPdo()->prepare("
+            INSERT INTO details_paiements (paiement_id, categorie,montant, methode_payment, type_wallet, numero_wallet, numero_cheque, nom_banque,reference, created_by_user)
+            VALUES (:paiement_id, :categories,:montant, :methode_payment, :type_wallet, :numero_wallet, :numero_cheque, :nom_banque,:reference, :created_by_user)");
+        $stmt->execute([
+            ':paiement_id' => $idPaiement,
+            ':methode_payment' => $methodePaiement,
+            ':type_wallet' => $typeWallet,
+            ':numero_wallet' => $numeroWallet,
+            ':numero_cheque' => $numeroCheque,
+            ':nom_banque' => $nomBanque,
+            ':categories' => $categories,
+            ':montant' => $montant,
+            ':reference' => $reference,
+            ':created_by_user' => $iduser
+        ]);
+    }
+
+    private function handleDocuments($idClient, $Data, $Role, $uploadPath)
+    {
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0777, true);
+        }
+
+        // Liste des fichiers attendus avec leurs noms de colonnes corrects
+        $filesMapping = [
+            'patent_quitance1' => 'patente_quitance',
+            'Identiter1' => 'identite_gerant',
+            'Abonnement1' => 'abonnement_unique'
+        ];
+
+        // Construire l'insertion dynamique des fichiers
+        $insertData = [];
+        $params = [
+            ':type' => $Role,
+            ':idClient' => $idClient
+        ];
+
+        foreach ($filesMapping as $inputKey => $dbColumn) {
+            if (!empty($Data[$inputKey]['tmp_name'])) {
+                $filePath = $uploadPath . '/' . basename($Data[$inputKey]['name']);
+                move_uploaded_file($Data[$inputKey]['tmp_name'], $filePath);
+
+                $insertData[$dbColumn] = $filePath;
+            }
+        }
+
+        if (!empty($insertData)) {
+            $columns = implode(", ", array_keys($insertData));
+            $placeholders = implode(", ", array_map(fn($col) => ":$col", array_keys($insertData)));
+
+            $sql = "INSERT INTO documents (type, $columns, created_at, id_client) VALUES (:type, $placeholders, NOW(), :idClient)";
+
+            $stmt = $this->db->getPdo()->prepare($sql);
+
+            foreach ($insertData as $column => $filePath) {
+                $params[":$column"] = $filePath;
+            }
+
+            $stmt->execute($params);
+        }
+    }
+
+
 
 
 
@@ -645,25 +722,25 @@ class BoitePostaleModel
     {
         try {
             $decodedData = json_decode($data, true);
-    
+
             // Validation des champs obligatoires
             if (!isset($id, $decodedData['Adresse_Livraison_Domicile'], $decodedData['Methode_de_paiement'], $decodedData['Montant'], $decodedData['NBp'], $decodedData['ReferenceId'], $decodedData['id_user'])) {
                 echo json_encode(["error" => "Tous les champs sont obligatoires."]);
                 return;
             }
-    
+
             $methodePaiement = $decodedData['Methode_de_paiement'];
             $validPaymentMethods = ['wallet', 'cash', 'cheque', 'carte_credits'];
             if (!in_array($methodePaiement, $validPaymentMethods)) {
                 echo json_encode(["error" => "Méthode de paiement invalide."]);
                 return;
             }
-    
+
             // Validation des données spécifiques à la méthode de paiement
             if ($methodePaiement === 'wallet') {
                 $typeWallet = $decodedData['Wallet'] ?? null;
                 $validWalletTypes = ['wafi', 'cac-pay', 'd-money', 'sab-pay'];
-    
+
                 if (!in_array($typeWallet, $validWalletTypes) || empty($decodedData['Numero_wallet'])) {
                     echo json_encode(["error" => "Données de wallet invalides."]);
                     return;
@@ -674,39 +751,39 @@ class BoitePostaleModel
                     return;
                 }
             }
-    
+
             // Vérifier si le client possède un paiement de type 'mis_a_jour'
             $paymentCheckQuery = "SELECT id, montant_redevence FROM paiements WHERE id_client = :id_client AND type = 'mis_a_jour'";
             $stmt = $this->db->getPdo()->prepare($paymentCheckQuery);
             $stmt->bindParam(':id_client', $id, PDO::PARAM_INT);
             $stmt->execute();
-    
+
             $payment = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
             if (!$payment) {
                 echo json_encode(["error" => "Le client n'a pas de paiement avec le type 'mis_a_jour'. Modification non autorisée."]);
                 return;
             }
-    
+
             // Récupérer l'id de la boîte postale
             $NBp = $decodedData['NBp'];
             $stmtidBp = $this->db->getPdo()->prepare("SELECT id FROM boites_postales WHERE numero = :Nbp");
             $stmtidBp->bindParam(':Nbp', $NBp, PDO::PARAM_INT);
             $stmtidBp->execute();
-    
+
             if ($stmtidBp->rowCount() > 0) {
                 $this->db->getPdo()->beginTransaction(); // Démarrage de la transaction
-    
+
                 try {
                     $idBpostal = $stmtidBp->fetch(PDO::FETCH_ASSOC)['id'];
-    
+
                     // Insertion dans 'livraison_a_domicile', avec id_user ajouté à l'insertion
                     $stmt = $this->db->getPdo()->prepare("INSERT INTO livraison_a_domicile (adresse, id_client, id_user) VALUES (:adresse, :id_client, :id_user)");
                     $stmt->bindParam(':adresse', $decodedData['Adresse_Livraison_Domicile'], PDO::PARAM_STR);
-                    $stmt->bindParam(':id_client', $id, PDO::PARAM_INT);  
+                    $stmt->bindParam(':id_client', $id, PDO::PARAM_INT);
                     $stmt->bindParam(':id_user', $decodedData['id_user'], PDO::PARAM_INT);  // Ajout de l'id_user dans l'insertion
                     $stmt->execute();
-    
+
                     // Préparation des données pour les détails du paiement dans 'details_paiements'
                     $montantLivraison = $decodedData['Montant'];
                     $numeroWallet = $decodedData['Numero_wallet'] ?? null;
@@ -714,7 +791,7 @@ class BoitePostaleModel
                     $nomBanque = $decodedData['Nom_Banque'] ?? null;
                     $typeWallet = $decodedData['Wallet'] ?? null;
                     $ReferenceId = $decodedData['ReferenceId'];
-    
+
                     // Insertion dans 'details_paiements'
                     $stmt = $this->db->getPdo()->prepare("INSERT INTO details_paiements (paiement_id, categorie, montant, methode_payment, type_wallet, numero_wallet, numero_cheque, nom_banque, reference) 
                     VALUES (:paiement_id, 'livraison_domicile', :montant, :methode_payment, :type_wallet, :numero_wallet, :numero_cheque, :nom_banque, :reference)");
@@ -727,16 +804,16 @@ class BoitePostaleModel
                     $stmt->bindParam(':nom_banque', $nomBanque, PDO::PARAM_STR);
                     $stmt->bindParam(':reference', $ReferenceId, PDO::PARAM_STR);
                     $stmt->execute();
-    
+
                     // Mise à jour du montant du paiement
                     $nouveauMontant = $payment['montant_redevence'] + $montantLivraison;
                     $stmt = $this->db->getPdo()->prepare("UPDATE paiements SET montant_redevence = :montant WHERE id = :paiement_id");
                     $stmt->bindParam(':montant', $nouveauMontant, PDO::PARAM_STR);
                     $stmt->bindParam(':paiement_id', $payment['id'], PDO::PARAM_INT);
                     $stmt->execute();
-    
+
                     $this->db->getPdo()->commit(); // Validation de la transaction
-    
+
                     echo json_encode(["success" => "Livraison et paiement mis à jour avec succès."]);
                 } catch (PDOException $e) {
                     $this->db->getPdo()->rollBack(); // Annulation de la transaction en cas d'erreur
@@ -749,7 +826,7 @@ class BoitePostaleModel
             echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
         }
     }
-    
+
 
 
 
@@ -762,11 +839,11 @@ class BoitePostaleModel
         try {
             // Décodage des données JSON
             $decodedData = json_decode($data, true);
-    
+
             if (!$decodedData) {
                 return json_encode(["error" => "Format JSON invalide."]);
             }
-    
+
             // Validation des champs obligatoires
             $requiredFields = ['Adresse_collection', 'NBp', 'Methode_de_paiement', 'Montant', 'ReferenceId', 'id_user'];
             foreach ($requiredFields as $field) {
@@ -774,7 +851,7 @@ class BoitePostaleModel
                     return json_encode(["error" => "Le champ '$field' est obligatoire."]);
                 }
             }
-    
+
             // Initialisation des valeurs
             $methodePaiement = $decodedData['Methode_de_paiement'];
             $montant = $decodedData['Montant'];
@@ -782,13 +859,13 @@ class BoitePostaleModel
             $idUser = $decodedData['id_user']; // Ajout de l'id_user
             $typeWallet = $decodedData['Wallet'] ?? null;
             $numeroWallet = $decodedData['Numero_wallet'] ?? null;
-    
+
             // Validation de la méthode de paiement
             $validPaymentMethods = ['wallet', 'cash', 'cheque', 'carte_credits'];
             if (!in_array($methodePaiement, $validPaymentMethods)) {
                 return json_encode(["error" => "Méthode de paiement invalide."]);
             }
-    
+
             // Vérification spécifique pour les wallets
             if ($methodePaiement === 'wallet') {
                 $validWalletTypes = ['wafi', 'cac-pay', 'd-money', 'sab-pay'];
@@ -796,55 +873,57 @@ class BoitePostaleModel
                     return json_encode(["error" => "Type de wallet invalide ou numéro wallet manquant."]);
                 }
             }
-    
+
             // Démarrage de la transaction
             $this->db->getPdo()->beginTransaction();
-    
+
             // Vérification de l'existence du paiement actif
             $stmt = $this->db->getPdo()->prepare("SELECT id FROM paiements WHERE id_client = :id_client AND type = 'mis_a_jour'");
             $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
             $stmt->execute();
             $paymentResult = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
             if (!$paymentResult) {
                 $this->db->getPdo()->rollBack();
                 return json_encode(["error" => "Aucun paiement mis à jour trouvé pour ce client."]);
             }
-    
+
             $paiementId = $paymentResult['id'];
-    
+
+
             // Vérification de l'existence de la boîte postale et récupération de son ID
             $stmt = $this->db->getPdo()->prepare("SELECT id FROM boites_postales WHERE numero = :numero");
             $stmt->bindParam(':numero', $decodedData['NBp'], PDO::PARAM_STR);
             $stmt->execute();
             $boitePostaleResult = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
             if (!$boitePostaleResult) {
                 $this->db->getPdo()->rollBack();
                 return json_encode(["error" => "Aucune boîte postale trouvée avec ce numéro."]);
             }
-    
+
             $idBoitePostale = $boitePostaleResult['id'];
-    
+
+
             // Vérification si l'ID client possède bien cette boîte postale
             $stmt = $this->db->getPdo()->prepare("SELECT id FROM clients WHERE id = :id_client AND id_boite_postale = :id_boite_postale");
             $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
             $stmt->bindParam(':id_boite_postale', $idBoitePostale, PDO::PARAM_INT);
             $stmt->execute();
             $clientResult = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
             if (!$clientResult) {
                 $this->db->getPdo()->rollBack();
                 return json_encode(["error" => "Ce client ne possède pas cette boîte postale."]);
             }
-    
+
             // Insertion de la collection avec l'ajout de l'id_user
             $stmt = $this->db->getPdo()->prepare("INSERT INTO collection (adresse, id_client, id_user, created_at, updated_at) VALUES (:adresse, :id_client, :id_user, NOW(), NOW())");
             $stmt->bindParam(':adresse', $decodedData['Adresse_collection'], PDO::PARAM_STR);
             $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
             $stmt->bindParam(':id_user', $idUser, PDO::PARAM_INT); // Ajout du paramètre id_user
             $stmt->execute();
-    
+
             // Insertion des détails du paiement
             $stmt = $this->db->getPdo()->prepare("INSERT INTO details_paiements (paiement_id, categorie, montant, methode_payment, type_wallet, numero_wallet, reference) VALUES (:paiement_id, 'collection', :montant, :methode_payment, :type_wallet, :numero_wallet, :reference)");
             $stmt->bindParam(':paiement_id', $paiementId, PDO::PARAM_INT);
@@ -854,23 +933,19 @@ class BoitePostaleModel
             $stmt->bindParam(':numero_wallet', $numeroWallet, PDO::PARAM_STR);
             $stmt->bindParam(':reference', $reference, PDO::PARAM_STR);
             $stmt->execute();
-    
+
             // Validation de la transaction
             $this->db->getPdo()->commit();
-    
+
             return json_encode(["success" => "La collection a été ajoutée et le paiement mis à jour avec succès."]);
         } catch (PDOException $e) {
             $this->db->getPdo()->rollBack();
             return json_encode(["error" => "Erreur de base de données : " . $e->getMessage()]);
         }
     }
-    
-    
-    
 
-    
 
-    
+
 
 
 
@@ -893,13 +968,13 @@ class BoitePostaleModel
 
     // une fonction qui récupére les informations des clients
     public function GetAllClients()
-{
-    try {
-        // Récupérer l'année en cours
-        $currentYear = date("Y");
+    {
+        try {
+            // Récupérer l'année en cours
+            $currentYear = date("Y");
 
-        // Requête SQL pour récupérer les informations des clients avec vérification de l'année d'abonnement
-        $sql = "
+            // Requête SQL pour récupérer les informations des clients avec vérification de l'année d'abonnement
+            $sql = "
         SELECT 
             DISTINCT
             c.id AS id,
@@ -971,236 +1046,44 @@ class BoitePostaleModel
             details_paiements dp ON p.id = dp.paiement_id
         ";
 
-        // Préparation et exécution de la requête
-        $stmt = $this->db->getPdo()->prepare($sql);
-        $stmt->bindParam(':currentYear', $currentYear, PDO::PARAM_INT);
-        $stmt->execute();
+            // Préparation et exécution de la requête
+            $stmt = $this->db->getPdo()->prepare($sql);
+            $stmt->bindParam(':currentYear', $currentYear, PDO::PARAM_INT);
+            $stmt->execute();
 
-        // Récupération des résultats
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // Récupération des résultats
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        if ($results) {
-            // Retourner les données au format JSON
-            echo json_encode($results);
-        } else {
-            // Retourner une erreur si aucun client n'est trouvé
-            echo json_encode(["error" => "No clients found"]);
+            if ($results) {
+                // Retourner les données au format JSON
+                echo json_encode($results);
+            } else {
+                // Retourner une erreur si aucun client n'est trouvé
+                echo json_encode(["error" => "No clients found"]);
+            }
+        } catch (PDOException $e) {
+            // Gestion des erreurs de base de données
+            echo json_encode(["error" => "Database error: " . $e->getMessage()]);
         }
-    } catch (PDOException $e) {
-        // Gestion des erreurs de base de données
-        echo json_encode(["error" => "Database error: " . $e->getMessage()]);
     }
-}
 
-    
-    
+
+
 
     public function getLastReferenceAchatCle()
     {
         try {
-            // Préparer la requête pour récupérer la dernière insertion
-            $queryLastInsert = "SELECT reference_achat_cle
-                FROM paiements
-                WHERE reference_achat_cle IS NOT NULL
-                ORDER BY 
-                    CAST(SUBSTRING(reference_achat_cle, 
-                    LOCATE('/', reference_achat_cle) + 1, 
-                    LOCATE('/', reference_achat_cle, LOCATE('/', reference_achat_cle) + 1) 
-                    - LOCATE('/', reference_achat_cle) - 1) AS UNSIGNED) DESC
-                LIMIT 1";
-            $stmt = $this->db->getPdo()->prepare($queryLastInsert);
-            $stmt->execute();
-
-
-            // Récupérer le résultat
-            $dernierPaiement = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($dernierPaiement && !empty($dernierPaiement['reference_achat_cle'])) {
-                // Retourner la référence si elle existe
-                echo json_encode([
-                    "reference_achat_cle" => $dernierPaiement['reference_achat_cle']
-                ]);
-            } else {
-                // Retourner une valeur par défaut si la table est vide ou la référence absente
-                echo json_encode([
-                    "reference_achat_cle" => null, // Ou une valeur par défaut si nécessaire
-                ]);
-            }
-        } catch (PDOException $e) {
-            // Retourner une erreur en cas d'exception
-            echo json_encode([
-                "success" => false,
-                "error" => "Erreur : " . $e->getMessage()
-            ]);
-        }
-    }
-
-    public function getLastReferenceAjoutSousCouvette()
-    {
-        try {
-            // Préparer la requête pour récupérer la dernière insertion pour reference_ajout_sous_couvette
-            $queryLastInsert = "SELECT reference_ajout_sous_couvette
-                FROM paiements
-                WHERE reference_ajout_sous_couvette IS NOT NULL
-                ORDER BY 
-                    CAST(SUBSTRING(reference_ajout_sous_couvette, 
-                    LOCATE('/', reference_ajout_sous_couvette) + 1, 
-                    LOCATE('/', reference_ajout_sous_couvette, LOCATE('/', reference_ajout_sous_couvette) + 1) 
-                    - LOCATE('/', reference_ajout_sous_couvette) - 1) AS UNSIGNED) DESC
-                LIMIT 1";
-            $stmt = $this->db->getPdo()->prepare($queryLastInsert);
-            $stmt->execute();
-
-            // Récupérer le résultat
-            $dernierPaiement = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($dernierPaiement && !empty($dernierPaiement['reference_ajout_sous_couvette'])) {
-                // Retourner la référence si elle existe
-                echo json_encode([
-                    "reference_ajout_sous_couvette" => $dernierPaiement['reference_ajout_sous_couvette']
-                ]);
-            } else {
-                // Retourner une valeur par défaut si la table est vide ou la référence absente
-                echo json_encode([
-                    "reference_ajout_sous_couvette" => null, // Ou une valeur par défaut si nécessaire
-                ]);
-            }
-        } catch (PDOException $e) {
-            // Retourner une erreur en cas d'exception
-            echo json_encode([
-                "success" => false,
-                "error" => "Erreur : " . $e->getMessage()
-            ]);
-        }
-    }
-
-    public function getLastReferenceChangerNom()
-    {
-        try {
-            // Préparer la requête pour récupérer la dernière insertion pour reference_changer_nom
-            $queryLastInsert = "SELECT reference_changer_nom
-                FROM paiements
-                WHERE reference_changer_nom IS NOT NULL
-                ORDER BY 
-                    CAST(SUBSTRING(reference_changer_nom, 
-                    LOCATE('/', reference_changer_nom) + 1, 
-                    LOCATE('/', reference_changer_nom, LOCATE('/', reference_changer_nom) + 1) 
-                    - LOCATE('/', reference_changer_nom) - 1) AS UNSIGNED) DESC
-                LIMIT 1";
-            $stmt = $this->db->getPdo()->prepare($queryLastInsert);
-            $stmt->execute();
-
-            // Récupérer le résultat
-            $dernierPaiement = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($dernierPaiement && !empty($dernierPaiement['reference_changer_nom'])) {
-                // Retourner la référence si elle existe
-                echo json_encode([
-                    "reference_changer_nom" => $dernierPaiement['reference_changer_nom']
-                ]);
-            } else {
-                // Retourner une valeur par défaut si la table est vide ou la référence absente
-                echo json_encode([
-                    "reference_changer_nom" => null, // Ou une valeur par défaut si nécessaire
-                ]);
-            }
-        } catch (PDOException $e) {
-            // Retourner une erreur en cas d'exception
-            echo json_encode([
-                "success" => false,
-                "error" => "Erreur : " . $e->getMessage()
-            ]);
-        }
-    }
-
-
-    public function getLastReferenceLivraisonDomicile()
-    {
-        try {
-            // Préparer la requête pour récupérer la dernière insertion pour reference_livraison_domicile
-            $queryLastInsert = "SELECT reference_livraison_domicile
-                FROM paiements
-                WHERE reference_livraison_domicile IS NOT NULL
-                ORDER BY 
-                    CAST(SUBSTRING(reference_livraison_domicile, 
-                    LOCATE('/', reference_livraison_domicile) + 1, 
-                    LOCATE('/', reference_livraison_domicile, LOCATE('/', reference_livraison_domicile) + 1) 
-                    - LOCATE('/', reference_livraison_domicile) - 1) AS UNSIGNED) DESC
-                LIMIT 1";
-            $stmt = $this->db->getPdo()->prepare($queryLastInsert);
-            $stmt->execute();
-
-            // Récupérer le résultat
-            $dernierPaiement = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($dernierPaiement && !empty($dernierPaiement['reference_livraison_domicile'])) {
-                // Retourner la référence si elle existe
-                echo json_encode([
-                    "reference_livraison_domicile" => $dernierPaiement['reference_livraison_domicile']
-                ]);
-            } else {
-                // Retourner une valeur par défaut si la table est vide ou la référence absente
-                echo json_encode([
-                    "reference_livraison_domicile" => null, // Ou une valeur par défaut si nécessaire
-                ]);
-            }
-        } catch (PDOException $e) {
-            // Retourner une erreur en cas d'exception
-            echo json_encode([
-                "success" => false,
-                "error" => "Erreur : " . $e->getMessage()
-            ]);
-        }
-    }
-
-    public function getLastReferenceAjoutCollection()
-    {
-        try {
-            // Préparer la requête pour récupérer la valeur avec la plus grande partie numérique
-            $query = "
-                SELECT reference_ajout_collection
-                FROM paiements
-                WHERE reference_ajout_collection IS NOT NULL
-                ORDER BY 
-                    CAST(SUBSTRING(reference_ajout_collection, 
-                    LOCATE('/', reference_ajout_collection) + 1, 
-                    LOCATE('/', reference_ajout_collection, LOCATE('/', reference_ajout_collection) + 1) 
-                    - LOCATE('/', reference_ajout_collection) - 1) AS UNSIGNED) DESC
-                LIMIT 1
-            ";
-            $stmt = $this->db->getPdo()->prepare($query);
-            $stmt->execute();
-
-            // Récupérer le résultat
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($result && !empty($result['reference_ajout_collection'])) {
-                // Retourner la ligne avec la plus grande valeur numérique
-                return json_encode(["reference_ajout_collection" => $result['reference_ajout_collection']]);
-            } else {
-                // Retourner null si aucune donnée n'est trouvée
-                return json_encode(["reference_ajout_collection" => null]);
-            }
-        } catch (PDOException $e) {
-            // Gérer les erreurs en cas d'exception
-            throw new \Exception("Erreur lors de la récupération de la référence : " . $e->getMessage());
-        }
-    }
-
-
-    public function getLastReference()
-    {
-        try {
-            // Préparer la requête pour récupérer la dernière insertion pour reference
+            // Préparer la requête pour récupérer la dernière référence pour la catégorie 'sous_couvette'
             $queryLastInsert = "SELECT reference
-                FROM paiements
-                WHERE reference IS NOT NULL
-                ORDER BY 
-                    CAST(SUBSTRING(reference, 
-                    LOCATE('/', reference) + 1, 
-                    LOCATE('/', reference, LOCATE('/', reference) + 1) 
-                    - LOCATE('/', reference) - 1) AS UNSIGNED) DESC
-                LIMIT 1";
+            FROM details_paiements
+            WHERE categorie = 'achats_cle' AND reference IS NOT NULL
+            ORDER BY 
+                CAST(SUBSTRING(reference, 
+                LOCATE('/', reference) + 1, 
+                LOCATE('/', reference, LOCATE('/', reference) + 1) 
+                - LOCATE('/', reference) - 1) AS UNSIGNED) DESC
+            LIMIT 1";
+
             $stmt = $this->db->getPdo()->prepare($queryLastInsert);
             $stmt->execute();
 
@@ -1221,6 +1104,210 @@ class BoitePostaleModel
         } catch (PDOException $e) {
             // Retourner une erreur en cas d'exception
             echo json_encode([
+                "success" => false,
+                "error" => "Erreur : " . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getLastReferenceSousCouvette()
+    {
+        try {
+            // Préparer la requête pour récupérer la dernière référence pour la catégorie 'sous_couvette'
+            $queryLastInsert = "SELECT reference
+            FROM details_paiements
+            WHERE categorie = 'sous_couvette' AND reference IS NOT NULL
+            ORDER BY 
+                CAST(SUBSTRING(reference, 
+                LOCATE('/', reference) + 1, 
+                LOCATE('/', reference, LOCATE('/', reference) + 1) 
+                - LOCATE('/', reference) - 1) AS UNSIGNED) DESC
+            LIMIT 1";
+
+            $stmt = $this->db->getPdo()->prepare($queryLastInsert);
+            $stmt->execute();
+
+            // Récupérer le résultat
+            $dernierPaiement = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($dernierPaiement && !empty($dernierPaiement['reference'])) {
+                // Retourner la référence si elle existe
+                echo json_encode([
+                    "reference" => $dernierPaiement['reference']
+                ]);
+            } else {
+                // Retourner une valeur par défaut si la table est vide ou la référence absente
+                echo json_encode([
+                    "reference" => null, // Ou une valeur par défaut si nécessaire
+                ]);
+            }
+        } catch (PDOException $e) {
+            // Retourner une erreur en cas d'exception
+            echo json_encode([
+                "success" => false,
+                "error" => "Erreur : " . $e->getMessage()
+            ]);
+        }
+    }
+
+
+    public function getLastReferenceChangerNom()
+    {
+        try {
+            // Préparer la requête pour récupérer la dernière référence pour la catégorie 'sous_couvette'
+            $queryLastInsert = "SELECT reference
+            FROM details_paiements
+            WHERE categorie = 'changement_nom' AND reference IS NOT NULL
+            ORDER BY 
+                CAST(SUBSTRING(reference, 
+                LOCATE('/', reference) + 1, 
+                LOCATE('/', reference, LOCATE('/', reference) + 1) 
+                - LOCATE('/', reference) - 1) AS UNSIGNED) DESC
+            LIMIT 1";
+
+            $stmt = $this->db->getPdo()->prepare($queryLastInsert);
+            $stmt->execute();
+
+            // Récupérer le résultat
+            $dernierPaiement = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($dernierPaiement && !empty($dernierPaiement['reference'])) {
+                // Retourner la référence si elle existe
+                echo json_encode([
+                    "reference" => $dernierPaiement['reference']
+                ]);
+            } else {
+                // Retourner une valeur par défaut si la table est vide ou la référence absente
+                echo json_encode([
+                    "reference" => null, // Ou une valeur par défaut si nécessaire
+                ]);
+            }
+        } catch (PDOException $e) {
+            // Retourner une erreur en cas d'exception
+            echo json_encode([
+                "success" => false,
+                "error" => "Erreur : " . $e->getMessage()
+            ]);
+        }
+    }
+
+
+    public function getLastReferenceLivraisonDomicile()
+    {
+        try {
+            // Préparer la requête pour récupérer la dernière référence pour la catégorie 'sous_couvette'
+            $queryLastInsert = "SELECT reference
+            FROM details_paiements
+            WHERE categorie = 'livraison_domicile' AND reference IS NOT NULL
+            ORDER BY 
+                CAST(SUBSTRING(reference, 
+                LOCATE('/', reference) + 1, 
+                LOCATE('/', reference, LOCATE('/', reference) + 1) 
+                - LOCATE('/', reference) - 1) AS UNSIGNED) DESC
+            LIMIT 1";
+
+            $stmt = $this->db->getPdo()->prepare($queryLastInsert);
+            $stmt->execute();
+
+            // Récupérer le résultat
+            $dernierPaiement = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($dernierPaiement && !empty($dernierPaiement['reference'])) {
+                // Retourner la référence si elle existe
+                echo json_encode([
+                    "reference" => $dernierPaiement['reference']
+                ]);
+            } else {
+                // Retourner une valeur par défaut si la table est vide ou la référence absente
+                echo json_encode([
+                    "reference" => null, // Ou une valeur par défaut si nécessaire
+                ]);
+            }
+        } catch (PDOException $e) {
+            // Retourner une erreur en cas d'exception
+            echo json_encode([
+                "success" => false,
+                "error" => "Erreur : " . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getLastReferenceAjoutCollection()
+    {
+        try {
+            // Préparer la requête pour récupérer la dernière référence pour la catégorie 'sous_couvette'
+            $queryLastInsert = "SELECT reference
+            FROM details_paiements
+            WHERE categorie = 'collection' AND reference IS NOT NULL
+            ORDER BY 
+                CAST(SUBSTRING(reference, 
+                LOCATE('/', reference) + 1, 
+                LOCATE('/', reference, LOCATE('/', reference) + 1) 
+                - LOCATE('/', reference) - 1) AS UNSIGNED) DESC
+            LIMIT 1";
+
+            $stmt = $this->db->getPdo()->prepare($queryLastInsert);
+            $stmt->execute();
+
+            // Récupérer le résultat
+            $dernierPaiement = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($dernierPaiement && !empty($dernierPaiement['reference'])) {
+                // Retourner la référence si elle existe
+                echo json_encode([
+                    "reference" => $dernierPaiement['reference']
+                ]);
+            } else {
+                // Retourner une valeur par défaut si la table est vide ou la référence absente
+                echo json_encode([
+                    "reference" => null, // Ou une valeur par défaut si nécessaire
+                ]);
+            }
+        } catch (PDOException $e) {
+            // Retourner une erreur en cas d'exception
+            echo json_encode([
+                "success" => false,
+                "error" => "Erreur : " . $e->getMessage()
+            ]);
+        }
+    }
+
+
+    public function getLastReference()
+    {
+        try {
+            // Préparer la requête pour récupérer la dernière référence pour la catégorie 'sous_couvette'
+            $queryLastInsert = "SELECT reference
+            FROM details_paiements
+            WHERE categorie = 'redevence' AND reference IS NOT NULL
+            ORDER BY 
+                CAST(SUBSTRING(reference, 
+                LOCATE('/', reference) + 1, 
+                LOCATE('/', reference, LOCATE('/', reference) + 1) 
+                - LOCATE('/', reference) - 1) AS UNSIGNED) DESC
+            LIMIT 1";
+
+            $stmt = $this->db->getPdo()->prepare($queryLastInsert);
+            $stmt->execute();
+
+            // Récupérer le résultat
+            $dernierPaiement = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($dernierPaiement && !empty($dernierPaiement['reference'])) {
+                // Retourner la référence si elle existe
+                echo json_encode([
+                    "reference" => $dernierPaiement['reference']
+                ]);
+            } else {
+                // Retourner une valeur par défaut si la table est vide ou la référence absente
+                echo json_encode([
+                    "reference" => null, // Ou une valeur par défaut si nécessaire
+                ]);
+            }
+        } catch (PDOException $e) {
+            // Retourner une erreur en cas d'exception
+            echo json_encode([
+                "success" => false,
                 "error" => "Erreur : " . $e->getMessage()
             ]);
         }

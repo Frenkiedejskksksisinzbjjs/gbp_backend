@@ -57,8 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         case 'getLastReferenceAchatCle':
             echo $boitePostaleModel->getLastReferenceAchatCle();
             break;
-        case 'getLastReferenceAjoutSousCouvette':
-            echo $boitePostaleModel->getLastReferenceAjoutSousCouvette();
+        case 'getLastReferenceSousCouvette':
+            echo $boitePostaleModel->getLastReferenceSousCouvette();
             break;
         case 'getLastReferenceChangerNom':
             echo $boitePostaleModel->getLastReferenceChangerNom();
@@ -209,7 +209,10 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
 
         case 'insertAndAssignBoitePostaleToClient':
-            echo $boitePostaleModel->insertAndAssignBoitePostaleToClient($id, $data);
+            // Récupérer les données envoyées
+            $Data = $_POST; // Utiliser $_POST pour récupérer les données du formulaire
+            $files=$_FILES;
+            echo $boitePostaleModel->insertAndAssignBoitePostaleToClient($id, $Data, $files);
             break;
         case 'insererLivraisonEtMettreAJourPaiement':
             echo $boitePostaleModel->insererLivraisonEtMettreAJourPaiement($id, $data);
@@ -237,31 +240,6 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $result = $boitePostaleModel->insererCollectionEtMettreAJourPaiement($idClient, $data);
                 echo $result;
                 break;
-
-                case 'insertExaunoration':
-                    // Vérifiez si l'ID client est passé correctement
-                    $idClient = $_GET['id_client'] ?? $_POST['id_client'] ?? null;
-                
-                    // Vérification que l'ID client est présent
-                    if (!$idClient) {
-                        echo json_encode(["error" => "idClient est manquant."]);
-                        exit;
-                    }
-                
-                    // Récupération des données envoyées en POST (JSON)
-                    $data = file_get_contents("php://input");
-                
-                    // Vérification que les données sont bien reçues
-                    if (empty($data)) {
-                        echo json_encode(["error" => "Les données sont vides."]);
-                        exit;
-                    }
-                
-                    // Appel de la fonction dans le modèle
-                    $result = $userModel->insertExaunoration($idClient, $data);
-                    echo $result;
-                    break;
-                
             
 
 

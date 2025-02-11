@@ -13,9 +13,9 @@ class BoitePostaleController
         $this->boitePostaleModel = new BoitePostaleModel();
     }
        
-    public function insertAndAssignBoitePostaleToClient($id,$data)
+    public function insertAndAssignBoitePostaleToClient($id,$data,$files)
     {
-        return $this->boitePostaleModel->insertAndAssignBoitePostaleToClient($id,$data) ;
+        return $this->boitePostaleModel->insertAndAssignBoitePostaleToClient($id,$data,$files) ;
 
         // A implémenter si nécessaire
     }
@@ -86,9 +86,9 @@ class BoitePostaleController
         // A implémenter si nécessaire
     }
 
-    public function getLastReferenceAjoutSousCouvette()
+    public function getLastReferenceSousCouvette()
     {
-        return $this->boitePostaleModel->getLastReferenceAjoutSousCouvette() ;
+        return $this->boitePostaleModel->getLastReferenceSousCouvette() ;
 
         // A implémenter si nécessaire
     }
