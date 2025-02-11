@@ -631,6 +631,54 @@ class UserModel
             return json_encode(["error" => "Database error: " . $e->getMessage()]);
         }
     }
+    
+
+
+    //Voici la fonction insertExaunoration
+    public function insertExaunoration($id_client, $data)
+    {
+        try {
+            $decodedData = json_decode($data, true);
+    
+            // Vérification des champs requis
+            if (!isset($id_client)) {
+                echo json_encode(["error" => "L'ID du client est obligatoire."]);
+                return;
+            }
+    
+            // Début de la transaction
+            $this->db->getPdo()->beginTransaction();
+    
+            try {
+                // Insertion dans la table exaunore
+                $stmt = $this->db->getPdo()->prepare("
+                    INSERT INTO exaunore (id_client, date_exaunoré) 
+                    VALUES (:id_client, NOW())
+                ");
+                $stmt->bindParam(':id_client', $id_client, PDO::PARAM_INT);
+                $stmt->execute();
+    
+                // Valider la transaction
+                $this->db->getPdo()->commit();
+    
+                echo json_encode(["success" => "Exaunoration enregistrée avec succès."]);
+            } catch (PDOException $e) {
+                $this->db->getPdo()->rollBack(); // Annulation en cas d'erreur
+                echo json_encode(["error" => "Erreur pendant l'insertion : " . $e->getMessage()]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
+        }
+    }
+    
+
+
+
+
+
+
+
+
 
 // la fonction inspiration pour enregistre des fichiers 
     public function insertionUploadImages($id, $file)
