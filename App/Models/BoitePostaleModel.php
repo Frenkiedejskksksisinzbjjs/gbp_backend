@@ -506,7 +506,7 @@ class BoitePostaleModel
     {
         try {
             // Vérifier si $idClient est présent et valide
-            if (empty($idClient) || !is_numeric($idClient)) {
+            if (empty($id) || !is_numeric($id)) {
                 echo json_encode(["error" => "L'ID du client est requis et doit être valide."]);
                 return;
             }
@@ -515,7 +515,7 @@ class BoitePostaleModel
             $decodedData = json_decode($data, true);
 
             // Vérifier les champs obligatoires
-            if (!isset($idClient, $decodedData['Montant'], $decodedData['Methode_de_paiement'], $decodedData['ReferenceId'])) {
+            if (!isset($id, $decodedData['Montant'], $decodedData['Methode_de_paiement'], $decodedData['ReferenceId'])) {
                 echo json_encode(["error" => "Les champs 'methode_payment' et 'montant_redevence' sont obligatoires."]);
                 return;
             }
