@@ -18,6 +18,8 @@ header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS'); // Mét
 header('Access-Control-Allow-Headers: Content-Type, Authorization'); // En-têtes autorisés
 header('Access-Control-Allow-Credentials: true'); // Permettre l'envoi de cookies et autres informations d'identification
 
+
+
 // Initialisation des contrôleurs
 $userModel = new UserModel();
 
@@ -52,6 +54,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         case 'GetAllClients':
             echo $boitePostaleModel->GetAllClients();
+            break;
+        case 'GetDetailsPaiement':
+            $iddetail = $_GET['id'] ?? null;
+            if ($iddetail) {
+                echo $boitePostaleModel->GetDetailsPaiement($iddetail);
+            }else{
+                json_encode(['error' =>"l'id client introuvable"]);
+            }
+
             break;
 
         case 'getLastReferenceAchatCle':
@@ -211,7 +222,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'insertAndAssignBoitePostaleToClient':
             // Récupérer les données envoyées
             $Data = $_POST; // Utiliser $_POST pour récupérer les données du formulaire
-            $files=$_FILES;
+            $files = $_FILES;
             echo $boitePostaleModel->insertAndAssignBoitePostaleToClient($id, $Data, $files);
             break;
         case 'insererLivraisonEtMettreAJourPaiement':

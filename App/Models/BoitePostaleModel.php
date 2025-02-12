@@ -464,6 +464,8 @@ class BoitePostaleModel
             $idUser = $decodedData['id_user'];
             $typeWallet = $decodedData['Wallet'] ?? null;
             $numeroWallet = $decodedData['Numero_wallet'] ?? null;
+            $numeroCheque = $decodedData['Numero_cheque'] ?? null;
+            $nomBanque = $decodedData['Nom_banque'] ?? null;
 
             // Validation de la méthode de paiement
             $validPaymentMethods = ['wallet', 'cash', 'cheque', 'carte_credits'];
@@ -473,7 +475,7 @@ class BoitePostaleModel
 
             // Vérification spécifique pour les wallets
             if ($methodePaiement === 'wallet') {
-                $validWalletTypes = ['wafi', 'cac-pay', 'd-money', 'sab-pay'];
+                $validWalletTypes = ['waafi', 'cac-pay', 'd-money', 'sab-pay'];
                 if (!in_array($typeWallet, $validWalletTypes) || empty($numeroWallet)) {
                     throw new \Exception("Type de wallet invalide ou numéro wallet manquant.");
                 }
@@ -486,20 +488,42 @@ class BoitePostaleModel
             $stmt = $this->db->getPdo()->prepare("SELECT id FROM paiements WHERE id_client = :id_client AND type = 'mis_a_jour'");
             $stmt->bindParam(':id_client', $idClient, PDO::PARAM_INT);
             $stmt->execute();
-            $paymentResult = $stmt->fetch(PDO::FETCH_ASSOC);
+            $paiement = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (!$paymentResult) {
+            if (!$paiement) {
                 throw new \Exception("Aucun paiement mis à jour trouvé pour ce client.");
             }
 
-            $paiementId = $paymentResult['id'];
+            // Insertion des détails de paiement
+            if ($paiement) {
+                $stmt = $this->db->getPdo()->prepare(
+                    "INSERT INTO details_paiements (paiement_id, categorie, montant, methode_payment, type_wallet, numero_wallet, numero_cheque, nom_banque, reference, created_by_user)
+                VALUES (:paiement_id, 'livraison_domicile', :montant, :methode, :type_wallet, :numero_wallet, :numero_cheque, :nom_banque, :reference, :id_user)"
+                );
+                $stmt->execute([
+                    ':paiement_id' => $paiement['id'],
+                    ':montant' => $decodedData['Montant'],
+                    ':methode' => $methodePaiement,
+                    ':type_wallet' => $typeWallet,
+                    ':numero_wallet' => $numeroWallet,
+                    ':numero_cheque' => $numeroCheque,
+                    ':nom_banque' => $nomBanque,
+                    ':reference' => $decodedData['ReferenceId'],
+                    ':id_user' => $decodedData['id_user']
+                ]);
+            }
 
+            // Validation de la transaction
+            $this->db->getPdo()->commit();
 
-            echo json_encode(["success" => "Paiement ajouté ou mis à jour avec succès."]);
+            return json_encode(["success" => "Paiement ajouté ou mis à jour avec succès."]);
         } catch (PDOException $e) {
-            echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
+            // Rollback en cas d'erreur
+            $this->db->getPdo()->rollBack();
+            return json_encode(["error" => "Erreur : " . $e->getMessage()]);
         }
     }
+
 
 
     public function enregistrerPaiement($id, $data)
@@ -555,7 +579,7 @@ class BoitePostaleModel
                 }
             }
 
-            
+
 
             // Vérification et mise à jour du paiement
             $stmt = $this->db->getPdo()->prepare("SELECT id FROM paiements WHERE id_client = :id_client");
@@ -583,6 +607,35 @@ class BoitePostaleModel
 
 
             echo json_encode(["success" => "Paiement ajouté avec succès."]);
+        } catch (PDOException $e) {
+            echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
+        }
+    }
+
+
+
+
+    public function GetDetailsPaiement($id)
+    {
+        try {
+            // Vérification et mise à jour du paiement
+            $stmt = $this->db->getPdo()->prepare("SELECT id FROM paiements WHERE id_client = :id_client");
+            $stmt->execute([':id_client' => $id]);
+            $paiement = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($paiement) {
+                $idpaiement = $paiement['id'];
+                $sql = "Select * from details_paiements where paiement_id = :idpaiement";
+                $stmt = $this->db->getPdo()->prepare($sql);
+                $stmt->execute([':idpaiement' => $idpaiement]);
+                $details = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                if ($details) {
+                    echo json_encode($details);
+                } else {
+                    echo json_encode(["error" => "Il ya pas des details"]);
+                }
+            } else {
+                echo json_encode(["error" => "paiement introuvable!!!"]);
+            }
         } catch (PDOException $e) {
             echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
         }
@@ -676,7 +729,7 @@ class BoitePostaleModel
 
             // Insérer les détails de paiement
             $insertPaymentQuery = "INSERT INTO details_paiements (paiement_id, categorie, montant, methode_payment, type_wallet, numero_wallet, numero_cheque, nom_banque, reference, created_by_user)
-                VALUES (:paiement_id, 'livraison_domicile', :montant, :methode, :type_wallet, :numero_wallet, :numero_cheque, :nom_banque, :reference, :id_user)";
+                VALUES (:paiement_id, 'changement_nom', :montant, :methode, :type_wallet, :numero_wallet, :numero_cheque, :nom_banque, :reference, :id_user)";
             $stmt = $this->db->getPdo()->prepare($insertPaymentQuery);
             $stmt->execute([
                 ':paiement_id' => $payment['id'],

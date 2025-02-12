@@ -19,6 +19,12 @@ class BoitePostaleController
 
         // A implémenter si nécessaire
     }
+    public function GetDetailsPaiement($id)
+    {
+        return $this->boitePostaleModel->GetDetailsPaiement($id) ;
+
+        // A implémenter si nécessaire
+    }
 
     public function insererCollectionEtMettreAJourPaiement($idClient, $data)
     {

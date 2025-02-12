@@ -513,17 +513,22 @@ class UserModel
                 c.email AS client_email,
                 c.telephone AS client_telephone,
                 c.adresse AS client_adresse,
-                p.id AS paiement_id,
-                p.montant_achats_cle,
-                p.reference_achat_cle
+                pd.paiement_id AS paiement_id,
+                pd.montant,
+                pd.reference
             FROM 
                 clients c
             INNER JOIN 
                 paiements p 
             ON 
                 c.id = p.id_client
+            INNER JOIN 
+                details_paiements pd 
+            ON 
+                pd.paiement_id = p.id and pd.categorie = 'achats_cle'
+
             WHERE 
-                p.reference_achat_cle IS NOT NULL
+                pd.reference IS NOT NULL
             ORDER BY 
                 c.nom ASC
         ";
@@ -550,23 +555,28 @@ class UserModel
         try {
             // Requête SQL pour récupérer les clients ayant un paiement avec 'reference_changer_nom' non null
             $sql = "
-            SELECT 
+             SELECT 
                 c.id AS client_id,
                 c.nom AS client_nom,
                 c.email AS client_email,
                 c.telephone AS client_telephone,
                 c.adresse AS client_adresse,
-                p.id AS paiement_id,
-                p.montant_livraison_a_domicile,
-                p.reference_livraison_domicile
+                pd.paiement_id AS paiement_id,
+                pd.montant,
+                pd.reference
             FROM 
                 clients c
             INNER JOIN 
                 paiements p 
             ON 
                 c.id = p.id_client
+            INNER JOIN 
+                details_paiements pd 
+            ON 
+                pd.paiement_id = p.id and pd.categorie = 'livraison_domicile'
+
             WHERE 
-                p.reference_livraison_domicile IS NOT NULL
+                pd.reference IS NOT NULL
             ORDER BY 
                 c.nom ASC
         ";
@@ -593,23 +603,28 @@ class UserModel
         try {
             // Requête SQL pour récupérer les clients ayant un paiement avec 'reference_changer_nom' non null
             $sql = "
-            SELECT 
+             SELECT 
                 c.id AS client_id,
                 c.nom AS client_nom,
                 c.email AS client_email,
                 c.telephone AS client_telephone,
                 c.adresse AS client_adresse,
-                p.id AS paiement_id,
-                p.montant_changement_nom,
-                p.reference_changer_nom
+                pd.paiement_id AS paiement_id,
+                pd.montant,
+                pd.reference
             FROM 
                 clients c
             INNER JOIN 
                 paiements p 
             ON 
                 c.id = p.id_client
+            INNER JOIN 
+                details_paiements pd 
+            ON 
+                pd.paiement_id = p.id and pd.categorie = 'changement_nom'
+
             WHERE 
-                p.reference_changer_nom IS NOT NULL
+                pd.reference IS NOT NULL
             ORDER BY 
                 c.nom ASC
         ";
@@ -631,7 +646,7 @@ class UserModel
             return json_encode(["error" => "Database error: " . $e->getMessage()]);
         }
     }
-    
+
 
 
     //Voici la fonction insertExaunoration
@@ -639,16 +654,16 @@ class UserModel
     {
         try {
             $decodedData = json_decode($data, true);
-    
+
             // Vérification des champs requis
             if (!isset($id_client)) {
                 echo json_encode(["error" => "L'ID du client est obligatoire."]);
                 return;
             }
-    
+
             // Début de la transaction
             $this->db->getPdo()->beginTransaction();
-    
+
             try {
                 // Insertion dans la table exaunore
                 $stmt = $this->db->getPdo()->prepare("
@@ -657,10 +672,10 @@ class UserModel
                 ");
                 $stmt->bindParam(':id_client', $id_client, PDO::PARAM_INT);
                 $stmt->execute();
-    
+
                 // Valider la transaction
                 $this->db->getPdo()->commit();
-    
+
                 echo json_encode(["success" => "Exaunoration enregistrée avec succès."]);
             } catch (PDOException $e) {
                 $this->db->getPdo()->rollBack(); // Annulation en cas d'erreur
@@ -670,7 +685,6 @@ class UserModel
             echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
         }
     }
-    
 
 
 
@@ -680,7 +694,8 @@ class UserModel
 
 
 
-// la fonction inspiration pour enregistre des fichiers 
+
+    // la fonction inspiration pour enregistre des fichiers 
     public function insertionUploadImages($id, $file)
     {
         try {
