@@ -55,12 +55,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         case 'GetAllClients':
             echo $boitePostaleModel->GetAllClients();
             break;
+        case 'GetToDayActivity':
+            echo $boitePostaleModel->GetToDayActivity();
+            break;
+        case 'GetToDayActivityCollections':
+            echo $boitePostaleModel->GetToDayActivityCollections();
+            break;
+        case 'GetToDayActivityChagementName':
+            echo $boitePostaleModel->GetToDayActivityChagementName();
+            break;
+        case 'GetToDayActivityAchatCle':
+            echo $boitePostaleModel->GetToDayActivityAchatCle();
+            break;
+        case 'GetToDayActivityLD':
+            echo $boitePostaleModel->GetToDayActivityLD();
+            break;
+        case 'GetToDayActivitySousCouverte':
+            echo $boitePostaleModel->GetToDayActivitySousCouverte();
+            break;
         case 'GetDetailsPaiement':
             $iddetail = $_GET['id'] ?? null;
             if ($iddetail) {
                 echo $boitePostaleModel->GetDetailsPaiement($iddetail);
-            }else{
-                json_encode(['error' =>"l'id client introuvable"]);
+            } else {
+                json_encode(['error' => "l'id client introuvable"]);
             }
 
             break;
@@ -264,7 +282,10 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
 
         case 'EnregistrerResiliation':
-            echo $boitePostaleModel->EnregistrerResiliation();
+            $idclient = $_GET['id'];
+            $files = $_FILES;
+            $data = $_POST;
+            echo $boitePostaleModel->EnregistrerResiliation($idclient,$files,$data);
             break;
 
         case 'GetClientName':

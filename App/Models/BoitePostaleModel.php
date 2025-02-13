@@ -641,6 +641,320 @@ class BoitePostaleModel
         }
     }
 
+    public function GetToDayActivity()
+    {
+        try {
+            // Récupérer la date actuelle au format 'YYYY-MM-DD'
+            $today = date('Y-m-d');
+
+            // Requête SQL pour récupérer les paiements et leurs détails de la date du jour
+            $sql = "
+                SELECT 
+                c.nom AS client_nom,
+                u.nom AS utilisateur_nom,
+                p.type AS paiement_type,
+                p.penalites,
+                p.montant_redevence,
+                p.methode_payment,
+                p.reference_general,
+                p.date_paiement,
+                dp.categorie,
+                dp.montant AS detail_montant,
+                dp.methode_payment AS detail_methode,
+                dp.type_wallet,
+                dp.numero_wallet,
+                dp.numero_cheque,
+                dp.nom_banque,
+                dp.reference
+            FROM paiements p
+            LEFT JOIN details_paiements dp ON p.id = dp.paiement_id
+            LEFT JOIN clients c ON p.id_client = c.id
+            LEFT JOIN users u ON dp.created_by_user = u.id
+            WHERE DATE(p.date_paiement) = :today
+            AND dp.categorie = 'redevence'  -- Filtre pour ne récupérer que les paiements de type 'redevance'
+            ORDER BY p.date_paiement DESC;
+            ";
+
+            // Préparer la requête
+            $stmt = $this->db->getPdo()->prepare($sql);
+
+            // Associer le paramètre
+            $stmt->bindParam(':today', $today, PDO::PARAM_STR);
+
+            // Exécuter la requête
+            $stmt->execute();
+
+            // Récupérer les résultats
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Retourner les données en JSON
+            echo json_encode( $result);
+        } catch (PDOException $e) {
+            echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
+        }
+    }
+    public function GetToDayActivitySousCouverte()
+    {
+        try {
+            // Récupérer la date actuelle au format 'YYYY-MM-DD'
+            $today = date('Y-m-d');
+
+            // Requête SQL pour récupérer les paiements et leurs détails de la date du jour
+            $sql = "
+                SELECT 
+                c.nom AS client_nom,
+                u.nom AS utilisateur_nom,
+                p.type AS paiement_type,
+                p.penalites,
+                p.montant_redevence,
+                p.methode_payment,
+                p.reference_general,
+                p.date_paiement,
+                dp.categorie,
+                dp.montant AS detail_montant,
+                dp.methode_payment AS detail_methode,
+                dp.type_wallet,
+                dp.numero_wallet,
+                dp.numero_cheque,
+                dp.nom_banque,
+                dp.reference
+            FROM paiements p
+            LEFT JOIN details_paiements dp ON p.id = dp.paiement_id
+            LEFT JOIN clients c ON p.id_client = c.id
+            LEFT JOIN users u ON dp.created_by_user = u.id
+            WHERE DATE(p.date_paiement) = :today
+            AND dp.categorie = 'sous_couvette'  -- Filtre pour ne récupérer que les paiements de type 'redevance'
+            ORDER BY p.date_paiement DESC;
+            ";
+
+            // Préparer la requête
+            $stmt = $this->db->getPdo()->prepare($sql);
+
+            // Associer le paramètre
+            $stmt->bindParam(':today', $today, PDO::PARAM_STR);
+
+            // Exécuter la requête
+            $stmt->execute();
+
+            // Récupérer les résultats
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Retourner les données en JSON
+            echo json_encode( $result);
+        } catch (PDOException $e) {
+            echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
+        }
+    }
+    public function GetToDayActivityLD()
+    {
+        try {
+            // Récupérer la date actuelle au format 'YYYY-MM-DD'
+            $today = date('Y-m-d');
+
+            // Requête SQL pour récupérer les paiements et leurs détails de la date du jour
+            $sql = "
+                SELECT 
+                c.nom AS client_nom,
+                u.nom AS utilisateur_nom,
+                p.type AS paiement_type,
+                p.penalites,
+                p.montant_redevence,
+                p.methode_payment,
+                p.reference_general,
+                p.date_paiement,
+                dp.categorie,
+                dp.montant AS detail_montant,
+                dp.methode_payment AS detail_methode,
+                dp.type_wallet,
+                dp.numero_wallet,
+                dp.numero_cheque,
+                dp.nom_banque,
+                dp.reference
+            FROM paiements p
+            LEFT JOIN details_paiements dp ON p.id = dp.paiement_id
+            LEFT JOIN clients c ON p.id_client = c.id
+            LEFT JOIN users u ON dp.created_by_user = u.id
+            WHERE DATE(p.date_paiement) = :today
+            AND dp.categorie = 'livraison_domicile'  -- Filtre pour ne récupérer que les paiements de type 'redevance'
+            ORDER BY p.date_paiement DESC;
+            ";
+
+            // Préparer la requête
+            $stmt = $this->db->getPdo()->prepare($sql);
+
+            // Associer le paramètre
+            $stmt->bindParam(':today', $today, PDO::PARAM_STR);
+
+            // Exécuter la requête
+            $stmt->execute();
+
+            // Récupérer les résultats
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Retourner les données en JSON
+            echo json_encode( $result);
+        } catch (PDOException $e) {
+            echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
+        }
+    }
+    public function GetToDayActivityCollections()
+    {
+        try {
+            // Récupérer la date actuelle au format 'YYYY-MM-DD'
+            $today = date('Y-m-d');
+
+            // Requête SQL pour récupérer les paiements et leurs détails de la date du jour
+            $sql = "
+                SELECT 
+                c.nom AS client_nom,
+                u.nom AS utilisateur_nom,
+                p.type AS paiement_type,
+                p.penalites,
+                p.montant_redevence,
+                p.methode_payment,
+                p.reference_general,
+                p.date_paiement,
+                dp.categorie,
+                dp.montant AS detail_montant,
+                dp.methode_payment AS detail_methode,
+                dp.type_wallet,
+                dp.numero_wallet,
+                dp.numero_cheque,
+                dp.nom_banque,
+                dp.reference
+            FROM paiements p
+            LEFT JOIN details_paiements dp ON p.id = dp.paiement_id
+            LEFT JOIN clients c ON p.id_client = c.id
+            LEFT JOIN users u ON dp.created_by_user = u.id
+            WHERE DATE(p.date_paiement) = :today
+            AND dp.categorie = 'collection'  -- Filtre pour ne récupérer que les paiements de type 'redevance'
+            ORDER BY p.date_paiement DESC;
+            ";
+
+            // Préparer la requête
+            $stmt = $this->db->getPdo()->prepare($sql);
+
+            // Associer le paramètre
+            $stmt->bindParam(':today', $today, PDO::PARAM_STR);
+
+            // Exécuter la requête
+            $stmt->execute();
+
+            // Récupérer les résultats
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Retourner les données en JSON
+            echo json_encode( $result);
+        } catch (PDOException $e) {
+            echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
+        }
+    }
+    public function GetToDayActivityChagementName()
+    {
+        try {
+            // Récupérer la date actuelle au format 'YYYY-MM-DD'
+            $today = date('Y-m-d');
+
+            // Requête SQL pour récupérer les paiements et leurs détails de la date du jour
+            $sql = "
+                SELECT 
+                c.nom AS client_nom,
+                u.nom AS utilisateur_nom,
+                p.type AS paiement_type,
+                p.penalites,
+                p.montant_redevence,
+                p.methode_payment,
+                p.reference_general,
+                p.date_paiement,
+                dp.categorie,
+                dp.montant AS detail_montant,
+                dp.methode_payment AS detail_methode,
+                dp.type_wallet,
+                dp.numero_wallet,
+                dp.numero_cheque,
+                dp.nom_banque,
+                dp.reference
+            FROM paiements p
+            LEFT JOIN details_paiements dp ON p.id = dp.paiement_id
+            LEFT JOIN clients c ON p.id_client = c.id
+            LEFT JOIN users u ON dp.created_by_user = u.id
+            WHERE DATE(p.date_paiement) = :today
+            AND dp.categorie = 'changement_nom'  -- Filtre pour ne récupérer que les paiements de type 'redevance'
+            ORDER BY p.date_paiement DESC;
+            ";
+
+            // Préparer la requête
+            $stmt = $this->db->getPdo()->prepare($sql);
+
+            // Associer le paramètre
+            $stmt->bindParam(':today', $today, PDO::PARAM_STR);
+
+            // Exécuter la requête
+            $stmt->execute();
+
+            // Récupérer les résultats
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Retourner les données en JSON
+            echo json_encode( $result);
+        } catch (PDOException $e) {
+            echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
+        }
+    }
+    public function GetToDayActivityAchatCle()
+    {
+        try {
+            // Récupérer la date actuelle au format 'YYYY-MM-DD'
+            $today = date('Y-m-d');
+
+            // Requête SQL pour récupérer les paiements et leurs détails de la date du jour
+            $sql = "
+                SELECT 
+                c.nom AS client_nom,
+                u.nom AS utilisateur_nom,
+                p.type AS paiement_type,
+                p.penalites,
+                p.montant_redevence,
+                p.methode_payment,
+                p.reference_general,
+                p.date_paiement,
+                dp.categorie,
+                dp.montant AS detail_montant,
+                dp.methode_payment AS detail_methode,
+                dp.type_wallet,
+                dp.numero_wallet,
+                dp.numero_cheque,
+                dp.nom_banque,
+                dp.reference
+            FROM paiements p
+            LEFT JOIN details_paiements dp ON p.id = dp.paiement_id
+            LEFT JOIN clients c ON p.id_client = c.id
+            LEFT JOIN users u ON dp.created_by_user = u.id
+            WHERE DATE(p.date_paiement) = :today
+            AND dp.categorie = 'achats_cle'  -- Filtre pour ne récupérer que les paiements de type 'redevance'
+            ORDER BY p.date_paiement DESC;
+            ";
+
+            // Préparer la requête
+            $stmt = $this->db->getPdo()->prepare($sql);
+
+            // Associer le paramètre
+            $stmt->bindParam(':today', $today, PDO::PARAM_STR);
+
+            // Exécuter la requête
+            $stmt->execute();
+
+            // Récupérer les résultats
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Retourner les données en JSON
+            echo json_encode( $result);
+        } catch (PDOException $e) {
+            echo json_encode(["error" => "Erreur : " . $e->getMessage()]);
+        }
+    }
+   
+
 
 
 
@@ -888,58 +1202,62 @@ class BoitePostaleModel
         try {
             // Requête SQL pour récupérer les informations des clients
             $sql = "
-            SELECT DISTINCT
-                c.id AS id,
-                c.nom AS Nom,
-                c.adresse AS Adresse,
-                c.type_client AS TypeClient,
-                bp.numero AS NBp,
-                bp.type AS Type_boite_postale,
-                c.telephone AS Telephone,
-                a.annee_abonnement AS annee_abonnement,
-                p.type AS Paiement_Type,
-                p.penalites AS Penalites,
-                p.montant_redevence AS Montant_Redevance,
-                p.methode_payment AS Methode_Paiement,
-                p.reference_general AS Reference_General,
-                p.date_paiement AS Date_Paiement,
+           SELECT DISTINCT
+    c.id AS id,
+    c.nom AS Nom,
+    c.adresse AS Adresse,
+    c.type_client AS TypeClient,
+    bp.numero AS NBp,
+    bp.type AS Type_boite_postale,
+    c.telephone AS Telephone,
+    a.annee_abonnement AS annee_abonnement,
+    p.type AS Paiement_Type,
+    p.penalites AS Penalites,
+    p.montant_redevence AS Montant_Redevance,
+    p.methode_payment AS Methode_Paiement,
+    p.reference_general AS Reference_General,
+    p.date_paiement AS Date_Paiement,
 
-                -- Détermination de l'état de l'abonnement
-                CASE 
-                    WHEN a.annee_abonnement = YEAR(CURDATE()) THEN 'mis_a_jour'
-                    ELSE 'non_mis_a_jour'
-                END AS Etat,
+    -- Détermination de l'état de l'abonnement
+    CASE 
+        WHEN a.annee_abonnement = YEAR(CURDATE()) THEN 'a jour'
+        ELSE 'non a jour'
+    END AS Etat,
 
-                -- Nombre de sous-couvertes associées
-                (SELECT COUNT(*) FROM sous_couvete sc WHERE sc.id_client = c.id) AS sous_couvert,
+    -- Nombre de sous-couvertes associées
+    (SELECT COUNT(*) FROM sous_couvete sc WHERE sc.id_client = c.id) AS sous_couvert,
 
-                -- Champs de la table documents
-                d.type AS Document_Type,
-                d.patente_quitance AS Patente_Quitance,
-                d.identite_gerant AS Identite_Gerant,
-                d.abonnement_unique AS Abonnement_Unique,
-                d.created_at AS Document_Created_At,
+    -- Champs de la table documents
+    d.type AS Document_Type,
+    d.patente_quitance AS Patente_Quitance,
+    d.identite_gerant AS Identite_Gerant,
+    d.abonnement_unique AS Abonnement_Unique,
+    d.created_at AS Document_Created_At,
 
-                -- Concaténation des paiements sur une seule ligne
-                GROUP_CONCAT(DISTINCT dp.categorie ORDER BY dp.categorie ASC SEPARATOR ', ') AS Paiement_Categories,
-                GROUP_CONCAT(DISTINCT dp.montant ORDER BY dp.montant ASC SEPARATOR ', ') AS Paiement_Montants,
-                GROUP_CONCAT(DISTINCT dp.methode_payment ORDER BY dp.methode_payment ASC SEPARATOR ', ') AS Paiement_Methodes,
-                GROUP_CONCAT(DISTINCT dp.type_wallet ORDER BY dp.type_wallet ASC SEPARATOR ', ') AS Type_Wallets,
-                GROUP_CONCAT(DISTINCT dp.numero_wallet ORDER BY dp.numero_wallet ASC SEPARATOR ', ') AS Numero_Wallets,
-                GROUP_CONCAT(DISTINCT dp.numero_cheque ORDER BY dp.numero_cheque ASC SEPARATOR ', ') AS Numero_Cheques,
-                GROUP_CONCAT(DISTINCT dp.nom_banque ORDER BY dp.nom_banque ASC SEPARATOR ', ') AS Nom_Banques,
-                GROUP_CONCAT(DISTINCT dp.reference ORDER BY dp.reference ASC SEPARATOR ', ') AS Paiement_References
+    -- Concaténation des paiements sur une seule ligne
+    GROUP_CONCAT(DISTINCT dp.categorie ORDER BY dp.categorie ASC SEPARATOR ', ') AS Paiement_Categories,
+    GROUP_CONCAT(DISTINCT dp.montant ORDER BY dp.montant ASC SEPARATOR ', ') AS Paiement_Montants,
+    GROUP_CONCAT(DISTINCT dp.methode_payment ORDER BY dp.methode_payment ASC SEPARATOR ', ') AS Paiement_Methodes,
+    GROUP_CONCAT(DISTINCT dp.type_wallet ORDER BY dp.type_wallet ASC SEPARATOR ', ') AS Type_Wallets,
+    GROUP_CONCAT(DISTINCT dp.numero_wallet ORDER BY dp.numero_wallet ASC SEPARATOR ', ') AS Numero_Wallets,
+    GROUP_CONCAT(DISTINCT dp.numero_cheque ORDER BY dp.numero_cheque ASC SEPARATOR ', ') AS Numero_Cheques,
+    GROUP_CONCAT(DISTINCT dp.nom_banque ORDER BY dp.nom_banque ASC SEPARATOR ', ') AS Nom_Banques,
+    GROUP_CONCAT(DISTINCT dp.reference ORDER BY dp.reference ASC SEPARATOR ', ') AS Paiement_References
 
-            FROM clients c
-            LEFT JOIN boites_postales bp ON c.id_boite_postale = bp.id
-            LEFT JOIN abonnement a ON bp.id = a.id_boite_postale
-            LEFT JOIN collection col ON col.id_client = c.id
-            LEFT JOIN livraison_a_domicile ld ON ld.id_client = c.id
-            LEFT JOIN documents d ON c.id = d.id_client
-            LEFT JOIN paiements p ON c.id = p.id_client
-            LEFT JOIN details_paiements dp ON p.id = dp.paiement_id
+FROM clients c
+LEFT JOIN boites_postales bp ON c.id_boite_postale = bp.id
+LEFT JOIN abonnement a ON bp.id = a.id_boite_postale
+LEFT JOIN collection col ON col.id_client = c.id
+LEFT JOIN livraison_a_domicile ld ON ld.id_client = c.id
+LEFT JOIN documents d ON c.id = d.id_client
+LEFT JOIN paiements p ON c.id = p.id_client
+LEFT JOIN details_paiements dp ON p.id = dp.paiement_id
 
-            GROUP BY c.id, bp.numero, bp.type, a.annee_abonnement, p.id, d.id
+-- Exclure les clients qui sont dans la table resilier
+WHERE c.id NOT IN (SELECT id_client FROM resilies)
+
+GROUP BY c.id, bp.numero, bp.type, a.annee_abonnement, p.id, d.id;
+
         ";
 
             // Exécution de la requête
@@ -1219,90 +1537,105 @@ class BoitePostaleModel
 
 
 
-    // enregistrer une résiliation dans la table resilies. Cette fonction prend l'ID du client (id_client), l'ID de l'utilisateur (id_user) et utilise la date actuelle (CURRENT_DATE) pour la résiliation.(Resilation)
-    public function EnregistrerResiliation()
+    // Enregistrer une résiliation dans la table resilies
+    public function EnregistrerResiliation($idclient, $files, $Data)
     {
         try {
-            // Récupérer les données JSON envoyées dans le corps de la requête
-            $input = file_get_contents('php://input');
-            $data = json_decode($input, true);
+            $data = json_decode(json_encode($Data), true);
 
-            // Vérifier que les données JSON contiennent l'ID du client et l'ID de l'utilisateur
-            if (!isset($data['clientId']) || !is_numeric($data['clientId']) || $data['clientId'] <= 0) {
-                echo json_encode(["error" => "Invalid or missing clientId"]);
+            // Vérification des données
+            if (!$idclient || !is_numeric($idclient) || !isset($data['id_user']) || !is_numeric($data['id_user'])) {
+                echo json_encode(["error" => "Invalid clientId or userId"]);
                 return;
             }
 
-            if (!isset($data['userId']) || !is_numeric($data['userId']) || $data['userId'] <= 0) {
-                echo json_encode(["error" => "Invalid or missing userId"]);
+            $clientId = intval($idclient);
+            $userId = intval($data['id_user']);
+            $dateResiliation = date('Y-m-d');
+            $uploadPath = 'upload/documents/';
+
+            // Créer le dossier s'il n'existe pas
+            if (!is_dir($uploadPath) && !mkdir($uploadPath, 0777, true) && !is_dir($uploadPath)) {
+                echo json_encode(["error" => "Failed to create upload directory"]);
                 return;
             }
 
-            $clientId = $data['clientId'];
-            $userId = $data['userId'];
-            $dateResiliation = date('Y-m-d'); // Date actuelle (format YYYY-MM-DD)
+            $lettrePath = null;
+            var_dump($files['lettre']);
+            if (!empty($files['lettre']['tmp_name'])) {
+                $fileTmpPath = $files['lettre']['tmp_name'];
+                $fileExtension = pathinfo($files['lettre']['name'], PATHINFO_EXTENSION);
+                $newFileName = time() . "_" . uniqid() . "." . $fileExtension;
+                $lettrePath = $uploadPath . $newFileName;
 
-            // Requête SQL pour insérer une nouvelle résiliation dans la table `resilies`
-            $sql = "
-            INSERT INTO resilies (id_user, id_client, date_resiliation)
-            VALUES (:userId, :clientId, :dateResiliation)
-        ";
 
-            // Préparation et exécution de la requête
+                if (!move_uploaded_file($fileTmpPath, $lettrePath)) {
+                    echo json_encode(["error" => "Failed to upload file"]);
+                    return;
+                }
+            }
+
+            // Vérifier si le fichier a bien été enregistré
+            if (!$lettrePath) {
+                echo json_encode(["error" => "No file uploaded"]);
+                return;
+            }
+
+            // Requête SQL
+            $sql = "INSERT INTO resilies (id_user, id_client, date_resiliation, Lettre_recommandation) 
+                VALUES (:userId, :clientId, :dateResiliation, :lettre)";
+
             $stmt = $this->db->getPdo()->prepare($sql);
             $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
             $stmt->bindParam(':clientId', $clientId, PDO::PARAM_INT);
             $stmt->bindParam(':dateResiliation', $dateResiliation, PDO::PARAM_STR);
+            $stmt->bindParam(':lettre', $lettrePath, PDO::PARAM_STR);
 
-            // Exécution de la requête
-            $stmt->execute();
-
-            // Vérifier si l'insertion a réussi
-            if ($stmt->rowCount() > 0) {
-                // Retourner une réponse JSON confirmant la réussite de l'enregistrement
+            if ($stmt->execute()) {
                 echo json_encode(["success" => "Resiliation enregistrée avec succès"]);
             } else {
-                // Retourner une erreur si l'insertion a échoué
-                echo json_encode(["error" => "Failed to register resiliation"]);
+                echo json_encode(["error" => "Database insertion failed"]);
             }
         } catch (PDOException $e) {
-            // Gestion des erreurs de base de données
             echo json_encode(["error" => "Database error: " . $e->getMessage()]);
         }
     }
 
-    public function AddResiliation($idClient, $idUser)
-    {
-        try {
-            // Vérifier que les IDs sont valides
-            if (!is_numeric($idClient) || $idClient <= 0 || !is_numeric($idUser) || $idUser <= 0) {
-                echo json_encode(["error" => "Invalid client ID or user ID"]);
-                return;
-            }
 
-            // Requête SQL pour insérer la résiliation
-            $sql = "
-              INSERT INTO resilies (id_client, id_user, date_resiliation)
-              VALUES (:idClient, :idUser, CURRENT_DATE)
-          ";
 
-            // Préparation et exécution de la requête
-            $stmt = $this->db->getPdo()->prepare($sql);
-            $stmt->bindParam(':idClient', $idClient, PDO::PARAM_INT);
-            $stmt->bindParam(':idUser', $idUser, PDO::PARAM_INT);
-            $stmt->execute();
 
-            // Vérifier si l'insertion a réussi
-            if ($stmt->rowCount() > 0) {
-                echo json_encode(["success" => "Resiliation added successfully"]);
-            } else {
-                echo json_encode(["error" => "Failed to add resiliation"]);
-            }
-        } catch (PDOException $e) {
-            // Gestion des erreurs de base de données
-            echo json_encode(["error" => "Database error: " . $e->getMessage()]);
-        }
-    }
+    // public function AddResiliation($idClient, $idUser)
+    // {
+    //     try {
+    //         // Vérifier que les IDs sont valides
+    //         if (!is_numeric($idClient) || $idClient <= 0 || !is_numeric($idUser) || $idUser <= 0) {
+    //             echo json_encode(["error" => "Invalid client ID or user ID"]);
+    //             return;
+    //         }
+
+    //         // Requête SQL pour insérer la résiliation
+    //         $sql = "
+    //           INSERT INTO resilies (id_client, id_user, date_resiliation)
+    //           VALUES (:idClient, :idUser, CURRENT_DATE)
+    //       ";
+
+    //         // Préparation et exécution de la requête
+    //         $stmt = $this->db->getPdo()->prepare($sql);
+    //         $stmt->bindParam(':idClient', $idClient, PDO::PARAM_INT);
+    //         $stmt->bindParam(':idUser', $idUser, PDO::PARAM_INT);
+    //         $stmt->execute();
+
+    //         // Vérifier si l'insertion a réussi
+    //         if ($stmt->rowCount() > 0) {
+    //             echo json_encode(["success" => "Resiliation added successfully"]);
+    //         } else {
+    //             echo json_encode(["error" => "Failed to add resiliation"]);
+    //         }
+    //     } catch (PDOException $e) {
+    //         // Gestion des erreurs de base de données
+    //         echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+    //     }
+    // }
 
 
 

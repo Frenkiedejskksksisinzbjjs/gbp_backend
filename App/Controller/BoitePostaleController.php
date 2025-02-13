@@ -12,16 +12,16 @@ class BoitePostaleController
     {
         $this->boitePostaleModel = new BoitePostaleModel();
     }
-       
-    public function insertAndAssignBoitePostaleToClient($id,$data,$files)
+
+    public function insertAndAssignBoitePostaleToClient($id, $data, $files)
     {
-        return $this->boitePostaleModel->insertAndAssignBoitePostaleToClient($id,$data,$files) ;
+        return $this->boitePostaleModel->insertAndAssignBoitePostaleToClient($id, $data, $files);
 
         // A implémenter si nécessaire
     }
     public function GetDetailsPaiement($id)
     {
-        return $this->boitePostaleModel->GetDetailsPaiement($id) ;
+        return $this->boitePostaleModel->GetDetailsPaiement($id);
 
         // A implémenter si nécessaire
     }
@@ -30,18 +30,18 @@ class BoitePostaleController
     {
         return $this->boitePostaleModel->insererCollectionEtMettreAJourPaiement($idClient, $data);
     }
-    
+
 
     public function enregistrerPaiement($idClient, $data)
     {
-        return $this->boitePostaleModel->enregistrerPaiement($idClient, $data) ;
+        return $this->boitePostaleModel->enregistrerPaiement($idClient, $data);
 
         // A implémenter si nécessaire
     }
 
     public function insererLivraisonEtMettreAJourPaiement($id, $data)
     {
-        return $this->boitePostaleModel->insererLivraisonEtMettreAJourPaiement($id, $data) ;
+        return $this->boitePostaleModel->insererLivraisonEtMettreAJourPaiement($id, $data);
 
         // A implémenter si nécessaire
     }
@@ -49,18 +49,18 @@ class BoitePostaleController
 
 
 
-    public function addMontantAchatsCle($id,$data)
+    public function addMontantAchatsCle($id, $data)
     {
-        return $this->boitePostaleModel->addMontantAchatsCle($id,$data) ;
+        return $this->boitePostaleModel->addMontantAchatsCle($id, $data);
 
         // A implémenter si nécessaire
     }
 
 
 
-    public function updateClientNameAndAddPayment($id,$data)
+    public function updateClientNameAndAddPayment($id, $data)
     {
-        return $this->boitePostaleModel->updateClientNameAndAddPayment($id,$data) ;
+        return $this->boitePostaleModel->updateClientNameAndAddPayment($id, $data);
 
         // A implémenter si nécessaire
     }
@@ -72,7 +72,7 @@ class BoitePostaleController
 
     public function addSousCouvette($id, $data)
     {
-        return $this->boitePostaleModel->addSousCouvette($id, $data) ;
+        return $this->boitePostaleModel->addSousCouvette($id, $data);
 
         // A implémenter si nécessaire
     }
@@ -80,160 +80,194 @@ class BoitePostaleController
 
     public function GetAllClients()
     {
-        return $this->boitePostaleModel->GetAllClients() ;
+        return $this->boitePostaleModel->GetAllClients();
 
         // A implémenter si nécessaire
     }
 
     public function getLastReferenceAchatCle()
     {
-        return $this->boitePostaleModel->getLastReferenceAchatCle() ;
+        return $this->boitePostaleModel->getLastReferenceAchatCle();
 
         // A implémenter si nécessaire
     }
 
     public function getLastReferenceSousCouvette()
     {
-        return $this->boitePostaleModel->getLastReferenceSousCouvette() ;
+        return $this->boitePostaleModel->getLastReferenceSousCouvette();
 
         // A implémenter si nécessaire
     }
 
     public function getLastReferenceChangerNom()
     {
-        return $this->boitePostaleModel->getLastReferenceChangerNom() ;
+        return $this->boitePostaleModel->getLastReferenceChangerNom();
 
         // A implémenter si nécessaire
     }
 
     public function getLastReferenceLivraisonDomicile()
     {
-        return $this->boitePostaleModel->getLastReferenceLivraisonDomicile() ;
+        return $this->boitePostaleModel->getLastReferenceLivraisonDomicile();
 
         // A implémenter si nécessaire
     }
 
     public function getLastReferenceAjoutCollection()
     {
-        return $this->boitePostaleModel->getLastReferenceAjoutCollection() ;
+        return $this->boitePostaleModel->getLastReferenceAjoutCollection();
 
         // A implémenter si nécessaire
     }
     public function getLastReference()
     {
-        return $this->boitePostaleModel->getLastReference() ;
+        return $this->boitePostaleModel->getLastReference();
 
         // A implémenter si nécessaire
     }
 
-//     public function GetAllResilies()
-//     {
-//         return $this->boitePostaleModel->GetAllResilies() ;
+    //     public function GetAllResilies()
+    //     {
+    //         return $this->boitePostaleModel->GetAllResilies() ;
 
-//         // A implémenter si nécessaire
-//     }
+    //         // A implémenter si nécessaire
+    //     }
 
-//     public function GetClientName()
-//     {
-//         return $this->boitePostaleModel->GetClientName() ;
+    //     public function GetClientName()
+    //     {
+    //         return $this->boitePostaleModel->GetClientName() ;
 
-//         // A implémenter si nécessaire
-//     }
-//     public function EnregistrerResiliation()
-//     {
-//         return $this->boitePostaleModel->EnregistrerResiliation() ;
+    //         // A implémenter si nécessaire
+    //     }
+    public function EnregistrerResiliation($idclient, $files, $data)
+    {
+        return $this->boitePostaleModel->EnregistrerResiliation($idclient, $files, $data);
 
-//         // A implémenter si nécessaire
-//     }
+        // A implémenter si nécessaire
+    }
+    public function GetToDayActivity()
+    {
+        return $this->boitePostaleModel->GetToDayActivity();
 
-    
-//     public function GetAllBoxDetails()
-//     {
-//         return $this->boitePostaleModel->GetAllBoxDetails() ;
+        // A implémenter si nécessaire
+    }
+    public function GetToDayActivitySousCouverte()
+    {
+        return $this->boitePostaleModel->GetToDayActivitySousCouverte();
 
-//         // A implémenter si nécessaire
-//     }
+        // A implémenter si nécessaire
+    }
+    public function GetToDayActivityLD()
+    {
+        return $this->boitePostaleModel->GetToDayActivityLD();
 
-//     public function GetDetailsByClientData()
-//     {
-//         return $this->boitePostaleModel->GetDetailsByClientData() ;
+        // A implémenter si nécessaire
+    }
+    public function GetToDayActivityCollections()
+    {
+        return $this->boitePostaleModel->GetToDayActivityCollections();
 
-//         // A implémenter si nécessaire
-//     }
+        // A implémenter si nécessaire
+    }
+    public function GetToDayActivityChagementName()
+    {
+        return $this->boitePostaleModel->GetToDayActivityChagementName();
 
+        // A implémenter si nécessaire
+    }
+    public function GetToDayActivityAchatCle()
+    {
+        return $this->boitePostaleModel->GetToDayActivityAchatCle();
 
-//     public function UpdateClientName($clientId, $jsonData  , $userId)
-//     {
-//         return $this->boitePostaleModel->UpdateClientName($clientId, $jsonData , $userId) ;
-
-//         // A implémenter si nécessaire
-//     }
-
-//     // Récupérer toutes les boîtes postales
-//     public function GetAllBoitesPostales()
-//     {
-//         return $this->boitePostaleModel->GetAllBoitesPostales();
-//     }
-//      // Récupérer toutes les boîtes postales
-//      public function GetBoitePostaleDetails()
-//      {
-//          return $this->boitePostaleModel->GetBoitePostaleDetails();
-//      }
-
-//     // Récupérer toutes les boîtes postales
-//     public function GetBoitesPostalesDetails()
-//     {
-//         return $this->boitePostaleModel->GetBoitesPostalesDetails();
-//     }
+        // A implémenter si nécessaire
+    }
 
 
-//     // Récupérer toutes les boîtes postales
-//     public function GetClientEtatBoitePostale($jsonData)
-// {
-//     return $this->boitePostaleModel->GetClientEtatBoitePostale($jsonData);
-// }
+    //     public function GetAllBoxDetails()
+    //     {
+    //         return $this->boitePostaleModel->GetAllBoxDetails() ;
 
-//     // Récupérer toutes les boîtes postales
-//     public function GetEtatBoitesPostales()
-//     {
-//         return $this->boitePostaleModel->GetEtatBoitesPostales();
-//     }
+    //         // A implémenter si nécessaire
+    //     }
 
-//     // Récupérer une boîte postale par son ID
-//     public function getBoitePostaleById($id)
-//     {
-//         return $this->boitePostaleModel->getBoitePostaleById($id);
-//     }
+    //     public function GetDetailsByClientData()
+    //     {
+    //         return $this->boitePostaleModel->GetDetailsByClientData() ;
 
-//     // Créer une nouvelle boîte postale
-//     public function createBoitePostale($jsonData)
-//     {
-//         return $this->boitePostaleModel->createBoitePostale($jsonData);
-//     }
+    //         // A implémenter si nécessaire
+    //     }
 
-//     // Mettre à jour une boîte postale
-//     public function updateBoitePostale($id, $data)
-//     {
-//         return $this->boitePostaleModel->updateBoitePostale($id, $data);
-//     }
 
-//     // Supprimer une ou plusieurs boîtes postales
-//     public function deleteBoitePostale($jsonData)
-//     {
-//         return $this->boitePostaleModel->deleteBoitePostale($jsonData);
-//     }
+    //     public function UpdateClientName($clientId, $jsonData  , $userId)
+    //     {
+    //         return $this->boitePostaleModel->UpdateClientName($clientId, $jsonData , $userId) ;
 
-//     // Récupérer les boîtes postales par type
-//     public function getBoitesPostalesByType($type)
-//     {
-//         return $this->boitePostaleModel->getBoitesPostalesByType($type);
-//     }
+    //         // A implémenter si nécessaire
+    //     }
 
-//     // Compter le nombre total de boîtes postales
-//     public function countBoitesPostales()
-//     {
-//         return $this->boitePostaleModel->countBoitesPostales();
-//     }
+    //     // Récupérer toutes les boîtes postales
+    //     public function GetAllBoitesPostales()
+    //     {
+    //         return $this->boitePostaleModel->GetAllBoitesPostales();
+    //     }
+    //      // Récupérer toutes les boîtes postales
+    //      public function GetBoitePostaleDetails()
+    //      {
+    //          return $this->boitePostaleModel->GetBoitePostaleDetails();
+    //      }
+
+    //     // Récupérer toutes les boîtes postales
+    //     public function GetBoitesPostalesDetails()
+    //     {
+    //         return $this->boitePostaleModel->GetBoitesPostalesDetails();
+    //     }
+
+
+    //     // Récupérer toutes les boîtes postales
+    //     public function GetClientEtatBoitePostale($jsonData)
+    // {
+    //     return $this->boitePostaleModel->GetClientEtatBoitePostale($jsonData);
+    // }
+
+    //     // Récupérer toutes les boîtes postales
+    //     public function GetEtatBoitesPostales()
+    //     {
+    //         return $this->boitePostaleModel->GetEtatBoitesPostales();
+    //     }
+
+    //     // Récupérer une boîte postale par son ID
+    //     public function getBoitePostaleById($id)
+    //     {
+    //         return $this->boitePostaleModel->getBoitePostaleById($id);
+    //     }
+
+    //     // Créer une nouvelle boîte postale
+    //     public function createBoitePostale($jsonData)
+    //     {
+    //         return $this->boitePostaleModel->createBoitePostale($jsonData);
+    //     }
+
+    //     // Mettre à jour une boîte postale
+    //     public function updateBoitePostale($id, $data)
+    //     {
+    //         return $this->boitePostaleModel->updateBoitePostale($id, $data);
+    //     }
+
+    //     // Supprimer une ou plusieurs boîtes postales
+    //     public function deleteBoitePostale($jsonData)
+    //     {
+    //         return $this->boitePostaleModel->deleteBoitePostale($jsonData);
+    //     }
+
+    //     // Récupérer les boîtes postales par type
+    //     public function getBoitesPostalesByType($type)
+    //     {
+    //         return $this->boitePostaleModel->getBoitesPostalesByType($type);
+    //     }
+
+    //     // Compter le nombre total de boîtes postales
+    //     public function countBoitesPostales()
+    //     {
+    //         return $this->boitePostaleModel->countBoitesPostales();
+    //     }
 }
-
-?>
