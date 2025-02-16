@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : dim. 09 fév. 2025 à 06:25
--- Version du serveur : 10.4.28-MariaDB
--- Version de PHP : 8.0.28
+-- Généré le : dim. 16 fév. 2025 à 06:44
+-- Version du serveur : 10.4.32-MariaDB
+-- Version de PHP : 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -39,7 +39,8 @@ CREATE TABLE `abonnement` (
 --
 
 INSERT INTO `abonnement` (`id`, `id_boite_postale`, `annee_abonnement`, `id_payments`) VALUES
-(42, 3, '2025', 8);
+(42, 3, '2025', 8),
+(43, 7, '2025', 9);
 
 -- --------------------------------------------------------
 
@@ -134,7 +135,8 @@ CREATE TABLE `clients` (
 --
 
 INSERT INTO `clients` (`id`, `nom`, `email`, `adresse`, `nom_societe`, `type_client`, `telephone`, `id_boite_postale`, `id_user`, `update_by`, `date_abonnement`) VALUES
-(73, 'Chamsa', 'Natasha@gmail.com', 'centre ville q1', NULL, 'particulier', '77101010', 3, 2, NULL, '2025-02-08');
+(73, 'halima abdillahi hassan', 'Natasha@gmail.com', 'centre ville q1', NULL, 'particulier', '77101010', 3, 2, NULL, '2025-02-08'),
+(74, 'fatouma sadik abdallah', 'testuser@gmail.com', 'cite nasib', NULL, 'particulier', '77777778', 7, 2, NULL, '2025-02-12');
 
 -- --------------------------------------------------------
 
@@ -199,7 +201,19 @@ INSERT INTO `details_paiements` (`id`, `paiement_id`, `categorie`, `montant`, `m
 (25, 8, 'redevence', 40000.00, 'wallet', 'waafi', '77101012', '', '', 'RNBP/00001/2025-02-08', 2),
 (26, 8, 'sous_couvette', 0.00, 'wallet', 'waafi', '77101012', '', '', 'AJSC/00001/2025-02-08', 2),
 (27, 8, 'livraison_domicile', 3000.00, 'wallet', 'waafi', '77101012', '', '', 'AJLV/00001/2025-02-08', 2),
-(28, 8, 'collection', 4000.00, 'wallet', 'waafi', '77101012', '', '', 'AJCll/00001/2025-02-08', 2);
+(28, 8, 'collection', 4000.00, 'wallet', 'waafi', '77101012', '', '', 'AJCll/00001/2025-02-08', 2),
+(29, 8, 'livraison_domicile', 5000.00, 'cheque', NULL, '', '132564', 'EAB', 'CGNM/00001/2025-02-11', 2),
+(30, 8, 'redevence', 40000.00, 'cash', NULL, '', '', '', 'RNBP/00002/2025-02-11', 2),
+(31, 8, 'redevence', 40000.00, 'wallet', 'waafi', '77101012', '', '', 'RNBP/00003/2025-02-11', 2),
+(32, 8, 'redevence', 40000.00, 'cash', NULL, '', '', '', 'RNBP/00004/2025-02-11', 2),
+(33, 8, 'redevence', 40000.00, 'cash', NULL, '', '', '', 'RNBP/00005/2025-02-11', 2),
+(34, 8, 'redevence', 40000.00, 'cash', NULL, '', '', '', 'RNBP/00005/2025-02-11', 2),
+(35, 8, 'redevence', 40000.00, 'cash', NULL, '', '', '', 'RNBP/00006/2025-02-11', 2),
+(36, 8, 'redevence', 40000.00, 'cash', NULL, '', '', '', 'RNBP/00006/2025-02-11', 2),
+(37, 8, 'redevence', 40000.00, 'cash', NULL, '', '', '', 'RNBP/00007/2025-02-11', 2),
+(38, 9, 'redevence', 40000.00, 'cash', '', '', '', '', 'RNBP/00008/2025-02-12', 2),
+(39, 9, 'sous_couvette', 0.00, 'cash', '', '', '', '', '', 2),
+(40, 9, 'livraison_domicile', 3000.00, 'cash', '', '', '', '', 'AJLV/00002/2025-02-12', 2);
 
 -- --------------------------------------------------------
 
@@ -216,6 +230,13 @@ CREATE TABLE `documents` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `id_client` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `documents`
+--
+
+INSERT INTO `documents` (`id`, `type`, `patente_quitance`, `identite_gerant`, `abonnement_unique`, `created_at`, `id_client`) VALUES
+(43, 'particulier', NULL, 0x75706c6f61642f646f63756d656e74732f506f7274666f6c696f205765622054656d706c6174652028436f6d6d756e697479292e706466, 0x75706c6f61642f646f63756d656e74732f506f7274666f6c696f2044657643686170746572202831292e706466, '2025-02-12 06:08:02', 74);
 
 -- --------------------------------------------------------
 
@@ -250,7 +271,8 @@ CREATE TABLE `livraison_a_domicile` (
 --
 
 INSERT INTO `livraison_a_domicile` (`id`, `adresse`, `id_client`, `created_at`, `updated_at`) VALUES
-(0, 'hodan 4', 73, '2025-02-08 14:54:38', '2025-02-08 16:54:38');
+(0, 'hodan 4', 73, '2025-02-08 14:54:38', '2025-02-08 16:54:38'),
+(0, 'cite hodan 4', 74, '2025-02-12 04:08:02', '2025-02-12 06:08:02');
 
 -- --------------------------------------------------------
 
@@ -274,7 +296,8 @@ CREATE TABLE `paiements` (
 --
 
 INSERT INTO `paiements` (`id`, `id_client`, `type`, `penalites`, `montant_redevence`, `methode_payment`, `reference_general`, `date_paiement`) VALUES
-(8, 73, 'mis_a_jour', 0.00, 40000.00, 'wallet', 'RNBP/00001/2025-02-08', '2025-02-08 17:54:38');
+(8, 73, 'mis_a_jour', 0.00, 40000.00, 'wallet', 'RNBP/00001/2025-02-08', '2025-02-08 17:54:38'),
+(9, 74, 'mis_a_jour', 0.00, 40000.00, 'cash', 'RNBP/00008/2025-02-12', '2025-02-16 07:08:02');
 
 -- --------------------------------------------------------
 
@@ -286,8 +309,16 @@ CREATE TABLE `resilies` (
   `id` int(11) NOT NULL,
   `id_user` int(11) DEFAULT NULL,
   `id_client` int(11) DEFAULT NULL,
-  `date_resiliation` date NOT NULL
+  `date_resiliation` date NOT NULL,
+  `Lettre_recommandation` longtext NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `resilies`
+--
+
+INSERT INTO `resilies` (`id`, `id_user`, `id_client`, `date_resiliation`, `Lettre_recommandation`) VALUES
+(3, 6, 73, '2025-02-13', 'upload/documents/1739439266_67adbca2d3ec5.PNG');
 
 -- --------------------------------------------------------
 
@@ -310,7 +341,8 @@ CREATE TABLE `sous_couvete` (
 --
 
 INSERT INTO `sous_couvete` (`id`, `nom_societe`, `nom_personne`, `telephone`, `adresse`, `id_client`, `id_user`) VALUES
-(0, '', '', '', '', 73, 2);
+(0, '', '', '', '', 73, 2),
+(0, '', '', '', '', 74, 2);
 
 -- --------------------------------------------------------
 
@@ -331,9 +363,10 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `nom`, `email`, `password`, `role`) VALUES
-(1, 'test', 'test@gmail.com', '12345', 'responsable'),
+(1, 'test', 'test@gmail.com', '$2a$12$GDWZWWmZGak79vkBzlLxsOM3ucHKPdjwgAJTw/mESoHsYBkvnj8jS', 'supersiveur'),
 (2, 'sadik', 'sadik@gmail.com', '$2a$12$GDWZWWmZGak79vkBzlLxsOM3ucHKPdjwgAJTw/mESoHsYBkvnj8jS', 'agent_guichets'),
-(4, 'John Doe', 'johndoe@example.com', '$2a$12$GDWZWWmZGak79vkBzlLxsOM3ucHKPdjwgAJTw/mESoHsYBkvnj8jS', 'responsable');
+(4, 'John Doe', 'johndoe@example.com', '$2a$12$GDWZWWmZGak79vkBzlLxsOM3ucHKPdjwgAJTw/mESoHsYBkvnj8jS', 'responsable'),
+(6, 'layla mohamed hassan', 'layla@gmail.com', '$2a$12$GDWZWWmZGak79vkBzlLxsOM3ucHKPdjwgAJTw/mESoHsYBkvnj8jS', 'agent_commerciale');
 
 --
 -- Index pour les tables déchargées
@@ -442,7 +475,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT pour la table `abonnement`
 --
 ALTER TABLE `abonnement`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT pour la table `boites_postales`
@@ -454,7 +487,7 @@ ALTER TABLE `boites_postales`
 -- AUTO_INCREMENT pour la table `clients`
 --
 ALTER TABLE `clients`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=74;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
 
 --
 -- AUTO_INCREMENT pour la table `depot`
@@ -466,13 +499,13 @@ ALTER TABLE `depot`
 -- AUTO_INCREMENT pour la table `details_paiements`
 --
 ALTER TABLE `details_paiements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT pour la table `documents`
 --
 ALTER TABLE `documents`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT pour la table `exaunore`
@@ -484,19 +517,19 @@ ALTER TABLE `exaunore`
 -- AUTO_INCREMENT pour la table `paiements`
 --
 ALTER TABLE `paiements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT pour la table `resilies`
 --
 ALTER TABLE `resilies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT pour la table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Contraintes pour les tables déchargées
