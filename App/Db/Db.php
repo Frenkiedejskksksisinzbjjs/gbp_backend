@@ -7,9 +7,9 @@ use PDOException;
 
 class Db {
     private $host = 'localhost'; // Changez cela avec le nom d'hôte de votre base de données
-    private $db   = 'gbp2'; // Changez cela avec le nom de votre base de données
+    private $db   = 'gbp2.1'; // Changez cela avec le nom de votre base de données
     private $user = 'root'; // Changez cela avec votre nom d'utilisateur
-    private $pass = ''; // Changez cela avec votre mot de passe
+    private $pass = 'Salima@#+*/-'; // Changez cela avec votre mot de passe
     private $charset = 'utf8mb4';
     private $pdo;
     private $error;

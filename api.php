@@ -1,14 +1,9 @@
 <?php
 
-
-
-
-use App\Controller\UserController;
-use App\Models\UserModel;
-use App\Controller\BoitePostaleController;
-
-
 // Inclure le fichier autoload
+
+use App\Models\UserModel;
+
 require_once __DIR__ . '/autoload.php';
 
 // Définir les en-têtes de réponse
@@ -19,12 +14,6 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization'); // En-tête
 header('Access-Control-Allow-Credentials: true'); // Permettre l'envoi de cookies et autres informations d'identification
 
 
-
-// Initialisation des contrôleurs
-$userModel = new UserModel();
-
-$boitePostaleModel = new BoitePostaleController();
-
 // Gérer les requêtes préliminaires OPTIONS
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -34,386 +23,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // Récupérer la méthode passée dans l'URL
 $method = $_GET['method'] ?? null;
 
+$UserController = new UserModel();
+
 // Gestion des requêtes GET
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    switch ($method) {
-        case 'getAllColisNoFound':
-            echo $colisNotFound->getAllColisNoFound();
-            break;
-        case 'GetBoitePostaleDetails':
-            echo $boitePostaleModel->GetBoitePostaleDetails();
-            break;
-
-        case 'GetAllBoxDetails':
-            echo $boitePostaleModel->GetAllBoxDetails();
-            break;
-
-        case 'GetAllResilies':
-            echo $boitePostaleModel->GetAllResilies();
-            break;
-
-        case 'GetAllClients':
-            echo $boitePostaleModel->GetAllClients();
-            break;
-        case 'GetToDayActivity':
-            echo $boitePostaleModel->GetToDayActivity();
-            break;
-        case 'GetToDayActivityCollections':
-            echo $boitePostaleModel->GetToDayActivityCollections();
-            break;
-        case 'GetToDayActivityChagementName':
-            echo $boitePostaleModel->GetToDayActivityChagementName();
-            break;
-        case 'GetToDayActivityAchatCle':
-            echo $boitePostaleModel->GetToDayActivityAchatCle();
-            break;
-        case 'GetToDayActivityLD':
-            echo $boitePostaleModel->GetToDayActivityLD();
-            break;
-        case 'GetToDayActivitySousCouverte':
-            echo $boitePostaleModel->GetToDayActivitySousCouverte();
-            break;
-        case 'GetDetailsPaiement':
-            $iddetail = $_GET['id'] ?? null;
-            if ($iddetail) {
-                echo $boitePostaleModel->GetDetailsPaiement($iddetail);
-            } else {
-                json_encode(['error' => "l'id client introuvable"]);
-            }
-
-            break;
-
-        case 'getLastReferenceAchatCle':
-            echo $boitePostaleModel->getLastReferenceAchatCle();
-            break;
-        case 'getLastReferenceSousCouvette':
-            echo $boitePostaleModel->getLastReferenceSousCouvette();
-            break;
-        case 'getLastReferenceChangerNom':
-            echo $boitePostaleModel->getLastReferenceChangerNom();
-            break;
-        case 'getLastReferenceLivraisonDomicile':
-            echo $boitePostaleModel->getLastReferenceLivraisonDomicile();
-            break;
-        case 'getLastReferenceAjoutCollection':
-            echo $boitePostaleModel->getLastReferenceAjoutCollection();
-            break;
-        case 'getLastReference':
-            echo $boitePostaleModel->getLastReference();
-            break;
-        case 'getPetitBoitesPostalesCount':
-            echo $userModel->getPetitBoitesPostalesCount();
-            break;
-        case 'getMoyenBoitesPostalesCount':
-            echo $userModel->getMoyenBoitesPostalesCount();
-            break;
-        case 'getGrandeBoitesPostalesCount':
-            echo $userModel->getGrandeBoitesPostalesCount();
-            break;
-        case 'getClientCount':
-            echo $userModel->getClientCount();
-            break;
-        case 'countClientsWithUpdatedPayments':
-            echo $userModel->countClientsWithUpdatedPayments();
-            break;
-        case 'countClientsWithoutPaymentsOrWithNonUpdatedPayments':
-            echo $userModel->countClientsWithoutPaymentsOrWithNonUpdatedPayments();
-            break;
-
-        case 'getAllResilations':
-            echo $userModel->getAllResilations();
-            break;
-        case 'getClientsWithPayments':
-            echo $userModel->getClientsWithPayments();
-            break;
-        case 'getClientsWithcouvette':
-            echo $userModel->getClientsWithcouvette();
-            break;
-        case 'getClientsWithPaymentsachatcle':
-            echo $userModel->getClientsWithPaymentsachatcle();
-            break;
-
-
-
-
-
-
-
-
-        case 'GetBoitesPostalesDetails':
-            echo $boitePostaleModel->GetBoitesPostalesDetails();
-            break;
-        case 'GetEtatBoitesPostales':
-            echo $boitePostaleModel->GetEtatBoitesPostales();
-            break;
-        case 'GetAllBoitesPostales':
-            echo $boitePostaleModel->GetAllBoitesPostales();
-            break;
-        case 'GetAllUsers':
-            echo $userModel->GetAllUsers();
-            break;
-        case 'GetAllUsersWithOutAdminProperty':
-            echo $userModel->GetAllUsersWithOutAdminProperty();
-            break;
-
-        case 'GetAgentsGuichets':
-            echo $userModel->GetAgentsGuichets();
-            break;
-        case 'GetChangementCle':
-            echo $userModel->GetChangementCle();
-            break;
-        case 'GetChangementLivraison':
-            echo $userModel->GetChangementLivraison();
-            break;
-
-        case 'GetBoitesPostales':
-            echo $userModel->GetBoitesPostales();
-            break;
-        case 'CountResilations':
-            echo $userModel->CountResilations();
-            break;
-        case 'GetUser':
-            if (isset($_GET['id']) && !empty($_GET['id'])) {
-                $id = (int) $_GET['id']; // On s'assure que l'ID est un entier
-                // Appeler la méthode GetUser du modèle et l'afficher
-                echo $userModel->GetUser($id);
-            } else {
-                echo json_encode(["error" => "User ID is required"]);
-            }
-            break;
-
-
-
-        default:
-            echo json_encode(['error' => 'Invalid method']);
-    }
+if ($_SERVER['REQUEST_METHOD'] === 'GET'){
+  switch ($method) {
+    case 'getAllUsers':
+        $UserController->getAllUsers();
+        break;
+    
+    default:
+        # code...
+        break;
+  }
 }
-
 // Gestion des requêtes POST
-elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $data = file_get_contents('php://input');
-    $id = isset($_GET['id']) ? $_GET['id'] : null;
+elseif ($_SERVER['REQUEST_METHOD'] === 'POST'){
 
-    switch ($method) {
-        case 'createColisNoFound':
-            echo $colisNotFound->createColisNoFound($data);
-            break;
-        case 'GetClientEtatBoitePostale':
-            echo $boitePostaleModel->GetClientEtatBoitePostale($data);
-            break;
-
-        case 'addSousCouvette':
-            if (isset($id)) {
-                $idClient = (int) $id;
-                $data = file_get_contents('php://input'); // Récupérer les données JSON
-                $boitePostaleModel->addSousCouvette($idClient, $data);
-            } else {
-                echo json_encode(["error" => "ID du client manquant."]);
-            }
-            break;
-
-
-        case 'addMontantAchatsCle':
-            echo $boitePostaleModel->addMontantAchatsCle($id, $data);
-            break;
-
-        case 'enregistrerPaiement':
-            if (isset($id)) {
-                $idClient = (int) $id;
-                $data = file_get_contents('php://input'); // Récupérer les données JSON
-                $boitePostaleModel->enregistrerPaiement($idClient, $data);
-            } else {
-                echo json_encode(["error" => "ID du client manquant."]);
-            }
-            break;
-
-
-
-        case 'updateClientNameAndAddPayment':
-            echo $boitePostaleModel->updateClientNameAndAddPayment($id, $data);
-            break;
-
-        case 'CreateUser':
-            echo $userModel->CreateUser();
-            break;
-
-        case 'insertAndAssignBoitePostaleToClient':
-            // Récupérer les données envoyées
-            $Data = $_POST; // Utiliser $_POST pour récupérer les données du formulaire
-            $files = $_FILES;
-            echo $boitePostaleModel->insertAndAssignBoitePostaleToClient($id, $Data, $files);
-            break;
-        case 'insererLivraisonEtMettreAJourPaiement':
-            echo $boitePostaleModel->insererLivraisonEtMettreAJourPaiement($id, $data);
-            break;
-        case 'insererCollectionEtMettreAJourPaiement':
-            // Vérifiez si l'ID client est passé correctement
-            $idClient = $_GET['id'] ?? $_POST['id'] ?? null;
-
-            // Vérification que l'ID client est présent
-            if (!$idClient) {
-                echo json_encode(["error" => "idClient est manquant."]);
-                exit;
-            }
-
-            // Récupération des données envoyées en POST (JSON)
-            $data = file_get_contents("php://input");
-
-            // Vérification que les données sont bien reçues
-            if (empty($data)) {
-                echo json_encode(["error" => "Les données sont vides."]);
-                exit;
-            }
-
-            // Appel de la fonction dans le modèle
-            $result = $boitePostaleModel->insererCollectionEtMettreAJourPaiement($idClient, $data);
-            echo $result;
-            break;
-
-
-
-
-
-
-
-
-        case 'GetDetailsByClientData':
-            echo $boitePostaleModel->GetDetailsByClientData();
-            break;
-
-        case 'EnregistrerResiliation':
-            $idclient = $_GET['id'];
-            $files = $_FILES;
-            $data = $_POST;
-            echo $boitePostaleModel->EnregistrerResiliation($idclient,$files,$data);
-            break;
-
-        case 'GetClientName':
-            echo $boitePostaleModel->GetClientName();
-            break;
-
-        default:
-            echo json_encode(['error' => 'Invalid method']);
-    }
 }
-
 // Gestion des requêtes PUT
-elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
-    $data = file_get_contents('php://input');
-    $decodedData = json_decode($data, true);
+elseif ($_SERVER['REQUEST_METHOD'] === 'PUT'){
 
-    switch ($method) {
-
-
-        case 'UpdateClientName':
-            // Récupération de l'ID du client depuis les paramètres GET
-            $clientId = $_GET['id'] ?? null;
-
-            // Récupération de l'ID de l'utilisateur depuis les paramètres GET (ou via un mécanisme d'authentification)
-            $userId = $_GET['user_id'] ?? null;
-
-            // Vérification de la présence de l'ID du client et de l'ID de l'utilisateur
-            if ($clientId && $userId) {
-                // Récupération des données JSON depuis le corps de la requête
-                $jsonData = file_get_contents('php://input');
-
-                // Appel de la méthode dans le contrôleur
-                echo $boitePostaleModel->UpdateClientName($clientId, $jsonData, $userId);
-            } else {
-                // Retourner une erreur si l'un des ID est manquant
-                echo json_encode(['error' => 'Missing client ID or user ID']);
-            }
-            break;
-
-        case 'UpdateUser':
-            // Récupération de l'ID de l'utilisateur depuis les paramètres GET
-            $userId = $_GET['id'] ?? null;
-
-            // Vérification de la présence de l'ID de l'utilisateur
-            if ($userId) {
-                // Récupération des données JSON depuis le corps de la requête
-                $jsonData = file_get_contents('php://input');
-
-                // Appel de la méthode dans le contrôleur pour mettre à jour l'utilisateur
-                echo $userModel->updateUser($userId, $jsonData);
-            } else {
-                // Retourner une erreur si l'ID de l'utilisateur est manquant
-                echo json_encode(['error' => 'Missing user ID']);
-            }
-            break;
-
-
-
-
-
-        default:
-            echo json_encode(['error' => 'Invalid method']);
-    }
 }
-
 // Gestion des requêtes DELETE
-elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
-    $data = file_get_contents('php://input');
-    $decodedData = json_decode($data, true);
+elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE'){
 
-    switch ($method) {
-        case 'deleteArulo':
-            if (isset($decodedData['id']) && is_numeric($decodedData['id'])) {
-                echo $arulos->deleteArulo(json_encode($decodedData));
-            } else {
-                echo json_encode(['error' => 'Invalid or missing ID for deleteArulo']);
-            }
-            break;
-        case 'deleteTransfert':
-            $data = file_get_contents('php://input');
-
-            if (!empty($data)) {
-                echo $transfert->deleteTransfert($data);
-            } else {
-                echo json_encode(['error' => 'No data provided for deletion']);
-            }
-            break;
-
-        case 'deleteCasSensible':
-            $id = $_GET['id'] ?? null;
-            if ($id) {
-                echo $adrCasSensible->deleteCasSensible(json_encode(['id' => (int) $id]));
-            } else {
-                echo json_encode(['error' => 'Missing id for deleteCasSensible']);
-            }
-            break;
-
-        case 'deleteColisNoFound':
-            if (isset($decodedData['id']) && !empty($decodedData['id'])) {
-                echo $colisNotFound->deleteColisNoFound($data);
-            } else {
-                echo json_encode(['error' => 'Missing id for DeleteColisNotFound']);
-            }
-            break;
-
-        case 'DeleteUser':
-            // Récupération de l'ID depuis les paramètres GET
-            $id = $_GET['id'] ?? null;
-
-            // Vérification de la présence de l'ID
-            if ($id) {
-                // Appel de la méthode DeleteUser avec l'ID
-                echo $userModel->DeleteUser($id);
-            } else {
-                // Retourner une erreur si l'ID est manquant
-                echo json_encode(['error' => 'User ID is required']);
-            }
-            break;
-
-
-
-        default:
-            echo json_encode(['error' => 'Invalid method']);
-    }
-}
-
-// Méthode invalide
+}// Méthode invalide
 else {
-    header("HTTP/1.1 404 Not Found");
-    echo json_encode(['error' => 'Invalid request method']);
+
 }
