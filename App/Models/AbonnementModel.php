@@ -91,7 +91,26 @@ class AbonnementModel
     public function SelectUnpaiedPaiement($idClients)
     {
         try {
-            //code...
+            $pdo = $this->db->getPdo();
+
+            // Sélectionner les années d'abonnement impayées
+            $sql = "SELECT Annee_abonnement FROM abonnement WHERE Id_client = :idClients AND Status = 'impaye'";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':idClients', $idClients, PDO::PARAM_INT);
+            $stmt->execute();
+            $abonnements = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Vérification s'il y a des abonnements impayés
+            if (!$abonnements) {
+                echo json_encode(['message' => 'Ce client n\'a pas d\'abonnement à payer.']);
+                return;
+            }
+
+            // Construction du message avec les années impayées
+            $annees = array_column($abonnements, 'Annee_abonnement');
+            $message = 'Redevance de ' . implode(', ', $annees) . ' non payée.';
+
+            echo json_encode(['message' => $message, 'annees_impayees' => $annees]);
         } catch (PDOException $e) {
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
