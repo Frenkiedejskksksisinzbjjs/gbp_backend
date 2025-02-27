@@ -31,9 +31,9 @@ class BoitPostaleModel
             $nouveauNumero = $boite ? $boite['Numero'] + 1 : 1;
 
             // Retourner le nouveau numéro
-            return json_encode(['nouveau_numero' => $nouveauNumero]);
+            echo json_encode(['nouveau_numero' => $nouveauNumero]);
         } catch (PDOException $e) {
-            return json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
 }

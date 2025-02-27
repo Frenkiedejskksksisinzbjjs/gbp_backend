@@ -133,4 +133,6 @@ class SousCouverteModel
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
+
+    
 }

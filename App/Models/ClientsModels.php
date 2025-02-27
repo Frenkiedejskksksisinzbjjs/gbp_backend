@@ -43,12 +43,12 @@ class ClientsModels
 
             // Vérifier si des clients existent
             if (!$clients) {
-                return json_encode(['message' => 'Aucun client trouvé.']);
+                echo json_encode(['message' => 'Aucun client trouvé.']);
             }
 
-            return json_encode($clients);
+            echo json_encode($clients);
         } catch (PDOException $e) {
-            return json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
 
@@ -82,12 +82,13 @@ class ClientsModels
 
             // Vérifier si des clients résiliés existent
             if (!$clientsResilies) {
-                return json_encode(['message' => 'Aucun client résilié trouvé.']);
+                echo json_encode(['message' => 'Aucun client résilié trouvé.']);
+                return;
             }
 
-            return json_encode(['clients_resilies' => $clientsResilies]);
+            echo json_encode(['clients_resilies' => $clientsResilies]);
         } catch (PDOException $e) {
-            return json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
 
@@ -120,15 +121,15 @@ class ClientsModels
 
             // Vérifier si des clients exonérés existent
             if (!$clientsExonores) {
-                return json_encode(['message' => 'Aucun client exonéré trouvé.']);
+                echo json_encode(['message' => 'Aucun client exonéré trouvé.']);
+                return;
             }
 
-            return json_encode($clientsExonores);
+            echo json_encode($clientsExonores);
         } catch (PDOException $e) {
-            return json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
-
 
     // pour le future 
     public function GetAllClientsEnlevePenaliter()
@@ -140,11 +141,23 @@ class ClientsModels
         }
     }
 
-    public function AddClientsAbonnment($idUser, $Data, $files) {
+    public function AddClientsAbonnment($idUser, $Data, $files)
+    {
         try {
             $pdo = $this->db->getPdo();
             $pdo->beginTransaction(); // Démarrer une transaction
-    
+
+            // 1️⃣ Enregistrer la boîte postale dans la table boit_postal et récupérer son ID
+            $sqlBoitePostale = "INSERT INTO boit_postal (Numero, Type) VALUES (:Numero, :Type)";
+            $stmt = $pdo->prepare($sqlBoitePostale);
+            $stmt->execute([
+                ':Numero' => $Data['Id_boite_postale'],
+                ':Type' => $Data['Type_boite_postale'] // Grand, Moyen, Petite
+            ]);
+
+            // Récupérer l'ID de la boîte postale insérée
+            $idBoitePostale = $pdo->lastInsertId();
+
             // 1️⃣ Enregistrer le client dans la table clients
             $sqlClient = "INSERT INTO clients (Nom, Email, Adresse, TypeClient, Telephone, Id_boite_postale, Date_abonnement, id_user, updated_by)
                           VALUES (:Nom, :Email, :Adresse, :TypeClient, :Telephone, :Id_boite_postale, NOW(), :idUser, :updated_by)";
@@ -155,12 +168,12 @@ class ClientsModels
                 ':Adresse' => $Data['Adresse'],
                 ':TypeClient' => $Data['TypeClient'],
                 ':Telephone' => $Data['Telephone'],
-                ':Id_boite_postale' => $Data['Id_boite_postale'],
+                ':Id_boite_postale' => $idBoitePostale,
                 ':idUser' => $idUser,
                 ':updated_by' => $idUser
             ]);
             $idClient = $pdo->lastInsertId();
-    
+
             // 2️⃣ Enregistrer l'abonnement du client
             $sqlAbonnement = "INSERT INTO abonnement (Id_client, Annee_abonnement, Montant, Penalite, Status, created_at, updated_at, updated_by) 
                               VALUES (:Id_client, YEAR(NOW()), 20000, 0, 'payé', NOW(), NOW(), :updated_by)";
@@ -169,8 +182,9 @@ class ClientsModels
                 ':Id_client' => $idClient,
                 ':updated_by' => $idUser
             ]);
+
             $idAbonnement = $pdo->lastInsertId();
-    
+
             // 3️⃣ Enregistrer le paiement
             $sqlPaiement = "INSERT INTO paiement (Id_abonnement, Methode_paiement, Wallet, Numero_wallet, Numero_cheque, Nom_bank, reference, created_at, created_by) 
                             VALUES (:Id_abonnement, :Methode_paiement, :Wallet, :Numero_wallet, :Numero_cheque, :Nom_bank, :reference, NOW(), :created_by)";
@@ -186,7 +200,7 @@ class ClientsModels
                 ':created_by' => $idUser
             ]);
             $idPaiement = $pdo->lastInsertId();
-    
+
             // 4️⃣ Enregistrer les documents
             $chemins = [];
             foreach (['Abonnement', 'Identite', 'Patent_Quitance'] as $doc) {
@@ -198,7 +212,7 @@ class ClientsModels
                     $chemins[$doc] = null;
                 }
             }
-    
+
             $sqlDocuments = "INSERT INTO documents (Id_client, Abonnement, Identite, Patent_Quitance, created_at, created_by)
                              VALUES (:Id_client, :Abonnement, :Identite, :Patent_Quitance, NOW(), :created_by)";
             $stmt = $pdo->prepare($sqlDocuments);
@@ -209,7 +223,7 @@ class ClientsModels
                 ':Patent_Quitance' => $chemins['Patent_Quitance'],
                 ':created_by' => $idUser
             ]);
-    
+
             // 5️⃣ Enregistrer la livraison à domicile si choisie
             if (!empty($Data['Livraison'])) {
                 $sqlLivraison = "INSERT INTO lvdomcile (Id_clients, Adresse, Date, created_by) 
@@ -217,12 +231,12 @@ class ClientsModels
                 $stmt = $pdo->prepare($sqlLivraison);
                 $stmt->execute([
                     ':Id_clients' => $idClient,
-                    ':Adresse' => $Data['Adresse'],
+                    ':Adresse' => $Data['Livraison'],
                     ':created_by' => $idUser
                 ]);
-    
-                $sqlDetailPaiement = "INSERT INTO details_paiement (Id_paiement, Categories, Methode_paiement, Wallet, Numero_wallet, Numero_cheque, Nom_bank, reference, created_at, created_by) 
-                                      VALUES (:Id_paiement, 'livraison_a_domicile', :Methode_paiement, :Wallet, :Numero_wallet, :Numero_cheque, :Nom_bank, :reference, NOW(), :created_by)";
+
+                $sqlDetailPaiement = "INSERT INTO details_paiements (Id_paiement, Categories, Methode_paiement, Wallet, Numero_wallet, Numero_cheque, Nom_bank, reference, created_at, created_by) 
+                                      VALUES (:Id_paiement, 'livraison_a_domicil', :Methode_paiement, :Wallet, :Numero_wallet, :Numero_cheque, :Nom_bank, :reference, NOW(), :created_by)";
                 $stmt = $pdo->prepare($sqlDetailPaiement);
                 $stmt->execute([
                     ':Id_paiement' => $idPaiement,
@@ -235,7 +249,7 @@ class ClientsModels
                     ':created_by' => $idUser
                 ]);
             }
-    
+
             // 6️⃣ Enregistrer la collecte si choisie
             if (!empty($Data['Collection'])) {
                 $sqlCollection = "INSERT INTO collections (Id_clients, Adresse, Date, created_by) 
@@ -243,40 +257,85 @@ class ClientsModels
                 $stmt = $pdo->prepare($sqlCollection);
                 $stmt->execute([
                     ':Id_clients' => $idClient,
-                    ':Adresse' => $Data['Adresse'],
+                    ':Adresse' => $Data['Collection'],
+                    ':created_by' => $idUser
+                ]);
+
+                $sqlDetailPaiement = "INSERT INTO details_paiements (Id_paiement, Categories, Methode_paiement, Wallet, Numero_wallet, Numero_cheque, Nom_bank, reference, created_at, created_by) 
+                VALUES (:Id_paiement, 'collections', :Methode_paiement, :Wallet, :Numero_wallet, :Numero_cheque, :Nom_bank, :reference, NOW(), :created_by)";
+                $stmt = $pdo->prepare($sqlDetailPaiement);
+                $stmt->execute([
+                    ':Id_paiement' => $idPaiement,
+                    ':Methode_paiement' => $Data['Methode_paiement'],
+                    ':Wallet' => $Data['Wallet'],
+                    ':Numero_wallet' => $Data['Numero_wallet'],
+                    ':Numero_cheque' => $Data['Numero_cheque'],
+                    ':Nom_bank' => $Data['Nom_bank'],
+                    ':reference' => $Data['reference'],
                     ':created_by' => $idUser
                 ]);
             }
-    
+
             // 7️⃣ Enregistrer sous-couverte si choisie (limite max 5)
             if (!empty($Data['SousCouverte'])) {
-                $stmt = $pdo->prepare("SELECT COUNT(*) FROM sous_couverte WHERE Id_client = :Id_client");
-                $stmt->execute([':Id_client' => $idClient]);
-                $countSousCouverte = $stmt->fetchColumn();
-    
-                if ($countSousCouverte < 5) {
-                    $sqlSousCouverte = "INSERT INTO sous_couverte (Nom_societe, Nom_personne, Telephone, Adresse, Id_client, Created_by, date) 
+                // Décoder la chaîne JSON en tableau associatif
+                $sousCouvertes = json_decode($Data['SousCouverte'], true);
+
+                // Vérifier que le décodage a réussi et que c'est bien un tableau
+                if (is_array($sousCouvertes)) {
+                    foreach ($sousCouvertes as $sousCouverte) {
+                        // Vérifier que tous les champs requis sont remplis et ne sont pas vides
+                        if (
+                            !empty($sousCouverte['Nom_societe']) &&
+                            !empty($sousCouverte['Nom_personne']) &&
+                            !empty($sousCouverte['Telephone']) &&
+                            !empty($sousCouverte['Adresse'])
+                        ) {
+
+                            // Vérifier le nombre actuel d'enregistrements
+                            $stmt = $pdo->prepare("SELECT COUNT(*) FROM sous_couverte WHERE Id_client = :Id_client");
+                            $stmt->execute([':Id_client' => $idClient]);
+                            $countSousCouverte = $stmt->fetchColumn();
+
+                            if ($countSousCouverte < 5) {
+                                // Insérer la sous-couverte
+                                $sqlSousCouverte = "INSERT INTO sous_couverte (Nom_societe, Nom_personne, Telephone, Adresse, Id_client, Created_by, date) 
                                         VALUES (:Nom_societe, :Nom_personne, :Telephone, :Adresse, :Id_client, :Created_by, NOW())";
-                    $stmt = $pdo->prepare($sqlSousCouverte);
-                    $stmt->execute([
-                        ':Nom_societe' => $Data['Nom_societe'],
-                        ':Nom_personne' => $Data['Nom_personne'],
-                        ':Telephone' => $Data['Telephone'],
-                        ':Adresse' => $Data['Adresse'],
-                        ':Id_client' => $idClient,
-                        ':Created_by' => $idUser
-                    ]);
+                                $stmt = $pdo->prepare($sqlSousCouverte);
+                                $stmt->execute([
+                                    ':Nom_societe' => $sousCouverte['Nom_societe'],
+                                    ':Nom_personne' => $sousCouverte['Nom_personne'],
+                                    ':Telephone' => $sousCouverte['Telephone'],
+                                    ':Adresse' => $sousCouverte['Adresse'],
+                                    ':Id_client' => $idClient,
+                                    ':Created_by' => $idUser
+                                ]);
+                            }
+                            $sqlDetailPaiement = "INSERT INTO details_paiements (Id_paiement, Categories, Methode_paiement, Wallet, Numero_wallet, Numero_cheque, Nom_bank, reference, created_at, created_by) 
+                            VALUES (:Id_paiement, 'sous_couverte', :Methode_paiement, :Wallet, :Numero_wallet, :Numero_cheque, :Nom_bank, :reference, NOW(), :created_by)";
+                            $stmt = $pdo->prepare($sqlDetailPaiement);
+                            $stmt->execute([
+                                ':Id_paiement' => $idPaiement,
+                                ':Methode_paiement' => $Data['Methode_paiement'],
+                                ':Wallet' => $Data['Wallet'],
+                                ':Numero_wallet' => $Data['Numero_wallet'],
+                                ':Numero_cheque' => $Data['Numero_cheque'],
+                                ':Nom_bank' => $Data['Nom_bank'],
+                                ':reference' => $Data['reference'],
+                                ':created_by' => $idUser
+                            ]);
+                        }
+                    }
                 }
             }
-    
+
+
             // 🔄 Commit la transaction
             $pdo->commit();
-            return json_encode(['success' => 'Client et abonnements enregistrés avec succès.']);
-    
+            echo json_encode(['success' => 'Client et abonnements enregistrés avec succès.']);
         } catch (PDOException $e) {
             $pdo->rollBack();
-            return json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
-    
 }
