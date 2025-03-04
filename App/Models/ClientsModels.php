@@ -338,4 +338,123 @@ class ClientsModels
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
+
+
+    public function GetAllClientCount()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Requête SQL pour compter le nombre total de clients
+            $sql = "SELECT COUNT(*) AS total FROM clients";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+
+            // Récupérer le résultat
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Retourner le nombre total de clients ou 0 si NULL
+            echo json_encode(['count' => $result['total'] ?? 0]);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage(), 'total_clients' => 0]);
+        }
+    }
+
+
+
+    public function GetAllClientsCountWithStatusPaye()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Requête SQL avec une jointure entre `clients` et `abonnement`
+            $sql = "SELECT COUNT(DISTINCT c.id) AS total 
+                    FROM clients c
+                    INNER JOIN abonnement a ON c.id = a.Id_client
+                    WHERE a.Status = 'paye'";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+
+            // Récupérer le résultat
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Retourner le nombre total de clients abonnés avec statut "paye" ou 0 si NULL
+            echo json_encode(['count' => $result['total'] ?? 0]);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage(), 'total_clients_paye' => 0]);
+        }
+    }
+
+    public function GetAllClientsCountWithStatusNonPaye()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Requête SQL avec une jointure entre `clients` et `abonnement`
+            $sql = "SELECT COUNT(DISTINCT c.id) AS total 
+                FROM clients c
+                INNER JOIN abonnement a ON c.id = a.id_client
+                WHERE a.Status = 'impayé'";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+
+            // Récupérer le résultat
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Retourner le nombre total de clients abonnés avec statut "non payé" ou 0 si NULL
+            echo json_encode(['count' => $result['total'] ?? 0]);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage(), 'total_clients_non_paye' => 0]);
+        }
+    }
+
+
+    public function GetAllClientsExonoreCount()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Requête pour compter le nombre total des clients exonérés
+            $sql = "
+            SELECT COUNT(*) AS total
+            FROM clients c
+            INNER JOIN exonore e ON c.id = e.Id_client
+        ";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Retourner le nombre total de clients exonérés ou 0 si aucun
+            echo json_encode(['count' => $result['total'] ?? 0]);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage(), 'total_clients_exonores' => 0]);
+        }
+    }
+
+    public function GetCountOfClientsResilies()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Requête SQL pour compter le nombre total de clients résiliés
+            $sql = "
+            SELECT COUNT(*) AS total
+            FROM resilier r
+            JOIN clients c ON r.Id_client = c.id
+        ";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Retourner le nombre total de clients résiliés ou 0 si aucun
+            echo json_encode(['count' => $result['total'] ?? 0]);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage(), 'total_clients_resilies' => 0]);
+        }
+    }
+
 }

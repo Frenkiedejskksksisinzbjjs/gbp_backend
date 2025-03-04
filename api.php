@@ -64,6 +64,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     case 'GetAllClientsExonore':
       $ClientsController->GetAllClientsExonore();
       break;
+    case 'GetAllClientCount':
+      $ClientsController->GetAllClientCount();
+      break;
+    case 'GetAllClientsCountWithStatusPaye':
+      $ClientsController->GetAllClientsCountWithStatusPaye();
+      break;
+    case 'GetAllClientsCountWithStatusNonPaye':
+      $ClientsController->GetAllClientsCountWithStatusNonPaye();
+      break;
+    case 'GetAllClientsExonoreCount':
+      $ClientsController->GetAllClientsExonoreCount();
+      break;
+    case 'GetCountOfClientsResilies':
+      $ClientsController->GetCountOfClientsResilies();
+      break;
+    case 'GetCountOfBpGrandType':
+      $BoitPostaleController->GetCountOfBpGrandType();
+      break;
+    case 'GetCountOfBpMoyenType':
+      $BoitPostaleController->GetCountOfBpMoyenType();
+      break;
+    case 'GetCountOfBpPetiteType':
+      $BoitPostaleController->GetCountOfBpPetiteType();
+      break;
 
     default:
       # code...
@@ -78,6 +102,11 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
   switch ($method) {
     case 'AddClientsAbonnment':
       $ClientsController->AddClientsAbonnment($id, $Data, $files);
+      break;
+    case 'CreateAgentsByResponsable':
+      $id = $_GET['id'];
+      $Data = $_POST;
+      $UserController->CreateAgentsByResponsable($Data);
       break;
 
     default:

@@ -36,4 +36,65 @@ class BoitPostaleModel
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
+
+
+    public function GetCountOfBpGrandType()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Préparer la requête pour compter le nombre de boîtes postales de type "Grand"
+            $sql = "SELECT COUNT(*) AS total FROM boit_postal WHERE Type = 'Grand'";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+
+            // Récupérer le résultat
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Retourner le nombre total
+            echo json_encode(['total' => $result['total']]);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
+
+    public function GetCountOfBpMoyenType()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Requête SQL pour compter les boîtes postales de type "Moyen"
+            $sql = "SELECT COUNT(*) AS total FROM boit_postal WHERE Type = 'Moyen'";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+
+            // Récupérer le résultat
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Retourner le nombre total
+            echo json_encode(['total' => $result['total']]);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
+
+    public function GetCountOfBpPetiteType()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Requête SQL pour compter les boîtes postales de type "Petite"
+            $sql = "SELECT COUNT(*) AS total FROM boit_postal WHERE Type = 'Petite'";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+
+            // Récupérer le résultat
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Retourner le nombre total
+            echo json_encode(['total' => $result['total']]);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
 }
