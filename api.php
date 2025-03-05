@@ -3,7 +3,9 @@
 // Inclure le fichier autoload
 
 use App\Models\AbonnementModel;
+use App\Models\AchatCleModel;
 use App\Models\BoitPostaleModel;
+use App\Models\ChangementModel;
 use App\Models\ClientsModels;
 use App\Models\CollectionModel;
 use App\Models\ExonorerModel;
@@ -42,6 +44,8 @@ $LvdController = new LvdModel();
 $PenaliterController = new PenaliterModels();
 $ResilierController = new ResilierModel();
 $SousCouverteController = new SousCouverteModel();
+$AchatCleController = new AchatCleModel();
+$ChangementNameController = new ChangementModel();
 
 // Gestion des requêtes GET
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -103,10 +107,46 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     case 'AddClientsAbonnment':
       $ClientsController->AddClientsAbonnment($id, $Data, $files);
       break;
+
     case 'CreateAgentsByResponsable':
       $id = $_GET['id'];
       $Data = $_POST;
       $UserController->CreateAgentsByResponsable($Data);
+      break;
+
+    case 'AddLvdClients':
+      $id = $_GET['id'];
+      $idClient = $_GET['idClient'];
+      $Data = file_get_contents("php://input");
+      $LvdController->AddLvdClients($idClient, $id, $Data);
+      break;
+
+    case 'AddCollectionClients':
+      $id = $_GET['id'];
+      $idClient = $_GET['idClient'];
+      $Data = file_get_contents("php://input");
+      $CollectionController->AddCollectionClients($idClient, $id, $Data);
+      break;
+
+    case 'AddSousCouverteClients':
+      $id = $_GET['id'];
+      $idClient = $_GET['idClient'];
+      $Data = file_get_contents("php://input");
+      $SousCouverteController->AddSousCouverteClients($idClient, $id, $Data);
+      break;
+
+    case 'AchatCleForClients':
+      $id = $_GET['id'];
+      $idClient = $_GET['idClient'];
+      $Data = file_get_contents("php://input");
+      $AchatCleController->AchatCleForClients($idClient, $id, $Data);
+      break;
+
+    case 'ChangeClientName':
+      $id = $_GET['id'];
+      $idClient = $_GET['idClient'];
+      $Data = file_get_contents("php://input");
+      $ChangementNameController->ChangeClientName($idClient, $id, $Data);
       break;
 
     default:

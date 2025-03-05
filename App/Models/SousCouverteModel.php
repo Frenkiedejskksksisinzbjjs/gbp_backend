@@ -42,7 +42,7 @@ class SousCouverteModel
 
             // Vérifier si le client a un abonnement payé
             $anneeActuelle = date('Y');
-            $sql = "SELECT id FROM abonnement WHERE Id_clients = :idclient AND Annee_abonnement = :anneeActuelle AND status = 'paye' LIMIT 1";
+            $sql = "SELECT id FROM abonnement WHERE Id_client = :idclient AND Annee_abonnement = :anneeActuelle AND status = 'paye' LIMIT 1";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':idclient', $idclient, PDO::PARAM_INT);
             $stmt->bindParam(':anneeActuelle', $anneeActuelle, PDO::PARAM_INT);
@@ -108,13 +108,14 @@ class SousCouverteModel
             }
 
             // Insérer dans la table details_paiement
-            $sql = "INSERT INTO detailts_paiement (Id_paiement, Categories, Methode_paiement, Wallet, Numero_wallet, 
+            $sql = "INSERT INTO details_paiements (Id_paiement,Categories,Montant, Methode_paiement, Wallet, Numero_wallet, 
                 Numero_cheque, Nom_bank, reference, created_at, created_by) 
-            VALUES (:id_paiement, 'sous_couverte', :methode, :wallet, :numero_wallet, 
+            VALUES (:id_paiement, 'sous_couverte',:montant, :methode, :wallet, :numero_wallet, 
                 :numero_cheque, :nom_bank, :reference, NOW(), :idUser)";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_paiement', $paiement['id'], PDO::PARAM_INT);
             $stmt->bindParam(':methode', $Data['Methode_paiement'], PDO::PARAM_STR);
+            $stmt->bindParam(':montant', $Data['Montant'], PDO::PARAM_STR);
             $stmt->bindParam(':wallet', $Data['Wallet'], PDO::PARAM_STR);
             $stmt->bindParam(':numero_wallet', $Data['Numero_wallet'], PDO::PARAM_STR);
             $stmt->bindParam(':numero_cheque', $Data['Numero_cheque'], PDO::PARAM_STR);

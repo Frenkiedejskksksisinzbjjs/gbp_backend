@@ -6,7 +6,7 @@ use App\Db\Db;
 use PDO;
 use PDOException;
 
-class LvdModel
+class AchatCleModel
 {
 
     private $db;
@@ -16,7 +16,7 @@ class LvdModel
         $this->db = new Db();
     }
 
-    public function AddLvdClients($idclient, $idUser, $data)
+    public function AchatCleForClients($idclient, $idUser, $data)
     {
         try {
             $Data = json_decode($data, true);
@@ -29,11 +29,6 @@ class LvdModel
 
             if (empty($idUser) || !is_numeric($idUser)) {
                 echo json_encode(['error' => 'ID utilisateur invalide']);
-                return;
-            }
-
-            if (empty($Data['Adresse'])) {
-                echo json_encode(['error' => 'Adresse requise']);
                 return;
             }
 
@@ -52,7 +47,7 @@ class LvdModel
 
             if (!$abonnement) {
                 $pdo->rollBack();
-                echo json_encode(['error' => 'Le client doit régler son abonnement avant d\'ajouter une livraison.']);
+                echo json_encode(['error' => 'Le client doit régler son abonnement avant d\'acheter un cle.']);
                 return;
             }
 
@@ -69,19 +64,10 @@ class LvdModel
                 return;
             }
 
-            // Insérer dans la table lvdomcile
-            $sql = "INSERT INTO lvdomcile (Id_clients, Adresse, Date, created_by) 
-                VALUES (:idclient, :adresse, NOW(), :idUser)";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':idclient', $idclient, PDO::PARAM_INT);
-            $stmt->bindParam(':adresse', $Data['Adresse'], PDO::PARAM_STR);
-            $stmt->bindParam(':idUser', $idUser, PDO::PARAM_INT);
-            $stmt->execute();
-
             // Insérer dans la table detailts_paiement
             $sql = "INSERT INTO details_paiements (Id_paiement, Categories,Montant, Methode_paiement, Wallet, Numero_wallet, 
                     Numero_cheque, Nom_bank, reference, created_at, created_by) 
-                VALUES (:id_paiement, 'livraison_a_domicil',:montant, :methode, :wallet, :numero_wallet, 
+                VALUES (:id_paiement, 'Achat_cle',:montant, :methode, :wallet, :numero_wallet, 
                     :numero_cheque, :nom_bank, :reference, NOW(), :idUser)";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_paiement', $paiement['id'], PDO::PARAM_INT);
@@ -98,13 +84,11 @@ class LvdModel
             // Valider la transaction
             $pdo->commit();
 
-            echo json_encode(['success' => 'La livraison à domicile et son paiement ont été enregistrés avec succès.']);
+            echo json_encode(['success' => 'L\'achat de la clé et son paiement ont été enregistrés avec succès.']);
         } catch (PDOException $e) {
             // Annuler la transaction en cas d'erreur
             $pdo->rollBack();
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
-
-    
 }
