@@ -42,6 +42,35 @@ class UserModel
         }
     }
 
+    public function GetUsersById($id)
+    {
+        try {
+            // Préparer la requête pour récupérer un utilisateur par son ID
+            $stmt = $this->db->getPdo()->prepare("SELECT * FROM users WHERE id = :id");
+
+            // Lier le paramètre :id à l'ID de l'utilisateur
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+
+            // Exécuter la requête
+            $stmt->execute();
+
+            // Vérifier si un utilisateur a été trouvé
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($user) {
+                // Retourner les données de l'utilisateur en JSON
+                echo json_encode($user);
+            } else {
+                // Si aucun utilisateur n'est trouvé avec cet ID
+                echo json_encode(['error' => 'Aucun utilisateur trouvé avec cet ID.']);
+            }
+        } catch (PDOException $e) {
+            // Gérer les erreurs PDO
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
+
+
     public function NoadminUsers()
     {
         try {
@@ -80,7 +109,7 @@ class UserModel
             }
 
             // Vérifier si le rôle est 'admin' ou 'Responsable'
-            if ($Data['role'] === 'admin' || $Data['role'] === 'Responsable') {
+            if ($Data['role'] === 'admin' || $Data['role'] === 'responsable') {
                 echo json_encode(['error' => 'Désolé, vous n\'avez pas l\'autorisation de créer cet utilisateur']);
                 return;
             }
@@ -132,7 +161,7 @@ class UserModel
                 return;
             }
 
-            if ($user['role'] === 'admin' || $user['role'] === 'Responsable') {
+            if ($Data['role'] === 'admin' || $Data['role'] === 'Responsable') {
                 echo json_encode(['error' => 'Désolé, vous n\'avez pas l\'autorisation de modifier cet utilisateur']);
                 return;
             }
@@ -169,6 +198,30 @@ class UserModel
 
             // Retourner une réponse JSON de succès
             echo json_encode(['success' => 'Utilisateur mis à jour avec succès']);
+        } catch (PDOException $e) {
+            // Gérer les erreurs PDO
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
+
+    public function DeletedByResponsable($id)
+    {
+        try {
+            // Préparer la requête DELETE pour supprimer l'utilisateur par ID
+            $stmt = $this->db->getPdo()->prepare("DELETE FROM users WHERE id = :id");
+
+            // Lier le paramètre :id à l'ID de l'utilisateur à supprimer
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+
+            // Exécuter la requête
+            $stmt->execute();
+
+            // Vérifier si l'utilisateur a été supprimé
+            if ($stmt->rowCount() > 0) {
+                echo json_encode(['success' => 'Utilisateur supprimé avec succès.']);
+            } else {
+                echo json_encode(['error' => 'Aucun utilisateur trouvé avec cet ID.']);
+            }
         } catch (PDOException $e) {
             // Gérer les erreurs PDO
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);

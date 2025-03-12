@@ -52,7 +52,7 @@ class BoitPostaleModel
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
             // Retourner le nombre total
-            echo json_encode(['total' => $result['total']]);
+            echo json_encode(['count' => $result['total']]);
         } catch (PDOException $e) {
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
@@ -72,7 +72,7 @@ class BoitPostaleModel
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
             // Retourner le nombre total
-            echo json_encode(['total' => $result['total']]);
+            echo json_encode(['count' => $result['total']]);
         } catch (PDOException $e) {
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
@@ -92,7 +92,7 @@ class BoitPostaleModel
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
             // Retourner le nombre total
-            echo json_encode(['total' => $result['total']]);
+            echo json_encode(['count' => $result['total']]);
         } catch (PDOException $e) {
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }

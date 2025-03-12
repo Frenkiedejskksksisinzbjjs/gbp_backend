@@ -53,6 +53,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     case 'getAllUsers':
       $UserController->getAllUsers();
       break;
+    case 'GetUsersById':
+      $id = $_GET['id'] ?? null;
+      $UserController->GetUsersById($id);
+      break;
     case 'NoadminUsers':
       $UserController->NoadminUsers();
       break;
@@ -100,17 +104,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 }
 // Gestion des requêtes POST
 elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $id = $_GET['id'];
-  $files = $_FILES;
-  $Data = $_POST;
+
   switch ($method) {
     case 'AddClientsAbonnment':
+      $id = $_GET['id'] ?? null;
+      $files = $_FILES;
+      $Data = $_POST;
       $ClientsController->AddClientsAbonnment($id, $Data, $files);
       break;
 
     case 'CreateAgentsByResponsable':
-      $id = $_GET['id'];
-      $Data = $_POST;
+      $Data = file_get_contents("php://input");
       $UserController->CreateAgentsByResponsable($Data);
       break;
 
@@ -156,9 +160,28 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 // Gestion des requêtes PUT
 elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+  switch ($method) {
+    case 'UpdateAgentByResponsable':
+      $id = $_GET['id'] ?? null;
+      $Data = file_get_contents("php://input");
+      $UserController->UpdateAgentByResponsable($id, $Data);
+      break;
+    default:
+      # code...
+      break;
+  }
 }
 // Gestion des requêtes DELETE
 elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+  switch ($method) {
+    case 'DeleteUser':
+      $id = $_GET['id'] ?? null;
+      $UserController->DeletedByResponsable($id);
+      break;
+    default:
+      # code...
+      break;
+  }
 } // Méthode invalide
 else {
 }
