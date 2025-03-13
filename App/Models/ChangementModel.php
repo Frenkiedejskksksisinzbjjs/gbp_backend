@@ -32,13 +32,18 @@ class ChangementModel
                 return;
             }
 
+            if (empty($Data['Nom'])) {
+                echo json_encode(['error' => 'Le nouveau nom du client est requis.']);
+                return;
+            }
+
             // Démarrer une transaction
             $pdo = $this->db->getPdo();
             $pdo->beginTransaction();
 
             // Vérifier si le client a un abonnement payé
             $anneeActuelle = date('Y');
-            $sql = "SELECT id FROM abonnement WHERE Id_client = :idclient AND Annee_abonnement = :anneeActuelle And status = 'paye' LIMIT 1";
+            $sql = "SELECT id FROM abonnement WHERE Id_client = :idclient AND Annee_abonnement = :anneeActuelle AND status = 'paye' LIMIT 1";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':idclient', $idclient, PDO::PARAM_INT);
             $stmt->bindParam(':anneeActuelle', $anneeActuelle, PDO::PARAM_INT);
@@ -47,7 +52,7 @@ class ChangementModel
 
             if (!$abonnement) {
                 $pdo->rollBack();
-                echo json_encode(['error' => 'Le client doit régler son abonnement avant d\'acheter un cle.']);
+                echo json_encode(['error' => 'Le client doit régler son abonnement avant de modifier son nom.']);
                 return;
             }
 
@@ -64,30 +69,62 @@ class ChangementModel
                 return;
             }
 
-            // Insérer dans la table detailts_paiement
-            $sql = "INSERT INTO details_paiements (Id_paiement, Categories,Montant, Methode_paiement, Wallet, Numero_wallet, 
+            // Modifier le nom du client dans la table clients
+            $sql = "UPDATE clients SET Nom = :nom WHERE id = :idclient";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':nom', $Data['Nom'], PDO::PARAM_STR);
+            $stmt->bindParam(':idclient', $idclient, PDO::PARAM_INT);
+            $stmt->execute();
+
+            // Insérer dans la table details_paiements
+            $sql = "INSERT INTO details_paiements (Id_paiement, Categories, Montant, Methode_paiement, Wallet, Numero_wallet, 
                     Numero_cheque, Nom_bank, reference, created_at, created_by) 
-                VALUES (:id_paiement, 'Changement_Nom',:montant, :methode, :wallet, :numero_wallet, 
+                VALUES (:id_paiement, 'Changement_Nom', :montant, :methode, :wallet, :numero_wallet, 
                     :numero_cheque, :nom_bank, :reference, NOW(), :idUser)";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_paiement', $paiement['id'], PDO::PARAM_INT);
-            $stmt->bindParam(':methode', $Data['Methode_paiement'], PDO::PARAM_STR);
+            $stmt->bindParam(':methode', $Data['Methode_de_paiement'], PDO::PARAM_STR);
             $stmt->bindParam(':montant', $Data['Montant'], PDO::PARAM_STR);
             $stmt->bindParam(':wallet', $Data['Wallet'], PDO::PARAM_STR);
             $stmt->bindParam(':numero_wallet', $Data['Numero_wallet'], PDO::PARAM_STR);
             $stmt->bindParam(':numero_cheque', $Data['Numero_cheque'], PDO::PARAM_STR);
             $stmt->bindParam(':nom_bank', $Data['Nom_bank'], PDO::PARAM_STR);
-            $stmt->bindParam(':reference', $Data['reference'], PDO::PARAM_STR);
+            $stmt->bindParam(':reference', $Data['ReferenceId'], PDO::PARAM_STR);
             $stmt->bindParam(':idUser', $idUser, PDO::PARAM_INT);
             $stmt->execute();
 
             // Valider la transaction
             $pdo->commit();
 
-            echo json_encode(['success' => 'La modification du nom du client et l\'enregistrement de son paiement ont été effectués avec succès.']);
+            echo json_encode(['success' => 'Le nom du client a été modifié et le paiement enregistré avec succès.']);
         } catch (PDOException $e) {
             // Annuler la transaction en cas d'erreur
             $pdo->rollBack();
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
+
+
+    public function getLastReferenceChangerNom()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            $sql = "SELECT reference 
+                    FROM details_paiements 
+                    WHERE Categories = 'Changement_Nom'
+                    ORDER BY 
+                        SUBSTRING_INDEX(reference, '/', -1) DESC, 
+                        CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(reference, '/', 2), '/', -1) AS UNSIGNED) DESC
+                    LIMIT 1";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            echo json_encode(["reference" => $result ? $result['reference'] : null]);
+        } catch (PDOException $e) {
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }

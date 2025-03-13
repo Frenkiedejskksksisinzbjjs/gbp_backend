@@ -25,13 +25,15 @@ class ClientsModels
 
             // Requête pour récupérer tous les clients avec leurs informations supplémentaires
             $sql = "
-                SELECT 
+                SELECT  DISTINCT 
                     c.*, 
                     a.Status AS abonnement_status, 
                     a.Penalite AS abonnement_penalite, 
                     a.Annee_abonnement, 
                     b.Numero AS boite_postal_numero, 
-                    (SELECT COUNT(*) FROM sous_couverte sc WHERE sc.Id_client = c.id) AS nombre_sous_couverte
+                    (SELECT COUNT(*) FROM sous_couverte sc WHERE sc.Id_client = c.id) AS nombre_sous_couverte,
+                    (SELECT COUNT(*) FROM lvdomcile L WHERE L.Id_clients = c.id) AS Adresse_Livraison,
+                    (SELECT COUNT(*) FROM collections Cl WHERE Cl.Id_clients = c.id) AS Adresse_Collection
                 FROM clients c
                 LEFT JOIN abonnement a ON c.id = a.Id_client
                 LEFT JOIN boit_postal b ON c.Id_boite_postale  = b.id

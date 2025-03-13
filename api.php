@@ -96,6 +96,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     case 'GetCountOfBpPetiteType':
       $BoitPostaleController->GetCountOfBpPetiteType();
       break;
+    case 'getLastReferenceChangerNom':
+      $ChangementNameController->getLastReferenceChangerNom();
+      break;
+    case 'getLastReferenceOfkey':
+      $AchatCleController->getLastReferenceOfkey();
+      break;
+    case 'getLastReferenceAjoutSousCouvette':
+      $SousCouverteController->getLastReferenceAjoutSousCouvette();
+      break;
 
     default:
       # code...

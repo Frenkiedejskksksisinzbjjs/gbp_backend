@@ -71,13 +71,13 @@ class AchatCleModel
                     :numero_cheque, :nom_bank, :reference, NOW(), :idUser)";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_paiement', $paiement['id'], PDO::PARAM_INT);
-            $stmt->bindParam(':methode', $Data['Methode_paiement'], PDO::PARAM_STR);
+            $stmt->bindParam(':methode', $Data['Methode_de_paiement'], PDO::PARAM_STR);
             $stmt->bindParam(':montant', $Data['Montant'], PDO::PARAM_STR);
             $stmt->bindParam(':wallet', $Data['Wallet'], PDO::PARAM_STR);
             $stmt->bindParam(':numero_wallet', $Data['Numero_wallet'], PDO::PARAM_STR);
             $stmt->bindParam(':numero_cheque', $Data['Numero_cheque'], PDO::PARAM_STR);
             $stmt->bindParam(':nom_bank', $Data['Nom_bank'], PDO::PARAM_STR);
-            $stmt->bindParam(':reference', $Data['reference'], PDO::PARAM_STR);
+            $stmt->bindParam(':reference', $Data['ReferenceId'], PDO::PARAM_STR);
             $stmt->bindParam(':idUser', $idUser, PDO::PARAM_INT);
             $stmt->execute();
 
@@ -88,6 +88,30 @@ class AchatCleModel
         } catch (PDOException $e) {
             // Annuler la transaction en cas d'erreur
             $pdo->rollBack();
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
+
+    public function getLastReferenceOfkey()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            $sql = "SELECT reference 
+                    FROM details_paiements 
+                    WHERE Categories = 'Achat_cle'
+                    ORDER BY 
+                        SUBSTRING_INDEX(reference, '/', -1) DESC, 
+                        CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(reference, '/', 2), '/', -1) AS UNSIGNED) DESC
+                    LIMIT 1";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            echo json_encode(["reference" => $result ? $result['reference'] : null]);
+        } catch (PDOException $e) {
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }

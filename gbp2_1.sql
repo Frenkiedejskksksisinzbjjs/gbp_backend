@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : jeu. 20 fév. 2025 à 14:39
+-- Généré le : jeu. 13 mars 2025 à 12:07
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.2.12
 
@@ -34,11 +34,19 @@ CREATE TABLE `abonnement` (
   `Montant` decimal(10,2) DEFAULT 20000.00,
   `MontantSc` decimal(10,2) NOT NULL,
   `Penalite` decimal(10,2) DEFAULT 0.00,
-  `Status` enum('payé','impayé') NOT NULL,
+  `Status` enum('payé','impayé','exonorer') NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `updated_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `abonnement`
+--
+
+INSERT INTO `abonnement` (`id`, `Id_client`, `Annee_abonnement`, `Montant`, `MontantSc`, `Penalite`, `Status`, `created_at`, `updated_at`, `updated_by`) VALUES
+(3, 9, 2025, 20000.00, 0.00, 0.00, 'payé', '2025-02-27 08:09:28', '2025-02-27 08:09:28', 1),
+(4, 11, 2025, 20000.00, 0.00, 0.00, 'payé', '2025-02-27 08:33:14', '2025-02-27 08:33:14', 1);
 
 -- --------------------------------------------------------
 
@@ -51,6 +59,14 @@ CREATE TABLE `boit_postal` (
   `Numero` varchar(50) NOT NULL,
   `Type` enum('Grand','Moyen','Petite') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `boit_postal`
+--
+
+INSERT INTO `boit_postal` (`id`, `Numero`, `Type`) VALUES
+(5, '1', 'Grand'),
+(8, '2', 'Grand');
 
 -- --------------------------------------------------------
 
@@ -70,6 +86,14 @@ CREATE TABLE `clients` (
   `id_user` int(11) NOT NULL,
   `updated_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `clients`
+--
+
+INSERT INTO `clients` (`id`, `Nom`, `Email`, `Adresse`, `TypeClient`, `Telephone`, `Id_boite_postale`, `Date_abonnement`, `id_user`, `updated_by`) VALUES
+(9, 'Hibo Ahmed', 'Fatouma@gmail.com', 'cite nasib', 'Entreprise', '77101214', 5, '2025-02-27', 1, 1),
+(11, 'Fatouma ali mohamed', 'RaliaMohamed@gmail.com', 'cite nasib', 'Entreprise', '77101214', 8, '2025-02-27', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -94,7 +118,8 @@ CREATE TABLE `collections` (
 CREATE TABLE `details_paiements` (
   `id` int(11) NOT NULL,
   `Id_paiement` int(11) NOT NULL,
-  `Categories` enum('livraison_a_domicil','sous_couverte','collections') NOT NULL,
+  `Categories` enum('livraison_a_domicil','sous_couverte','collections','Achat_cle','Changement_Nom') NOT NULL,
+  `Montant` float NOT NULL,
   `Methode_paiement` enum('cash','cheque','wallet') NOT NULL,
   `Wallet` enum('dahabplace','waafi','d_money','cac_pay','sabapay') DEFAULT NULL,
   `Numero_wallet` varchar(255) DEFAULT NULL,
@@ -104,6 +129,15 @@ CREATE TABLE `details_paiements` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `created_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `details_paiements`
+--
+
+INSERT INTO `details_paiements` (`id`, `Id_paiement`, `Categories`, `Montant`, `Methode_paiement`, `Wallet`, `Numero_wallet`, `Numero_cheque`, `Nom_bank`, `reference`, `created_at`, `created_by`) VALUES
+(11, 3, 'Changement_Nom', 5000, 'cash', NULL, '', '', NULL, 'CGNM/00001/2025-03-13', '2025-03-13 10:30:34', 27),
+(12, 3, 'Achat_cle', 2000, 'wallet', 'waafi', '77101010', '', NULL, 'CGCLE/00001/2025-03-13', '2025-03-13 10:45:18', 27),
+(13, 3, 'sous_couverte', 30000, 'cheque', NULL, '', '132564', 'salam bank', 'AJSC/00001/2025-03-13', '2025-03-13 11:00:43', 27);
 
 -- --------------------------------------------------------
 
@@ -120,6 +154,14 @@ CREATE TABLE `documents` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `created_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `documents`
+--
+
+INSERT INTO `documents` (`id`, `Id_client`, `Abonnement`, `Identite`, `Patent_Quitance`, `created_at`, `created_by`) VALUES
+(3, 9, 'upload/documents/1740643768_Compte d\'attente.PNG', 'upload/documents/1740643768_compte d\'attende modifier.PNG', 'upload/documents/1740643768_Add Clients individuel.PNG', '2025-02-27 08:09:28', 1),
+(4, 11, 'upload/documents/1740645194_Compte d\'attente.PNG', 'upload/documents/1740645194_compte d\'attende modifier.PNG', 'upload/documents/1740645194_Add Clients individuel.PNG', '2025-02-27 08:33:14', 1);
 
 -- --------------------------------------------------------
 
@@ -168,6 +210,14 @@ CREATE TABLE `paiement` (
   `created_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Déchargement des données de la table `paiement`
+--
+
+INSERT INTO `paiement` (`id`, `Id_abonnement`, `Methode_paiement`, `Wallet`, `Numero_wallet`, `Numero_cheque`, `Nom_bank`, `reference`, `created_at`, `created_by`) VALUES
+(3, 3, 'wallet', 'waafi', '77101214', '0', '0', 'NBGPB/0001/2025', '2025-02-27 08:09:28', 1),
+(4, 4, 'wallet', 'waafi', '77101214', '0', '0', 'NBGPB/0001/2025', '2025-02-27 08:33:14', 1);
+
 -- --------------------------------------------------------
 
 --
@@ -206,14 +256,21 @@ CREATE TABLE `resilier` (
 
 CREATE TABLE `sous_couverte` (
   `id` int(11) NOT NULL,
-  `Nom_societe` varchar(255) NOT NULL,
-  `Nom_personne` varchar(255) NOT NULL,
-  `Telephone` varchar(20) NOT NULL,
-  `Adresse` varchar(255) NOT NULL,
+  `Nom_societe` varchar(255) DEFAULT NULL,
+  `Nom_personne` varchar(255) DEFAULT NULL,
+  `Telephone` varchar(20) DEFAULT NULL,
+  `Adresse` varchar(255) DEFAULT NULL,
   `Id_client` int(11) DEFAULT NULL,
   `Created_by` int(11) DEFAULT NULL,
   `date` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `sous_couverte`
+--
+
+INSERT INTO `sous_couverte` (`id`, `Nom_societe`, `Nom_personne`, `Telephone`, `Adresse`, `Id_client`, `Created_by`, `date`) VALUES
+(10, 'societe A', 'Mousa ali farah', '7710121410', 'quartier 5', 9, 27, '2025-03-13');
 
 -- --------------------------------------------------------
 
@@ -236,7 +293,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `Nom`, `Adresse`, `Telephone`, `Email`, `password`, `Role`) VALUES
-(1, 'moussa abdirahman ali', 'cite hodan', '77101214', 'moussa@gmail.com', '123123', 'responsable');
+(1, 'moussa abdirahman ali', 'cite hodan', '77101214', 'moussa@gmail.com', '$2a$12$sAgTed5Ir6SzUzmOyUEtGe0dvSQyk5UwFQipPy/JCK1BWLLKIZgkW', 'responsable'),
+(25, 'abdirahman nouradine moussa', 'test Adresse', '77101214', 'youra@gmail.com', '$2y$10$AyVHYFOV.Bl040/tD9IZIOAE1RJb6GtXkawiLyDrrRI9KYRVubggu', 'agent_commercial'),
+(27, 'halima abdillahi hassan', 'test Adresse', '77101214', 'denerise@gmail.com', '$2y$10$Z6VlYn60l2Tc68aILh2A6e1WyUcPWYWgqJf7O7IQi6AC6suKkhLGO', 'agent_guichet');
 
 --
 -- Index pour les tables déchargées
@@ -354,37 +413,37 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT pour la table `abonnement`
 --
 ALTER TABLE `abonnement`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT pour la table `boit_postal`
 --
 ALTER TABLE `boit_postal`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT pour la table `clients`
 --
 ALTER TABLE `clients`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT pour la table `collections`
 --
 ALTER TABLE `collections`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT pour la table `details_paiements`
 --
 ALTER TABLE `details_paiements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT pour la table `documents`
 --
 ALTER TABLE `documents`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT pour la table `exonore`
@@ -396,13 +455,13 @@ ALTER TABLE `exonore`
 -- AUTO_INCREMENT pour la table `lvdomcile`
 --
 ALTER TABLE `lvdomcile`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT pour la table `paiement`
 --
 ALTER TABLE `paiement`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT pour la table `penaliter`
@@ -420,13 +479,13 @@ ALTER TABLE `resilier`
 -- AUTO_INCREMENT pour la table `sous_couverte`
 --
 ALTER TABLE `sous_couverte`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT pour la table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- Contraintes pour les tables déchargées
