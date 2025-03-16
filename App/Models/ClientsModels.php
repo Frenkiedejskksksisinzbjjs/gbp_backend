@@ -28,7 +28,7 @@ class ClientsModels
                 SELECT  DISTINCT 
                     c.*, 
                     a.Status AS abonnement_status, 
-                    a.Penalite AS abonnement_penalite, 
+                    SUM(a.Penalite) AS abonnement_penalite, 
                     a.Annee_abonnement, 
                     b.Numero AS boite_postal_numero, 
                     (SELECT COUNT(*) FROM sous_couverte sc WHERE sc.Id_client = c.id) AS nombre_sous_couverte,
@@ -37,6 +37,7 @@ class ClientsModels
                 FROM clients c
                 LEFT JOIN abonnement a ON c.id = a.Id_client
                 LEFT JOIN boit_postal b ON c.Id_boite_postale  = b.id
+                GROUP BY c.id, b.Numero;
             ";
 
             $stmt = $pdo->prepare($sql);

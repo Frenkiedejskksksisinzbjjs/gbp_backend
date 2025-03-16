@@ -16,7 +16,7 @@ class AbonnementModel
         $this->db = new Db();
     }
 
-    public function PaidAbonnement($idUser, $IdClient, $data)
+    public function PaidAbonnement($IdClient,$idUser, $data)
     {
         try {
             $Data = json_decode($data, true);
@@ -24,7 +24,7 @@ class AbonnementModel
             $pdo->beginTransaction();
 
             // Récupérer tous les abonnements impayés du client
-            $sql = "SELECT id, Montant, Penalite FROM abonnement WHERE Id_clients = :IdClient AND status = 'impaye'";
+            $sql = "SELECT id, Montant, Penalite FROM abonnement WHERE Id_client = :IdClient AND status = 'impayé'";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':IdClient', $IdClient, PDO::PARAM_INT);
             $stmt->execute();
@@ -47,7 +47,7 @@ class AbonnementModel
             }
 
             // Vérifier si le montant saisi correspond au montant total
-            if ($Data['MontantPaye'] != $totalAmount) {
+            if ($Data['Montant'] != $totalAmount) {
                 $pdo->rollBack();
                 echo json_encode(['error' => 'Le montant payé ne correspond pas au montant total dû.']);
                 return;
@@ -58,7 +58,7 @@ class AbonnementModel
             $pdo->exec($sql);
 
             // Mise à jour du statut des pénalités en "payé"
-            $sql = "UPDATE penalite SET status = 'paye' WHERE Id_abonnement IN (" . implode(',', $abonnementIds) . ")";
+            $sql = "UPDATE penaliter SET status = 'paye' WHERE Abonnement_id IN (" . implode(',', $abonnementIds) . ")";
             $pdo->exec($sql);
 
             // Enregistrer le paiement
@@ -67,12 +67,12 @@ class AbonnementModel
             $stmt = $pdo->prepare($sql);
             foreach ($abonnementIds as $idAbonnement) {
                 $stmt->bindParam(':IdAbonnement', $idAbonnement, PDO::PARAM_INT);
-                $stmt->bindParam(':Methode', $Data['Methode_paiement'], PDO::PARAM_STR);
+                $stmt->bindParam(':Methode', $Data['Methode_de_paiement'], PDO::PARAM_STR);
                 $stmt->bindParam(':Wallet', $Data['Wallet'], PDO::PARAM_STR);
                 $stmt->bindParam(':NumeroWallet', $Data['Numero_wallet'], PDO::PARAM_STR);
                 $stmt->bindParam(':NumeroCheque', $Data['Numero_cheque'], PDO::PARAM_STR);
                 $stmt->bindParam(':NomBank', $Data['Nom_bank'], PDO::PARAM_STR);
-                $stmt->bindParam(':Reference', $Data['reference'], PDO::PARAM_STR);
+                $stmt->bindParam(':Reference', $Data['ReferenceId'], PDO::PARAM_STR);
                 $stmt->bindParam(':CreatedBy', $idUser, PDO::PARAM_INT);
                 $stmt->execute();
             }
@@ -87,6 +87,37 @@ class AbonnementModel
         }
     }
 
+    public function SelectionsLesMontantsImaper($IdClient)
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Récupérer tous les abonnements impayés du client
+            $sql = "SELECT id, Montant, Penalite FROM abonnement WHERE Id_client  = :IdClient AND status = 'impayé'";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':IdClient', $IdClient, PDO::PARAM_INT);
+            $stmt->execute();
+            $abonnements = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (!$abonnements) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Aucun abonnement impayé trouvé.']);
+                return;
+            }
+
+            // Calcul du montant total à payer
+            $totalAmount = 0;
+
+            foreach ($abonnements as $abonnement) {
+                $totalAmount += $abonnement['Montant'] + $abonnement['Penalite'];
+            }
+           
+            echo json_encode(["MontantApayer" => $totalAmount]);
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
 
     public function SelectUnpaiedPaiement($idClients)
     {
@@ -111,6 +142,30 @@ class AbonnementModel
             $message = 'Redevance de ' . implode(', ', $annees) . ' non payée.';
 
             echo json_encode(['message' => $message, 'annees_impayees' => $annees]);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
+
+    public function getLastReferenceRdv()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            $sql = "SELECT reference 
+                    FROM paiement 
+                    -- WHERE Categories = 'livraison_a_domicil'
+                    ORDER BY 
+                        SUBSTRING_INDEX(reference, '/', -1) DESC, 
+                        CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(reference, '/', 2), '/', -1) AS UNSIGNED) DESC
+                    LIMIT 1";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            echo json_encode(["reference" => $result ? $result['reference'] : null]);
         } catch (PDOException $e) {
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }

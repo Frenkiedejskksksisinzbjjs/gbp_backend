@@ -32,7 +32,7 @@ class CollectionModel
                 return;
             }
 
-            if (empty($Data['Adresse'])) {
+            if (empty($Data['Adresse_collection'])) {
                 echo json_encode(['error' => 'Adresse requise']);
                 return;
             }
@@ -74,7 +74,7 @@ class CollectionModel
                 VALUES (:idclient, :adresse, NOW(), :idUser)";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':idclient', $idclient, PDO::PARAM_INT);
-            $stmt->bindParam(':adresse', $Data['Adresse'], PDO::PARAM_STR);
+            $stmt->bindParam(':adresse', $Data['Adresse_collection'], PDO::PARAM_STR);
             $stmt->bindParam(':idUser', $idUser, PDO::PARAM_INT);
             $stmt->execute();
 
@@ -85,13 +85,13 @@ class CollectionModel
                     :numero_cheque, :nom_bank, :reference, NOW(), :idUser)";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_paiement', $paiement['id'], PDO::PARAM_INT);
-            $stmt->bindParam(':methode', $Data['Methode_paiement'], PDO::PARAM_STR);
+            $stmt->bindParam(':methode', $Data['Methode_de_paiement'], PDO::PARAM_STR);
             $stmt->bindParam(':montant', $Data['Montant'], PDO::PARAM_STR);
             $stmt->bindParam(':wallet', $Data['Wallet'], PDO::PARAM_STR);
             $stmt->bindParam(':numero_wallet', $Data['Numero_wallet'], PDO::PARAM_STR);
             $stmt->bindParam(':numero_cheque', $Data['Numero_cheque'], PDO::PARAM_STR);
             $stmt->bindParam(':nom_bank', $Data['Nom_bank'], PDO::PARAM_STR);
-            $stmt->bindParam(':reference', $Data['reference'], PDO::PARAM_STR);
+            $stmt->bindParam(':reference', $Data['ReferenceId'], PDO::PARAM_STR);
             $stmt->bindParam(':idUser', $idUser, PDO::PARAM_INT);
             $stmt->execute();
 
@@ -106,5 +106,27 @@ class CollectionModel
         }
     }
 
-    
+    public function getLastReferenceCollection()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            $sql = "SELECT reference 
+                    FROM details_paiements 
+                    WHERE Categories = 'collections'
+                    ORDER BY 
+                        SUBSTRING_INDEX(reference, '/', -1) DESC, 
+                        CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(reference, '/', 2), '/', -1) AS UNSIGNED) DESC
+                    LIMIT 1";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            echo json_encode(["reference" => $result ? $result['reference'] : null]);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
 }

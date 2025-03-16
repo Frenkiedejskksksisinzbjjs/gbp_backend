@@ -105,6 +105,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     case 'getLastReferenceAjoutSousCouvette':
       $SousCouverteController->getLastReferenceAjoutSousCouvette();
       break;
+    case 'getLastReferenceCollection':
+      $CollectionController->getLastReferenceCollection();
+      break;
+    case 'getLastReferenceLvd':
+      $LvdController->getLastReferenceLvd();
+      break;
+    case 'getLastReferenceRdv':
+      $AbonnementController->getLastReferenceRdv();
+      break;
+    case 'SelectionsLesMontantsImaper':
+      $id = $_GET['ClientId'];
+      $AbonnementController->SelectionsLesMontantsImaper($id);
+      break;
 
     default:
       # code...
@@ -132,6 +145,12 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $idClient = $_GET['idClient'];
       $Data = file_get_contents("php://input");
       $LvdController->AddLvdClients($idClient, $id, $Data);
+      break;
+    case 'PaidAbonnement':
+      $id = $_GET['id'];
+      $idClient = $_GET['idClient'];
+      $Data = file_get_contents("php://input");
+      $AbonnementController->PaidAbonnement($idClient, $id, $Data);
       break;
 
     case 'AddCollectionClients':
