@@ -21,17 +21,31 @@ class BoitPostaleModel
         try {
             $pdo = $this->db->getPdo();
 
-            // Récupérer le dernier numéro inséré
+            // Récupérer le dernier numéro inséré dans boit_postal
             $sql = "SELECT Numero FROM boit_postal ORDER BY Numero DESC LIMIT 1";
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $boite = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            // Si la table est vide, commencer à 1, sinon incrémenter
             $nouveauNumero = $boite ? $boite['Numero'] + 1 : 1;
 
-            // Retourner le nouveau numéro
-            echo json_encode(['nouveau_numero' => $nouveauNumero]);
+            // Récupérer tous les numéros résiliés disponibles
+            $sqlResilie = "
+            SELECT bp.Numero 
+            FROM resilier r
+            JOIN clients c ON r.Id_client = c.id
+            JOIN boit_postal bp ON c.Id_boite_postale = bp.id
+            ORDER BY r.Date_resilier ASC";
+
+            $stmtResilie = $pdo->prepare($sqlResilie);
+            $stmtResilie->execute();
+            $numerosResilies = $stmtResilie->fetchAll(PDO::FETCH_COLUMN); // Récupère un tableau de numéros résiliés
+
+            // Ajouter le prochain numéro disponible dans le tableau des numéros disponibles
+            $numerosDisponibles = array_merge([$nouveauNumero], $numerosResilies);
+
+            echo json_encode([
+                'numeros_disponibles' => $numerosDisponibles // Un tableau avec le prochain numéro + les numéros résiliés
+            ]);
         } catch (PDOException $e) {
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
