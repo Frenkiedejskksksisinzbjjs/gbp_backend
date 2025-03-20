@@ -28,23 +28,31 @@ class BoitPostaleModel
             $boite = $stmt->fetch(PDO::FETCH_ASSOC);
             $nouveauNumero = $boite ? $boite['Numero'] + 1 : 1;
 
-            // Récupérer tous les numéros résiliés disponibles
+            // Récupérer les numéros résiliés qui ne sont pas attribués à un autre client actif
             $sqlResilie = "
-            SELECT bp.Numero 
+           SELECT bp.Numero 
             FROM resilier r
-            JOIN clients c ON r.Id_client = c.id
-            JOIN boit_postal bp ON c.Id_boite_postale = bp.id
-            ORDER BY r.Date_resilier ASC";
+            JOIN clients c_resilie ON r.Id_client = c_resilie.id
+            JOIN boit_postal bp ON c_resilie.Id_boite_postale = bp.id
+            WHERE bp.id NOT IN (
+                SELECT DISTINCT c_actif.Id_boite_postale 
+                FROM clients c_actif 
+                LEFT JOIN resilier r_actif ON c_actif.id = r_actif.Id_client
+                WHERE r_actif.Id_client IS NULL -- Seuls les clients non résiliés
+            )
+            ORDER BY r.Date_resilier ASC;
+
+        ";
 
             $stmtResilie = $pdo->prepare($sqlResilie);
             $stmtResilie->execute();
-            $numerosResilies = $stmtResilie->fetchAll(PDO::FETCH_COLUMN); // Récupère un tableau de numéros résiliés
+            $numerosResilies = $stmtResilie->fetchAll(PDO::FETCH_COLUMN); // Récupère un tableau des numéros résiliés disponibles
 
-            // Ajouter le prochain numéro disponible dans le tableau des numéros disponibles
+            // Ajouter le prochain numéro disponible dans la liste
             $numerosDisponibles = array_merge([$nouveauNumero], $numerosResilies);
 
             echo json_encode([
-                'numeros_disponibles' => $numerosDisponibles // Un tableau avec le prochain numéro + les numéros résiliés
+                'numeros_disponibles' => $numerosDisponibles, // Tableau des numéros disponibles
             ]);
         } catch (PDOException $e) {
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);

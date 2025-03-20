@@ -150,16 +150,28 @@ class ClientsModels
             $pdo = $this->db->getPdo();
             $pdo->beginTransaction(); // Démarrer une transaction
 
-            // 1️⃣ Enregistrer la boîte postale dans la table boit_postal et récupérer son ID
-            $sqlBoitePostale = "INSERT INTO boit_postal (Numero) VALUES (:Numero)";
-            $stmt = $pdo->prepare($sqlBoitePostale);
-            $stmt->execute([
-                ':Numero' => $Data['BoitePostale'],
-                // ':Type' => $Data['Type_boite_postale'] // Grand, Moyen, Petite
+            // Vérification si la boîte postale existe déjà
+            $verificationSql = "SELECT id FROM boit_postal WHERE Numero = :Numero";
+            $Verfystmt = $pdo->prepare($verificationSql);
+            $Verfystmt->execute([
+                ':Numero' => $Data['BoitePostale']
             ]);
 
-            // Récupérer l'ID de la boîte postale insérée
-            $idBoitePostale = $pdo->lastInsertId();
+            // Récupération de l'ID si la boîte existe
+            $idBoitePostale = $Verfystmt->fetchColumn();
+
+            if (!$idBoitePostale) {
+                // La boîte postale n'existe pas, on l'insère dans la base de données
+                $sqlBoitePostale = "INSERT INTO boit_postal (Numero) VALUES (:Numero)";
+                $stmt = $pdo->prepare($sqlBoitePostale);
+                $stmt->execute([
+                    ':Numero' => $Data['BoitePostale']
+                ]);
+
+                // Récupération de l'ID de la nouvelle boîte postale insérée
+                $idBoitePostale = $pdo->lastInsertId();
+            }
+
 
             // 1️⃣ Enregistrer le client dans la table clients
             $sqlClient = "INSERT INTO clients (Nom, Email, Adresse, TypeClient, Telephone, Id_boite_postale, Date_abonnement, id_user, updated_by)
@@ -195,7 +207,7 @@ class ClientsModels
             $stmt->execute([
                 ':Id_abonnement' => $idAbonnement,
                 ':Methode_paiement' => $Data['Methode_de_paiement'],
-                ':Wallet' => $Data['wallet']?? null,
+                ':Wallet' => $Data['wallet'] ?? null,
                 ':Numero_wallet' => $Data['Numero_wallet'],
                 ':Numero_cheque' => $Data['Numero_cheque'],
                 ':Nom_bank' => $Data['Nom_Banque'],
@@ -223,12 +235,12 @@ class ClientsModels
                 ':Id_client' => $idClient,
                 ':Abonnement' => $chemins['Abonnement'],
                 ':Identite' => $chemins['Identiter'],
-                ':Patent_Quitance' => $chemins['patent_quitance']?? 'null',
+                ':Patent_Quitance' => $chemins['patent_quitance'] ?? 'null',
                 ':created_by' => $idUser
             ]);
 
             // 5️⃣ Enregistrer la livraison à domicile si choisie
-            if (!empty($Data['Livraison'])) {
+            if (!empty($Data['Adresse_Livraison_Domicile'])) {
                 $sqlLivraison = "INSERT INTO lvdomcile (Id_clients, Adresse, Date, created_by) 
                                  VALUES (:Id_clients, :Adresse, NOW(), :created_by)";
                 $stmt = $pdo->prepare($sqlLivraison);
@@ -245,7 +257,7 @@ class ClientsModels
                     ':Id_paiement' => $idPaiement,
                     ':Methode_paiement' => $Data['Methode_de_paiement'],
                     ':Montant' => $Data['montantLd'],
-                    ':Wallet' => $Data['wallet']?? null,
+                    ':Wallet' => $Data['wallet'] ?? null,
                     ':Numero_wallet' => $Data['Numero_wallet'],
                     ':Numero_cheque' => $Data['Numero_cheque'],
                     ':Nom_bank' => $Data['Nom_Banque'],
@@ -272,7 +284,7 @@ class ClientsModels
                     ':Id_paiement' => $idPaiement,
                     ':Methode_paiement' => $Data['Methode_de_paiement'],
                     ':Montant' => $Data['montantCll'],
-                    ':Wallet' => $Data['wallet']?? null,
+                    ':Wallet' => $Data['wallet'] ?? null,
                     ':Numero_wallet' => $Data['Numero_wallet'],
                     ':Numero_cheque' => $Data['Numero_cheque'],
                     ':Nom_bank' => $Data['Nom_Banque'],
@@ -282,10 +294,12 @@ class ClientsModels
             }
 
             // 7️⃣ Enregistrer sous-couverte si choisie (limite max 5)
-            if (!empty($Data['SousCouverte'])) {
+            if (!empty($Data['sousCouvertures'])) {
+                // Correction du format JSON (ajout de guillemets aux clés)
+                // $jsonString = preg_replace('/([{,])(\s*)([a-zA-Z0-9_]+)(\s*):/', '$1"$3":', $Data['sousCouvertures']);
                 // Décoder la chaîne JSON en tableau associatif
-                $sousCouvertes = json_decode($Data['SousCouverte'], true);
-
+                $sousCouvertes = json_decode($Data['sousCouvertures'], true);
+                // var_dump($sousCouvertes);
                 // Vérifier que le décodage a réussi et que c'est bien un tableau
                 if (is_array($sousCouvertes)) {
                     foreach ($sousCouvertes as $sousCouverte) {
@@ -323,7 +337,7 @@ class ClientsModels
                                 ':Id_paiement' => $idPaiement,
                                 ':Methode_paiement' => $Data['Methode_de_paiement'],
                                 ':Montant' => $Data['montantSC'],
-                                ':Wallet' => $Data['wallet']??null,
+                                ':Wallet' => $Data['wallet'] ?? null,
                                 ':Numero_wallet' => $Data['Numero_wallet'],
                                 ':Numero_cheque' => $Data['Numero_cheque'],
                                 ':Nom_bank' => $Data['Nom_Banque'],
@@ -462,5 +476,4 @@ class ClientsModels
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage(), 'total_clients_resilies' => 0]);
         }
     }
-
 }
