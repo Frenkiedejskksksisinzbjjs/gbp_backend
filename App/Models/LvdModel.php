@@ -129,4 +129,22 @@ class LvdModel
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
+
+    public function GetLDVInfo($id){
+        try {
+            $pdo = $this->db->getPdo();
+            $sql = "SELECT * from lvdomcile Where Id_clients =:id";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+            if ($stmt->rowCount() > 0) {
+                $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                echo json_encode($result);
+            }else{
+                echo json_encode(['error' => 'Cette client N\'a pas des Livraison à domicile']);
+            }
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
 }

@@ -118,6 +118,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
       $id = $_GET['ClientId'];
       $AbonnementController->SelectionsLesMontantsImaper($id);
       break;
+    case 'GetSousCouvertInfo':
+      $id = $_GET['ClientId'];
+      $SousCouverteController->GetSousCouvertInfo($id);
+      break;
+    case 'GetLDVInfo':
+      $id = $_GET['ClientId'];
+      $LvdController->GetLDVInfo($id);
+      break;
+    case 'GetCollectionInfo':
+      $id = $_GET['ClientId'];
+      $CollectionController->GetCollectionInfo($id);
+      break;
 
     default:
       # code...

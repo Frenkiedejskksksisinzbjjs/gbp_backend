@@ -37,6 +37,7 @@ class ClientsModels
                 FROM clients c
                 LEFT JOIN abonnement a ON c.id = a.Id_client
                 LEFT JOIN boit_postal b ON c.Id_boite_postale  = b.id
+                 WHERE c.id not in (SELECT Id_client from resilier)
                 GROUP BY c.id, b.Numero;
             ";
 
