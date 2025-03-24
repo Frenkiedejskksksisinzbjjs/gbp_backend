@@ -16,7 +16,7 @@ class AbonnementModel
         $this->db = new Db();
     }
 
-    public function PaidAbonnement($IdClient,$idUser, $data)
+    public function PaidAbonnement($IdClient, $idUser, $data)
     {
         try {
             $Data = json_decode($data, true);
@@ -111,7 +111,7 @@ class AbonnementModel
             foreach ($abonnements as $abonnement) {
                 $totalAmount += $abonnement['Montant'] + $abonnement['Penalite'];
             }
-           
+
             echo json_encode(["MontantApayer" => $totalAmount]);
         } catch (PDOException $e) {
             http_response_code(500);
@@ -171,18 +171,42 @@ class AbonnementModel
         }
     }
 
-    public function GetCollectionInfo($id){
+    public function GetFactureClient($id)
+    {
         try {
             $pdo = $this->db->getPdo();
-            $sql = "SELECT * from collections Where Id_clients =:id";
+            $sql = "SELECT 
+                        a.Annee_abonnement As Redevance, 
+                        c.Nom AS Nom, 
+                        p.reference AS Reference, 
+                        p.Methode_paiement AS Methode_de_paiement_anne, 
+                        a.Montant AS Montant_Redevance, 
+                        p.Wallet AS Wallet_de_redevance, 
+                        p.Numero_wallet AS Numero_Telephone, 
+                        p.Nom_bank AS Banque, 
+                        p.Numero_cheque AS Numero_banque, 
+                        dp.Categories AS Categorie,
+                        dp.Methode_paiement AS Methode_Paiement_Categorie, 
+                        dp.Wallet AS Wallet_de_Categorie, 
+                        dp.Numero_wallet AS Numero_Telephone_categorie, 
+                        dp.Nom_bank AS Nom_banque_categorie, 
+                        dp.Numero_cheque AS Numero_banque_categorie, 
+                        dp.Montant AS Montant_categorie
+                    FROM abonnement a
+                    JOIN clients c ON a.Id_client = c.id
+                    JOIN paiement p ON p.Id_abonnement = a.id
+                    LEFT JOIN  details_paiements dp ON dp.Id_paiement = p.id
+                    WHERE c.id = :id";
+
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
+
             if ($stmt->rowCount() > 0) {
                 $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 echo json_encode($result);
-            }else{
-                echo json_encode(['error' => 'Cette client N\'a pas des collections']);
+            } else {
+                echo json_encode(['error' => 'Aucune facture trouvée pour ce client']);
             }
         } catch (PDOException $e) {
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);

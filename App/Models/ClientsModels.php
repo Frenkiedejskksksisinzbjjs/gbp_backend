@@ -29,7 +29,7 @@ class ClientsModels
                     c.*, 
                     a.Status AS abonnement_status, 
                     SUM(a.Penalite) AS abonnement_penalite, 
-                    a.Annee_abonnement, 
+                    MAX(a.Annee_abonnement) AS annee_abonnement, 
                     b.Numero AS boite_postal_numero, 
                     (SELECT COUNT(*) FROM sous_couverte sc WHERE sc.Id_client = c.id) AS nombre_sous_couverte,
                     (SELECT COUNT(*) FROM lvdomcile L WHERE L.Id_clients = c.id) AS Adresse_Livraison,

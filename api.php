@@ -130,6 +130,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
       $id = $_GET['ClientId'];
       $CollectionController->GetCollectionInfo($id);
       break;
+    case 'GetFactureClient':
+      $id = $_GET['ClientId'];
+      $AbonnementController->GetFactureClient($id);
+      break;
 
     default:
       # code...
