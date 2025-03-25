@@ -134,6 +134,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
       $id = $_GET['ClientId'];
       $AbonnementController->GetFactureClient($id);
       break;
+    case 'GetAllBoitPostale':
+      $BoitPostaleController->GetAllBoitPostale();
+      break;
 
     default:
       # code...
@@ -195,6 +198,12 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $idClient = $_GET['idClient'];
       $Data = file_get_contents("php://input");
       $ChangementNameController->ChangeClientName($idClient, $id, $Data);
+      break;
+    case 'ResilierClients':
+      $id = $_GET['id'];
+      $idClient = $_GET['idClient'];
+      $files = $_FILES;
+      $ResilierController->ResilierClients($idClient, $id, $files);
       break;
 
     default:

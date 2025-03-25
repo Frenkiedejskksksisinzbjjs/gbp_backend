@@ -16,6 +16,28 @@ class BoitPostaleModel
         $this->db = new Db();
     }
 
+
+    public function GetAllBoitPostale()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+            // Préparer la requête pour compter le nombre de boîtes postales de type "Grand"
+            $sql = "SELECT * FROM boit_postal";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+
+            if ($stmt->rowCount() > 0) {
+                // Récupérer le résultat
+                $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                echo json_encode($result);
+            } else {
+                echo json_encode(['error' => 'Aucune boite postale trouver.']);
+            }
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
+
     public function GetNextBoitePostal()
     {
         try {
