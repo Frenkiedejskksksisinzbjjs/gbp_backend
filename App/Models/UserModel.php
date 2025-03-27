@@ -75,7 +75,7 @@ class UserModel
     {
         try {
             // Préparer la requête SQL pour récupérer tous les utilisateurs
-            $sql = "SELECT * FROM users WHERE Role != 'responsable';";
+            $sql = "SELECT * FROM users WHERE Role NOT IN ('responsable', 'superviseur', 'Admin');";
             $stmt = $this->db->getPdo()->prepare($sql);
 
             // Exécution de la requête
@@ -146,7 +146,7 @@ class UserModel
             $Data = json_decode($data, true);
 
             // Vérifier si toutes les données nécessaires sont présentes
-            if (!isset($Data['Nom'], $Data['Adresse'], $Data['Telephone'], $Data['Email'], $Data['role'])) {
+            if (!isset($Data['Nom'], $Data['Adresse'], $Data['Telephone'], $Data['Email'], $Data['Role'])) {
                 echo json_encode(['error' => 'Données manquantes']);
                 return;
             }
@@ -161,7 +161,7 @@ class UserModel
                 return;
             }
 
-            if ($Data['role'] === 'admin' || $Data['role'] === 'Responsable') {
+            if ($Data['Role'] === 'admin' || $Data['Role'] === 'Responsable') {
                 echo json_encode(['error' => 'Désolé, vous n\'avez pas l\'autorisation de modifier cet utilisateur']);
                 return;
             }
@@ -182,7 +182,7 @@ class UserModel
                 ':Adresse' => $Data['Adresse'],
                 ':Telephone' => $Data['Telephone'],
                 ':Email' => $Data['Email'],
-                ':Role' => $Data['role'],
+                ':Role' => $Data['Role'],
                 ':id' => $id
             ];
 

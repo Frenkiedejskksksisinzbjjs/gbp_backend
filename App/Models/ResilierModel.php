@@ -151,4 +151,29 @@ class ResilierModel
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
- }
+
+    public function RecaputilationsResilier($id)
+    {
+        try {
+            $pdo = $this->db->getPdo();
+            $sql = "SELECT C.*, R.*
+                    FROM resilier R
+                    LEFT JOIN clients C ON C.id = R.Id_client
+                    WHERE R.Resilier_by = :id";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (!empty($result)) {
+                echo json_encode($result);
+            } else {
+                echo json_encode(['error' => 'Ce client n\'a pas de sous-couverture.']);
+            }
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
+}

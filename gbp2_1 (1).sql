@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : jeu. 13 mars 2025 à 12:07
+-- Généré le : jeu. 27 mars 2025 à 12:25
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.2.12
 
@@ -46,7 +46,12 @@ CREATE TABLE `abonnement` (
 
 INSERT INTO `abonnement` (`id`, `Id_client`, `Annee_abonnement`, `Montant`, `MontantSc`, `Penalite`, `Status`, `created_at`, `updated_at`, `updated_by`) VALUES
 (3, 9, 2025, 20000.00, 0.00, 0.00, 'payé', '2025-02-27 08:09:28', '2025-02-27 08:09:28', 1),
-(4, 11, 2025, 20000.00, 0.00, 0.00, 'payé', '2025-02-27 08:33:14', '2025-02-27 08:33:14', 1);
+(4, 11, 2025, 20000.00, 0.00, 3000.00, 'payé', '2025-02-27 08:33:14', '2025-03-16 09:25:28', 1),
+(5, 11, 2026, 20000.00, 0.00, 3000.00, 'payé', '2025-03-16 08:06:22', '2025-03-16 09:25:28', 27),
+(38, 49, 2025, 20000.00, 0.00, 0.00, 'payé', '2025-03-19 08:10:28', '2025-03-19 08:10:28', 27),
+(41, 53, 2025, 20000.00, 0.00, 0.00, 'payé', '2025-03-19 08:55:44', '2025-03-19 08:55:44', 27),
+(42, 54, 2025, 20000.00, 0.00, 0.00, 'payé', '2025-03-19 08:56:52', '2025-03-19 08:56:52', 27),
+(43, 55, 2025, 20000.00, 0.00, 0.00, 'payé', '2025-03-24 10:42:44', '2025-03-24 10:42:44', 27);
 
 -- --------------------------------------------------------
 
@@ -66,7 +71,11 @@ CREATE TABLE `boit_postal` (
 
 INSERT INTO `boit_postal` (`id`, `Numero`, `Type`) VALUES
 (5, '1', 'Grand'),
-(8, '2', 'Grand');
+(8, '2', 'Grand'),
+(47, '3', 'Grand'),
+(50, '4', 'Grand'),
+(51, '5', 'Grand'),
+(52, '6', 'Grand');
 
 -- --------------------------------------------------------
 
@@ -93,7 +102,11 @@ CREATE TABLE `clients` (
 
 INSERT INTO `clients` (`id`, `Nom`, `Email`, `Adresse`, `TypeClient`, `Telephone`, `Id_boite_postale`, `Date_abonnement`, `id_user`, `updated_by`) VALUES
 (9, 'Hibo Ahmed', 'Fatouma@gmail.com', 'cite nasib', 'Entreprise', '77101214', 5, '2025-02-27', 1, 1),
-(11, 'Fatouma ali mohamed', 'RaliaMohamed@gmail.com', 'cite nasib', 'Entreprise', '77101214', 8, '2025-02-27', 1, 1);
+(11, 'Fatouma ali mohamed', 'RaliaMohamed@gmail.com', 'cite nasib', 'Entreprise', '77101214', 8, '2025-02-27', 1, 1),
+(49, 'testuser', 'testuser@gmail.com', 'cite nasib', 'Particulier', '77101214', 47, '2025-03-19', 27, 27),
+(53, 'halima abdillahi hassan', 'testusennr@gmail.com', 'cite nasib', 'Particulier', '77101012', 50, '2025-03-19', 27, 27),
+(54, 'halima abdillahi hassan', 'testusenner@gmail.com', 'cite nasib', 'Particulier', '77101012', 51, '2025-03-19', 27, 27),
+(55, 'abdirahman nouradine moussa', 'abdirahman@gmail.com', 'cite nasib', 'Particulier', '77186724', 52, '2025-03-24', 27, 27);
 
 -- --------------------------------------------------------
 
@@ -108,6 +121,14 @@ CREATE TABLE `collections` (
   `Date` date NOT NULL,
   `created_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `collections`
+--
+
+INSERT INTO `collections` (`id`, `Id_clients`, `Adresse`, `Date`, `created_by`) VALUES
+(7, 9, 'Q7,cite barwago', '2025-03-16', 27),
+(27, 49, 'Q7,cite barwago', '2025-03-19', 27);
 
 -- --------------------------------------------------------
 
@@ -137,7 +158,12 @@ CREATE TABLE `details_paiements` (
 INSERT INTO `details_paiements` (`id`, `Id_paiement`, `Categories`, `Montant`, `Methode_paiement`, `Wallet`, `Numero_wallet`, `Numero_cheque`, `Nom_bank`, `reference`, `created_at`, `created_by`) VALUES
 (11, 3, 'Changement_Nom', 5000, 'cash', NULL, '', '', NULL, 'CGNM/00001/2025-03-13', '2025-03-13 10:30:34', 27),
 (12, 3, 'Achat_cle', 2000, 'wallet', 'waafi', '77101010', '', NULL, 'CGCLE/00001/2025-03-13', '2025-03-13 10:45:18', 27),
-(13, 3, 'sous_couverte', 30000, 'cheque', NULL, '', '132564', 'salam bank', 'AJSC/00001/2025-03-13', '2025-03-13 11:00:43', 27);
+(13, 3, 'sous_couverte', 30000, 'cheque', NULL, '', '132564', 'salam bank', 'AJSC/00001/2025-03-13', '2025-03-13 11:00:43', 27),
+(14, 3, 'livraison_a_domicil', 5000, 'wallet', 'd_money', '77101010', '', NULL, 'AJLV/00001/2025-03-16', '2025-03-16 07:16:38', 27),
+(15, 3, 'collections', 5000, 'cheque', NULL, '', '741012', NULL, 'AJCll/00001/2025-03-16', '2025-03-16 07:21:15', 27),
+(56, 39, 'livraison_a_domicil', 3000, 'cash', NULL, '', '', '', 'AJLV/00002/2025-03-19', '2025-03-19 08:10:28', 27),
+(57, 39, 'collections', 4000, 'cash', NULL, '', '', '', 'AJCll/00002/2025-03-19', '2025-03-19 08:10:28', 27),
+(58, 39, 'sous_couverte', 20000, 'cash', NULL, '', '', '', 'AJSC/00002/2025-03-19', '2025-03-19 08:10:28', 27);
 
 -- --------------------------------------------------------
 
@@ -161,7 +187,11 @@ CREATE TABLE `documents` (
 
 INSERT INTO `documents` (`id`, `Id_client`, `Abonnement`, `Identite`, `Patent_Quitance`, `created_at`, `created_by`) VALUES
 (3, 9, 'upload/documents/1740643768_Compte d\'attente.PNG', 'upload/documents/1740643768_compte d\'attende modifier.PNG', 'upload/documents/1740643768_Add Clients individuel.PNG', '2025-02-27 08:09:28', 1),
-(4, 11, 'upload/documents/1740645194_Compte d\'attente.PNG', 'upload/documents/1740645194_compte d\'attende modifier.PNG', 'upload/documents/1740645194_Add Clients individuel.PNG', '2025-02-27 08:33:14', 1);
+(4, 11, 'upload/documents/1740645194_Compte d\'attente.PNG', 'upload/documents/1740645194_compte d\'attende modifier.PNG', 'upload/documents/1740645194_Add Clients individuel.PNG', '2025-02-27 08:33:14', 1),
+(28, 49, 'upload/documents/1742371828_Compte d\'attente.PNG', 'upload/documents/1742371828_compte d\'attende modifier.PNG', 'null', '2025-03-19 08:10:28', 27),
+(31, 53, 'upload/documents/1742374544_compte d\'attende modifier.PNG', 'upload/documents/1742374544_Compte d\'attente.PNG', 'null', '2025-03-19 08:55:44', 27),
+(32, 54, 'upload/documents/1742374612_compte d\'attende modifier.PNG', 'upload/documents/1742374612_Compte d\'attente.PNG', 'null', '2025-03-19 08:56:52', 27),
+(33, 55, 'upload/documents/1742812964_2222.pdf', 'upload/documents/1742812964_Portfolio Web Template (Community).pdf', 'null', '2025-03-24 10:42:44', 27);
 
 -- --------------------------------------------------------
 
@@ -191,6 +221,14 @@ CREATE TABLE `lvdomcile` (
   `created_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Déchargement des données de la table `lvdomcile`
+--
+
+INSERT INTO `lvdomcile` (`id`, `Id_clients`, `Adresse`, `Date`, `created_by`) VALUES
+(8, 9, 'q3,q4,cite hodan', '2025-03-16', 27),
+(26, 49, 'cite hodan 4', '2025-03-19', 27);
+
 -- --------------------------------------------------------
 
 --
@@ -216,7 +254,12 @@ CREATE TABLE `paiement` (
 
 INSERT INTO `paiement` (`id`, `Id_abonnement`, `Methode_paiement`, `Wallet`, `Numero_wallet`, `Numero_cheque`, `Nom_bank`, `reference`, `created_at`, `created_by`) VALUES
 (3, 3, 'wallet', 'waafi', '77101214', '0', '0', 'NBGPB/0001/2025', '2025-02-27 08:09:28', 1),
-(4, 4, 'wallet', 'waafi', '77101214', '0', '0', 'NBGPB/0001/2025', '2025-02-27 08:33:14', 1);
+(5, 4, 'cash', NULL, '', '', NULL, 'RNBP/00002/2025-03-16', '2025-03-16 09:25:28', 27),
+(6, 5, 'cash', NULL, '', '', NULL, 'RNBP/00002/2025-03-16', '2025-03-16 09:25:28', 27),
+(39, 38, 'cash', NULL, '', '', '', 'RNBP/00003/2025-03-19', '2025-03-19 08:10:28', 27),
+(42, 41, 'cash', NULL, '', '', '', 'RNBP/00005/2025-03-19', '2025-03-19 08:55:44', 27),
+(43, 42, 'cash', NULL, '', '', '', 'RNBP/00006/2025-03-19', '2025-03-19 08:56:52', 27),
+(44, 43, 'cash', NULL, '', '', '', 'RNBP/00007/2025-03-24', '2025-03-24 10:42:44', 27);
 
 -- --------------------------------------------------------
 
@@ -248,6 +291,16 @@ CREATE TABLE `resilier` (
   `Resilier_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Déchargement des données de la table `resilier`
+--
+
+INSERT INTO `resilier` (`id`, `Id_client`, `Lettre_recommandation`, `Date_resilier`, `Resilier_by`) VALUES
+(1, 9, 'test', '2025-03-19', 27),
+(2, 55, 'upload/documents/lettre_recommandation_resilier/lettre_67e2873e429bc.PNG', '2025-03-25', 27),
+(3, 54, 'upload/documents/lettre_recommandation_resilier/lettre_67e2878fbb195.pdf', '2025-03-25', 28),
+(4, 53, 'upload/documents/lettre_recommandation_resilier/lettre_67e3d6690a22e.pdf', '2025-03-26', 28);
+
 -- --------------------------------------------------------
 
 --
@@ -270,7 +323,8 @@ CREATE TABLE `sous_couverte` (
 --
 
 INSERT INTO `sous_couverte` (`id`, `Nom_societe`, `Nom_personne`, `Telephone`, `Adresse`, `Id_client`, `Created_by`, `date`) VALUES
-(10, 'societe A', 'Mousa ali farah', '7710121410', 'quartier 5', 9, 27, '2025-03-13');
+(10, 'societe A', 'Mousa ali farah', '7710121410', 'quartier 5', 9, 27, '2025-03-13'),
+(15, 'Djibouti telecom', 'Hassan nouradine mousa', '7710121410', 'quartier 5', 49, 27, '2025-03-19');
 
 -- --------------------------------------------------------
 
@@ -294,8 +348,9 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `Nom`, `Adresse`, `Telephone`, `Email`, `password`, `Role`) VALUES
 (1, 'moussa abdirahman ali', 'cite hodan', '77101214', 'moussa@gmail.com', '$2a$12$sAgTed5Ir6SzUzmOyUEtGe0dvSQyk5UwFQipPy/JCK1BWLLKIZgkW', 'responsable'),
-(25, 'abdirahman nouradine moussa', 'test Adresse', '77101214', 'youra@gmail.com', '$2y$10$AyVHYFOV.Bl040/tD9IZIOAE1RJb6GtXkawiLyDrrRI9KYRVubggu', 'agent_commercial'),
-(27, 'halima abdillahi hassan', 'test Adresse', '77101214', 'denerise@gmail.com', '$2y$10$Z6VlYn60l2Tc68aILh2A6e1WyUcPWYWgqJf7O7IQi6AC6suKkhLGO', 'agent_guichet');
+(27, 'halima abdillahi hassan', 'test Adresse', '77101214', 'denerise@gmail.com', '$2y$10$Z6VlYn60l2Tc68aILh2A6e1WyUcPWYWgqJf7O7IQi6AC6suKkhLGO', 'agent_guichet'),
+(28, 'abdirahman nouradine moussa', 'cite hodan', '77101214', 'abdi@gmail.com', '$2y$10$UPhoyRhW/e3Csn4D1f/zVOIAjemjvOoYr0uI4gf4X8nbmSz5OuXRO', 'agent_commercial'),
+(29, 'fatouma omar abdillahi', 'cite hodan', '77101214', 'youra@gmail.com', '$2y$10$c4awG/9pqhcTSHXh3zPXCONKTR/WBY0BjyWdiaPMxBfOybaNDw8IS', 'superviseur');
 
 --
 -- Index pour les tables déchargées
@@ -413,37 +468,37 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT pour la table `abonnement`
 --
 ALTER TABLE `abonnement`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT pour la table `boit_postal`
 --
 ALTER TABLE `boit_postal`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
 
 --
 -- AUTO_INCREMENT pour la table `clients`
 --
 ALTER TABLE `clients`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
 
 --
 -- AUTO_INCREMENT pour la table `collections`
 --
 ALTER TABLE `collections`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT pour la table `details_paiements`
 --
 ALTER TABLE `details_paiements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- AUTO_INCREMENT pour la table `documents`
 --
 ALTER TABLE `documents`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT pour la table `exonore`
@@ -455,13 +510,13 @@ ALTER TABLE `exonore`
 -- AUTO_INCREMENT pour la table `lvdomcile`
 --
 ALTER TABLE `lvdomcile`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT pour la table `paiement`
 --
 ALTER TABLE `paiement`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT pour la table `penaliter`
@@ -473,19 +528,19 @@ ALTER TABLE `penaliter`
 -- AUTO_INCREMENT pour la table `resilier`
 --
 ALTER TABLE `resilier`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT pour la table `sous_couverte`
 --
 ALTER TABLE `sous_couverte`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT pour la table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- Contraintes pour les tables déchargées

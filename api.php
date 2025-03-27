@@ -137,6 +137,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     case 'GetAllBoitPostale':
       $BoitPostaleController->GetAllBoitPostale();
       break;
+    case 'RecaputilationsResilier':
+      $id = $_GET['id'];
+      $ResilierController->RecaputilationsResilier($id);
+      break;
 
     default:
       # code...
