@@ -147,4 +147,42 @@ class CollectionModel
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
+
+    public function GetToDayActivityCollections()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Requête pour récupérer tous les clients avec leurs informations supplémentaires
+            $sql = "
+                   SELECT DISTINCT 
+                    c.*, 
+                    Co.Adresse as Adresse_collections, 
+                    a.Status AS abonnement_status, 
+                    u.Nom AS Agent,
+                    Co.Date AS 'Date creation',
+                    SUM(a.Penalite) AS abonnement_penalite, 
+                    MAX(a.Annee_abonnement) AS annee_abonnement
+                    FROM clients c
+                    JOIN collections Co ON Co.Id_clients = c.id
+                    JOIN abonnement a ON a.Id_client = c.id
+                    JOIN users u ON Co.created_by = u.id
+                    WHERE Co.Date = CURRENT_DATE
+                    GROUP BY c.id, a.Status, u.Nom, Co.Adresse, Co.Date;
+            ";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Vérifier si des clients existent
+            if (!$clients) {
+                echo json_encode(['message' => 'Aucun client trouvé.']);
+            }
+
+            echo json_encode($clients);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
 }

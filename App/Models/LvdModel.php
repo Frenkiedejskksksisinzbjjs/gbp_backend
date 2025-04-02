@@ -130,7 +130,8 @@ class LvdModel
         }
     }
 
-    public function GetLDVInfo($id){
+    public function GetLDVInfo($id)
+    {
         try {
             $pdo = $this->db->getPdo();
             $sql = "SELECT * from lvdomcile Where Id_clients =:id";
@@ -140,9 +141,47 @@ class LvdModel
             if ($stmt->rowCount() > 0) {
                 $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 echo json_encode($result);
-            }else{
+            } else {
                 echo json_encode(['error' => 'Cette client N\'a pas des Livraison à domicile']);
             }
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
+
+    public function GetToDayActivityLD()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Requête pour récupérer tous les clients avec leurs informations supplémentaires
+            $sql = "
+                   SELECT DISTINCT 
+                    c.*, 
+                    l.Adresse as Adresse_livraison, 
+                    a.Status AS abonnement_status, 
+                    u.Nom AS Agent,
+                    l.Date AS 'Date_creation',
+                    SUM(a.Penalite) AS abonnement_penalite, 
+                    MAX(a.Annee_abonnement) AS annee_abonnement
+                    FROM clients c
+                    JOIN lvdomcile l ON l.Id_clients = c.id
+                    JOIN abonnement a ON a.Id_client = c.id
+                    JOIN users u ON l.created_by = u.id
+                    WHERE l.Date = CURRENT_DATE
+                    GROUP BY c.id, a.Status, u.Nom, l.Adresse, l.Date;
+            ";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Vérifier si des clients existent
+            if (!$clients) {
+                echo json_encode(['message' => 'Aucun client trouvé.']);
+            }
+
+            echo json_encode($clients);
         } catch (PDOException $e) {
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }

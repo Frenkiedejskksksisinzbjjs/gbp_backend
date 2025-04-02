@@ -128,4 +128,44 @@ class ChangementModel
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
+
+    public function GetToDayActivityChagementName()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Requête pour récupérer tous les clients avec leurs informations supplémentaires
+            $sql = "
+                    SELECT 
+                    c.*, 
+                    a.Status AS abonnement_status, 
+                    u.Nom AS Agent, 
+                    SUM(a.Penalite) AS abonnement_penalite, 
+                    MAX(a.Annee_abonnement) AS annee_abonnement, 
+                    D.created_at AS Date
+                    FROM clients c
+                    JOIN abonnement a ON c.id = a.Id_client
+                    JOIN paiement p ON a.id = p.Id_abonnement
+                    JOIN details_paiements D ON p.id = D.Id_paiement
+                    JOIN users u ON D.created_by = u.id
+                    WHERE D.Categories = 'Changement_Nom' 
+                    AND DATE(D.created_at) = CURRENT_DATE
+                    GROUP BY c.id, a.Status, u.Nom, D.created_at;
+
+            ";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Vérifier si des clients existent
+            if (!$clients) {
+                echo json_encode(['message' => 'Aucun client trouvé.']);
+            }
+
+            echo json_encode($clients);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
 }

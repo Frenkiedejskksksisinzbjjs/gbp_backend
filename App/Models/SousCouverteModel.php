@@ -181,5 +181,45 @@ class SousCouverteModel
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
-    
+    public function GetToDayActivitySousCouverte()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Requête pour récupérer tous les clients avec leurs informations supplémentaires
+            $sql = "
+                    SELECT DISTINCT 
+                    c.*, 
+                    S.Nom_societe, 
+                    S.Nom_personne, 
+                    S.Telephone, 
+                    S.Adresse,
+                    a.Status AS abonnement_status, 
+                    u.Nom AS Agent, 
+                    SUM(a.Penalite) AS abonnement_penalite, 
+                    MAX(a.Annee_abonnement) AS annee_abonnement
+                FROM clients c
+                LEFT JOIN abonnement a ON c.id = a.Id_client
+                LEFT JOIN sous_couverte S ON c.id = S.Id_client
+                LEFT JOIN boit_postal b ON c.Id_boite_postale = b.id
+                LEFT JOIN users u ON a.updated_by = u.id
+                WHERE c.id NOT IN (SELECT Id_client FROM resilier)
+                AND S.Date = CURRENT_DATE
+                GROUP BY c.id, S.Nom_societe, S.Nom_personne, S.Telephone, S.Adresse, a.Status, u.Nom;
+            ";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Vérifier si des clients existent
+            if (!$clients) {
+                echo json_encode(['message' => 'Aucun client trouvé.']);
+            }
+
+            echo json_encode($clients);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
 }

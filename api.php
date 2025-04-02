@@ -141,7 +141,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
       $id = $_GET['id'];
       $ResilierController->RecaputilationsResilier($id);
       break;
-
+    case 'GetToDayActivity':
+      $AbonnementController->GetToDayActivity();
+      break;
+    case 'GetToDayActivityAchatCle':
+      $AchatCleController->GetToDayActivityAchatCle();
+      break;
+    case 'GetToDayActivityChagementName':
+      $ChangementNameController->GetToDayActivityChagementName();
+      break;
+    case 'GetToDayActivityCollections':
+      $CollectionController->GetToDayActivityCollections();
+      break;
+    case 'GetToDayActivityLD':
+      $LvdController->GetToDayActivityLD();
+      break;
+    case 'GetToDayActivitySousCouverte':
+      $SousCouverteController->GetToDayActivitySousCouverte();
+      break;
     default:
       # code...
       break;
