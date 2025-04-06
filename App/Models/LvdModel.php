@@ -186,4 +186,98 @@ class LvdModel
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
+    
+    public function GetToDayActivityLDById($id)
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Requête pour récupérer tous les clients avec leurs informations supplémentaires
+            $sql = "
+                 SELECT DISTINCT 
+                        c.*, 
+                        l.Adresse AS Adresse_livraison, 
+                        a.Status AS abonnement_status, 
+                        u.Nom AS Agent,
+                        l.Date AS Date_creation,
+                        SUM(a.Penalite) AS abonnement_penalite, 
+                        MAX(a.Annee_abonnement) AS annee_abonnement,
+                        b.Numero AS boite_postal_numero
+                    FROM clients c
+                    JOIN lvdomcile l ON l.Id_clients = c.id
+                    JOIN abonnement a ON a.Id_client = c.id
+                    JOIN users u ON l.created_by = u.id
+                    LEFT JOIN boit_postal b ON c.Id_boite_postale = b.id
+                    WHERE l.Date = CURRENT_DATE 
+                      AND l.created_by = :id
+                    GROUP BY 
+                        c.id, 
+                        l.Adresse, 
+                        a.Status, 
+                        u.Nom, 
+                        l.Date, 
+                        b.Numero;
+
+            ";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Vérifier si des clients existent
+            if (!$clients) {
+                echo json_encode(['error' => 'Aucun client trouvé.']);
+            }
+            //   var_dump($clients);
+            // echo json_encode($clients);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
+    public function GetAllActivityLD()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Requête pour récupérer tous les clients avec leurs informations supplémentaires
+            $sql = "
+                 SELECT DISTINCT 
+                        c.*, 
+                        l.Adresse AS Adresse_livraison, 
+                        a.Status AS abonnement_status, 
+                        u.Nom AS Agent,
+                        l.Date AS Date_creation,
+                        SUM(a.Penalite) AS abonnement_penalite, 
+                        MAX(a.Annee_abonnement) AS annee_abonnement,
+                        b.Numero AS boite_postal_numero
+                    FROM clients c
+                    JOIN lvdomcile l ON l.Id_clients = c.id
+                    JOIN abonnement a ON a.Id_client = c.id
+                    JOIN users u ON l.created_by = u.id
+                    LEFT JOIN boit_postal b ON c.Id_boite_postale = b.id
+                    GROUP BY 
+                        c.id, 
+                        l.Adresse, 
+                        a.Status, 
+                        u.Nom, 
+                        l.Date, 
+                        b.Numero;
+
+            ";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Vérifier si des clients existent
+            if (!$clients) {
+                echo json_encode(['error' => 'Aucun client trouvé.']);
+            }
+            //   var_dump($clients);
+            echo json_encode($clients);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
 }

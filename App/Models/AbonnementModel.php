@@ -254,4 +254,113 @@ class AbonnementModel
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
+    public function GetToDayActivityById($id)
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Requête pour récupérer tous les clients avec leurs informations supplémentaires
+            $sql = "
+                    SELECT DISTINCT 
+                    c.*, 
+                    a.Status AS abonnement_status, 
+                    u.Nom AS Agent, 
+                    SUM(a.Penalite) AS abonnement_penalite, 
+                    MAX(a.Annee_abonnement) AS annee_abonnement, 
+                    b.Numero AS boite_postal_numero, 
+                    (
+                        SELECT COUNT(*) 
+                        FROM sous_couverte sc 
+                        WHERE sc.Id_client = c.id
+                    ) AS nombre_sous_couverte,
+                    (
+                        SELECT COUNT(*) 
+                        FROM lvdomcile l 
+                        WHERE l.Id_clients = c.id
+                    ) AS Adresse_Livraison,
+                    (
+                        SELECT COUNT(*) 
+                        FROM collections cl 
+                        WHERE cl.Id_clients = c.id
+                    ) AS Adresse_Collection
+                FROM clients c
+                LEFT JOIN abonnement a ON c.id = a.Id_client
+                LEFT JOIN boit_postal b ON c.Id_boite_postale = b.id
+                LEFT JOIN users u ON a.updated_by = u.id
+                WHERE c.id NOT IN (SELECT Id_client FROM resilier)
+                AND a.updated_by = :id
+                AND DATE(a.updated_at) = CURRENT_DATE
+                GROUP BY 
+                    c.id, a.Status, u.Nom, b.Numero;
+
+            ";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Vérifier si des clients existent
+            if (!$clients) {
+                echo json_encode(['message' => 'Aucun client trouvé.']);
+            }
+
+            echo json_encode($clients);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
+    public function GetAllActivityRdv()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Requête pour récupérer tous les clients avec leurs informations supplémentaires
+            $sql = "
+                    SELECT DISTINCT 
+                    c.*, 
+                    a.Status AS abonnement_status, 
+                    u.Nom AS Agent, 
+                    SUM(a.Penalite) AS abonnement_penalite, 
+                    MAX(a.Annee_abonnement) AS annee_abonnement, 
+                    b.Numero AS boite_postal_numero, 
+                    (
+                        SELECT COUNT(*) 
+                        FROM sous_couverte sc 
+                        WHERE sc.Id_client = c.id
+                    ) AS nombre_sous_couverte,
+                    (
+                        SELECT COUNT(*) 
+                        FROM lvdomcile l 
+                        WHERE l.Id_clients = c.id
+                    ) AS Adresse_Livraison,
+                    (
+                        SELECT COUNT(*) 
+                        FROM collections cl 
+                        WHERE cl.Id_clients = c.id
+                    ) AS Adresse_Collection
+                FROM clients c
+                LEFT JOIN abonnement a ON c.id = a.Id_client
+                LEFT JOIN boit_postal b ON c.Id_boite_postale = b.id
+                LEFT JOIN users u ON a.updated_by = u.id
+                WHERE c.id NOT IN (SELECT Id_client FROM resilier)
+                GROUP BY 
+                    c.id, a.Status, u.Nom, b.Numero;
+
+            ";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Vérifier si des clients existent
+            if (!$clients) {
+                echo json_encode(['error' => 'Aucun client trouvé.']);
+            }
+
+            echo json_encode($clients);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
 }

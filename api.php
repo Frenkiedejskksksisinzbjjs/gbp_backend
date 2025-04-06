@@ -159,6 +159,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     case 'GetToDayActivitySousCouverte':
       $SousCouverteController->GetToDayActivitySousCouverte();
       break;
+    case 'GetToDayActivityById':
+      $id = $_GET['IdRecpUser'];
+      $AbonnementController->GetToDayActivityById($id);
+      break;
+    case 'GetToDayActivityAchatCleById':
+      $id = $_GET['IdRecpUser'];
+      $AchatCleController->GetToDayActivityAchatCleById($id);
+      break;
+    case 'GetToDayActivityChagementNameById':
+      $id = $_GET['IdRecpUser'];
+      $ChangementNameController->GetToDayActivityChagementNameById($id);
+      break;
+    case 'GetToDayActivityCollectionsById':
+      $id = $_GET['IdRecpUser'];
+      $CollectionController->GetToDayActivityCollectionsById($id);
+      break;
+    case 'GetToDayActivityLDById':
+      $id = $_GET['IdRecpUser'];
+      $LvdController->GetToDayActivityLDById($id);
+    case 'GetToDayActivitySousCouverteById':
+      $id = $_GET['IdRecpUser'];
+      $SousCouverteController->GetToDayActivitySousCouverteById($id);
+      break;
+    case 'GetAllActivityLD':
+      $LvdController->GetAllActivityLD();
+      break;
+    case 'GetAllActivityRdv':
+      $AbonnementController->GetAllActivityRdv();
+      break;
+    case 'GetAllActivitySousCouverte':
+      $SousCouverteController->GetAllActivitySousCouverte();
+      break;
+    case 'GetAllActivityChagementName':
+      $ChangementNameController->GetAllActivityChagementName();
+      break;
+    case 'GetAllActivityAchatCle':
+      $AchatCleController->GetAllActivityAchatCle();
+      break;
+    case 'GetAllActivityCollections':
+      $CollectionController->GetAllActivityCollections();
+      break;
     default:
       # code...
       break;

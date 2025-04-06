@@ -185,4 +185,82 @@ class CollectionModel
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
+    public function GetToDayActivityCollectionsById($id)
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Requête pour récupérer tous les clients avec leurs informations supplémentaires
+            $sql = "
+                   SELECT DISTINCT 
+                    c.*, 
+                    Co.Adresse as Adresse_collections, 
+                    a.Status AS abonnement_status, 
+                    u.Nom AS Agent,
+                    Co.Date AS 'Date creation',
+                    SUM(a.Penalite) AS abonnement_penalite, 
+                    MAX(a.Annee_abonnement) AS annee_abonnement,
+                     b.Numero AS boite_postal_numero 
+                    FROM clients c
+                    JOIN collections Co ON Co.Id_clients = c.id
+                    JOIN abonnement a ON a.Id_client = c.id
+                    JOIN users u ON Co.created_by = u.id
+                     LEFT JOIN boit_postal b ON c.Id_boite_postale = b.id
+                    WHERE Co.Date = CURRENT_DATE and Co.created_by = :id
+                    GROUP BY c.id, a.Status, u.Nom, Co.Adresse, Co.Date;
+            ";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Vérifier si des clients existent
+            if (!$clients) {
+                echo json_encode(['error' => 'Aucun client trouvé.']);
+            }
+
+            echo json_encode($clients);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
+    public function GetAllActivityCollections()
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Requête pour récupérer tous les clients avec leurs informations supplémentaires
+            $sql = "
+                   SELECT DISTINCT 
+                    c.*, 
+                    Co.Adresse as Adresse_collections, 
+                    a.Status AS abonnement_status, 
+                    u.Nom AS Agent,
+                    Co.Date AS 'Date creation',
+                    SUM(a.Penalite) AS abonnement_penalite, 
+                    MAX(a.Annee_abonnement) AS annee_abonnement,
+                     b.Numero AS boite_postal_numero 
+                    FROM clients c
+                    JOIN collections Co ON Co.Id_clients = c.id
+                    JOIN abonnement a ON a.Id_client = c.id
+                    JOIN users u ON Co.created_by = u.id
+                     LEFT JOIN boit_postal b ON c.Id_boite_postale = b.id
+                    GROUP BY c.id, a.Status, u.Nom, Co.Adresse, Co.Date;
+            ";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Vérifier si des clients existent
+            if (!$clients) {
+                echo json_encode(['error' => 'Aucun client trouvé.']);
+            }
+
+            echo json_encode($clients);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
+        }
+    }
 }
