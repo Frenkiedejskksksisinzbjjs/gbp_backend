@@ -281,6 +281,10 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
       $Data = file_get_contents("php://input");
       $UserController->UpdateAgentByResponsable($id, $Data);
       break;
+    case 'EnleverPenaliter':
+      $id = $_GET['id'] ?? null;
+      $PenaliterController->EnleverPenaliter($id);
+      break;
     default:
       # code...
       break;
