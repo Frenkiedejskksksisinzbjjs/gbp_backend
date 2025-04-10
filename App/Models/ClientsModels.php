@@ -477,4 +477,31 @@ class ClientsModels
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage(), 'total_clients_resilies' => 0]);
         }
     }
+
+    public function AfficherDocument($id)
+    {
+        try {
+            $pdo = $this->db->getPdo();
+
+            // Requête SQL pour récupérer tous les documents du client
+            $sql = "
+            SELECT *
+            FROM documents 
+            WHERE Id_client = :id
+        ";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            if ($stmt->rowCount() > 0) {
+                $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                echo json_encode($result);
+            } else {
+                echo json_encode(['error' => 'Aucun document pour ce client.']);
+            }
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Erreur de la base de données : ' . $e->getMessage()]);
+        }
+    }
 }

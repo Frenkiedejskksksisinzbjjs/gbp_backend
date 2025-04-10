@@ -200,6 +200,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     case 'GetAllActivityCollections':
       $CollectionController->GetAllActivityCollections();
       break;
+    case 'AdminUsers':
+      $UserController->AdminUsers();
+      break;
+    case 'AfficherDocument':
+      $id = $_GET['Id'];
+      $ClientsController->AfficherDocument($id);
+      break;
     default:
       # code...
       break;
