@@ -161,17 +161,27 @@ class ClientsModels
             // Récupération de l'ID si la boîte existe
             $idBoitePostale = $Verfystmt->fetchColumn();
 
-            if (!$idBoitePostale) {
-                // La boîte postale n'existe pas, on l'insère dans la base de données
-                $sqlBoitePostale = "INSERT INTO boit_postal (Numero) VALUES (:Numero)";
+            if ($idBoitePostale) {
+                // Mise à jour du type si la boîte postale existe déjà
+                $updateSql = "UPDATE boit_postal SET Type = :Type WHERE id = :id";
+                $updateStmt = $pdo->prepare($updateSql);
+                $updateStmt->execute([
+                    ':Type' => $Data['TypeBp'],
+                    ':id' => $idBoitePostale
+                ]);
+            } else {
+                // La boîte postale n'existe pas, on l'insère
+                $sqlBoitePostale = "INSERT INTO boit_postal (Numero, Type) VALUES (:Numero, :Type)";
                 $stmt = $pdo->prepare($sqlBoitePostale);
                 $stmt->execute([
-                    ':Numero' => $Data['BoitePostale']
+                    ':Numero' => $Data['BoitePostale'],
+                    ':Type' => $Data['TypeBp']
                 ]);
 
                 // Récupération de l'ID de la nouvelle boîte postale insérée
                 $idBoitePostale = $pdo->lastInsertId();
             }
+
 
 
             // 1️⃣ Enregistrer le client dans la table clients
@@ -191,11 +201,14 @@ class ClientsModels
             $idClient = $pdo->lastInsertId();
 
             // 2️⃣ Enregistrer l'abonnement du client
+            $montant = ($Data['Role'] === 'particulier') ? 15000 : 25000;
+
             $sqlAbonnement = "INSERT INTO abonnement (Id_client, Annee_abonnement, Montant, Penalite, Status, created_at, updated_at, updated_by) 
-                              VALUES (:Id_client, YEAR(NOW()), 20000, 0, 'payé', NOW(), NOW(), :updated_by)";
+                              VALUES (:Id_client, YEAR(NOW()), :Montant, 0, 'payé', NOW(), NOW(), :updated_by)";
             $stmt = $pdo->prepare($sqlAbonnement);
             $stmt->execute([
                 ':Id_client' => $idClient,
+                ':Montant' => $montant,
                 ':updated_by' => $idUser
             ]);
 
