@@ -120,15 +120,22 @@ class ResilierModel
     {
         try {
             // Préparer la requête SQL pour récupérer tous les clients résiliés avec toutes les informations supplémentaires
-            $sql = "SELECT r.Id_client, c.*, r.Lettre_recommandation, r.Date_resilier, r.Resilier_by, 
-                           sc.*, lv.*, cl.*, a.*, d.*
-                    FROM resilier r 
-                    JOIN clients c ON r.Id_client = c.id
-                    LEFT JOIN sous_couvertes sc ON c.id = sc.Id_client
-                    LEFT JOIN lvdomicile lv ON c.id = lv.Id_client
-                    LEFT JOIN collections cl ON c.id = cl.Id_client
-                    LEFT JOIN abonnements a ON c.id = a.Id_client AND a.Date_abonnement = (SELECT MAX(Date_abonnement) FROM abonnements WHERE Id_client = c.id)
-                    LEFT JOIN documents d ON c.id = d.Id_client";
+            $sql = "SELECT  DISTINCT 
+                    c.*,r.*, 
+                    a.Status AS abonnement_status, 
+                    SUM(a.Penalite) AS abonnement_penalite, 
+                    MAX(a.Annee_abonnement) AS annee_abonnement, 
+                    b.Numero AS boite_postal_numero, 
+                    (SELECT COUNT(*) FROM sous_couverte sc WHERE sc.Id_client = c.id) AS nombre_sous_couverte,
+                    (SELECT COUNT(*) FROM lvdomcile L WHERE L.Id_clients = c.id) AS Adresse_Livraison,
+                    (SELECT COUNT(*) FROM collections Cl WHERE Cl.Id_clients = c.id) AS Adresse_Collection,
+                    u.Nom as Agents
+                FROM resilier r
+                JOIN clients c ON r.Id_client = c.id
+                JOIN users u ON r.Resilier_by = u.id
+                LEFT JOIN abonnement a ON c.id = a.Id_client
+                LEFT JOIN boit_postal b ON c.Id_boite_postale  = b.id
+                GROUP BY c.id, b.Numero; ";
 
             $stmt = $this->db->getPdo()->prepare($sql);
 
@@ -156,9 +163,10 @@ class ResilierModel
     {
         try {
             $pdo = $this->db->getPdo();
-            $sql = "SELECT C.*, R.*
+            $sql = "SELECT C.*, R.*,b.Numero
                     FROM resilier R
                     LEFT JOIN clients C ON C.id = R.Id_client
+                    JOIN boit_postal b ON b.id = C.Id_boite_postale
                     WHERE R.Resilier_by = :id";
 
             $stmt = $pdo->prepare($sql);

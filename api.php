@@ -141,6 +141,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
       $id = $_GET['id'];
       $ResilierController->RecaputilationsResilier($id);
       break;
+    case 'TousLesClientsResiliers':
+      $ResilierController->TousLesClientsResiliers();
+      break;
     case 'GetToDayActivity':
       $AbonnementController->GetToDayActivity();
       break;
