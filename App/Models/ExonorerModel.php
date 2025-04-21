@@ -57,12 +57,22 @@ class ExonorerModel
     {
         try {
             // Requête pour récupérer tous les clients exonérés avec les détails
-            $sql = "SELECT c.*,d.*, e.Date AS date_exonoration, u.Nom As agents
-                    FROM clients c
-                    INNER JOIN exonore e ON c.id = e.Id_client
-                    INNER JOIN users u ON u.id = e.created_by
-                    INNER JOIN documents d ON d.id_client = c.id
-                    ORDER BY e.Date DESC";
+            $sql = "SELECT  DISTINCT 
+                    c.*,e.*, 
+                    a.Status AS abonnement_status, 
+                    SUM(a.Penalite) AS abonnement_penalite, 
+                    MAX(a.Annee_abonnement) AS annee_abonnement, 
+                    b.Numero AS boite_postal_numero, 
+                    (SELECT COUNT(*) FROM sous_couverte sc WHERE sc.Id_client = c.id) AS nombre_sous_couverte,
+                    (SELECT COUNT(*) FROM lvdomcile L WHERE L.Id_clients = c.id) AS Adresse_Livraison,
+                    (SELECT COUNT(*) FROM collections Cl WHERE Cl.Id_clients = c.id) AS Adresse_Collection,
+                    u.Nom as Agents
+                FROM exonore e
+                JOIN clients c ON e.Id_client = c.id
+                JOIN users u ON e.created_by = u.id
+                LEFT JOIN abonnement a ON c.id = a.Id_client
+                LEFT JOIN boit_postal b ON c.Id_boite_postale  = b.id
+                GROUP BY c.id, b.Numero;                    ";
 
             // Préparer et exécuter la requête
             $stmt = $this->db->getPdo()->prepare($sql);

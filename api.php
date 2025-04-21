@@ -144,6 +144,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     case 'TousLesClientsResiliers':
       $ResilierController->TousLesClientsResiliers();
       break;
+    case 'AllClientExonorer':
+      $ExonoreController->AllClientExonorer();
+      break;
     case 'GetToDayActivity':
       $AbonnementController->GetToDayActivity();
       break;
