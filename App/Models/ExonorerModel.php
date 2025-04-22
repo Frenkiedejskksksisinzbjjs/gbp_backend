@@ -19,38 +19,52 @@ class ExonorerModel
     public function ExonorerClients($idclient, $idUser)
     {
         try {
-            // Vérifier si l'ID du client est valide
+            // Vérifier si les IDs sont valides
             if (empty($idclient) || !is_numeric($idclient)) {
                 echo json_encode(['error' => 'ID client invalide']);
                 return;
             }
 
-            // Vérifier si l'ID de l'utilisateur est valide
             if (empty($idUser) || !is_numeric($idUser)) {
                 echo json_encode(['error' => 'ID utilisateur invalide']);
                 return;
             }
 
-            // Requête pour insérer l'exonération du client
-            $sql = "INSERT INTO exonore (Id_client, Date, created_by) VALUES (:idclient, NOW(), :idUser)";
+            // Démarrer la transaction
+            $pdo = $this->db->getPdo();
+            $pdo->beginTransaction();
 
-            // Préparation et exécution de la requête
-            $stmt = $this->db->getPdo()->prepare($sql);
-            $stmt->bindParam(':idclient', $idclient, PDO::PARAM_INT);
-            $stmt->bindParam(':idUser', $idUser, PDO::PARAM_INT);
-            $stmt->execute();
+            // Mettre à jour le statut de l'abonnement
+            $sql1 = 'UPDATE abonnement SET Status = "exonorer" WHERE Id_client = :id';
+            $stmt1 = $pdo->prepare($sql1);
+            $stmt1->bindParam(':id', $idclient, PDO::PARAM_INT);
+            $stmt1->execute();
 
-            // Vérifier si l'insertion a été effectuée
-            if ($stmt->rowCount() > 0) {
+            // Insérer l'exonération dans la table "exonore"
+            $sql2 = "INSERT INTO exonore (Id_client, Date, created_by) VALUES (:idclient, NOW(), :idUser)";
+            $stmt2 = $pdo->prepare($sql2);
+            $stmt2->bindParam(':idclient', $idclient, PDO::PARAM_INT);
+            $stmt2->bindParam(':idUser', $idUser, PDO::PARAM_INT);
+            $stmt2->execute();
+
+            // Vérifier les deux exécutions avant de valider
+            if ($stmt1->rowCount() > 0 && $stmt2->rowCount() > 0) {
+                $pdo->commit();
                 echo json_encode(['success' => 'Le client a été exonéré avec succès']);
             } else {
-                echo json_encode(['error' => 'Aucune modification effectuée. Vérifiez si le client est déjà exonéré.']);
+                // Une des deux opérations n'a rien modifié => rollback
+                $pdo->rollBack();
+                echo json_encode(['error' => 'Échec de l\'exonération. Le client est peut-être déjà exonéré.']);
             }
         } catch (PDOException $e) {
-            // Gestion des erreurs PDO
+            // En cas d'erreur, rollback et affichage du message
+            if (isset($pdo)) {
+                $pdo->rollBack();
+            }
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
+
 
 
     public function AllClientExonorer()

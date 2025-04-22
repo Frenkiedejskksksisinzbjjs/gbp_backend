@@ -363,4 +363,99 @@ class AbonnementModel
             echo json_encode(['error' => 'Erreur de la base de données: ' . $e->getMessage()]);
         }
     }
+
+    public function getTotalParJour()
+    {
+        try {
+            $sql = "
+            SELECT SUM(Montant) as total
+            FROM details_paiements
+            WHERE DATE(created_at) = CURRENT_DATE
+            GROUP BY DATE(created_at)
+        ";
+            $stmt = $this->db->getPdo()->prepare($sql);
+            $stmt->execute();
+            if ($stmt->rowCount() > 0) {
+                $count = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                echo json_encode(["count" => $count]);
+            } else {
+                echo json_encode(["count" => [["total" => 0]]]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+
+    public function getTotalParMois()
+    {
+        try {
+            $sql = "
+                SELECT 
+                    DATE_FORMAT(created_at, '%Y-%m') AS mois,
+                    SUM(Montant) AS total
+                FROM details_paiements
+                WHERE MONTH(created_at) = MONTH(CURRENT_DATE)
+                  AND YEAR(created_at) = YEAR(CURRENT_DATE)
+                GROUP BY mois
+                ORDER BY mois
+            ";
+            $stmt = $this->db->getPdo()->prepare($sql);
+            $stmt->execute();
+            if ($stmt->rowCount() > 0) {
+                $count = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                echo json_encode(["count" => $count]);
+            } else {
+                echo json_encode(["count" => [["mois" => date('Y-m'), "total" => 0]]]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+
+    public function getTotalParAnnee()
+    {
+        try {
+            $sql = "
+            SELECT annee, SUM(total) AS total 
+            FROM (
+                -- Paiements annuels
+                SELECT 
+                    YEAR(created_at) AS annee, 
+                    SUM(Montant) AS total
+                FROM details_paiements
+                WHERE 
+                    YEAR(created_at) = YEAR(CURRENT_DATE)
+                GROUP BY YEAR(created_at)
+
+                UNION ALL
+
+                -- Abonnements payés
+                SELECT 
+                    Annee_abonnement AS annee, 
+                    SUM(Montant) AS total
+                FROM abonnement
+                WHERE 
+                    Status = 'payé' 
+                    AND Annee_abonnement = YEAR(CURRENT_DATE)
+                GROUP BY Annee_abonnement
+            ) AS union_data
+            GROUP BY annee
+            ORDER BY annee
+        ";
+            $stmt = $this->db->getPdo()->prepare($sql);
+            $stmt->execute();
+            if ($stmt->rowCount() > 0) {
+                $count = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                echo json_encode(["count" => $count]);
+            } else {
+                echo json_encode(["count" => [["annee" => date('Y'), "total" => 0]]]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+
 }

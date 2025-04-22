@@ -213,6 +213,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
       $id = $_GET['Id'];
       $ClientsController->AfficherDocument($id);
       break;
+    case 'getTotalParAnnee':
+      $AbonnementController->getTotalParAnnee();
+      break;
+    case 'getTotalParMois':
+      $AbonnementController->getTotalParMois();
+      break;
+    case 'getTotalParJour':
+      $AbonnementController->getTotalParJour();
+      break;
     default:
       # code...
       break;
@@ -279,6 +288,11 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $idClient = $_GET['idClient'];
       $files = $_FILES;
       $ResilierController->ResilierClients($idClient, $id, $files);
+      break;
+    case 'ExonorerClients':
+      $iduser = $_GET['iduser'];
+      $idClient = $_GET['idClient'];
+      $ExonoreController->ExonorerClients($idClient, $iduser);
       break;
 
     default:
