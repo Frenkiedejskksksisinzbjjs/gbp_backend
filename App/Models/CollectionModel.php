@@ -81,7 +81,7 @@ class CollectionModel
             // Insérer dans la table detailts_paiement
             $sql = "INSERT INTO details_paiements (Id_paiement, Categories,Montant, Methode_paiement, Wallet, Numero_wallet, 
                     Numero_cheque, Nom_bank, reference, created_at, created_by) 
-                VALUES (:id_paiement, 'collections',:montant, :methode, :wallet, :numero_wallet, 
+                VALUES (:id_paiement, 'collecte',:montant, :methode, :wallet, :numero_wallet, 
                     :numero_cheque, :nom_bank, :reference, NOW(), :idUser)";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_paiement', $paiement['id'], PDO::PARAM_INT);

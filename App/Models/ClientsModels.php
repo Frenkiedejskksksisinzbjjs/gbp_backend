@@ -265,7 +265,7 @@ class ClientsModels
                 ]);
 
                 $sqlDetailPaiement = "INSERT INTO details_paiements (Id_paiement, Categories,Montant, Methode_paiement, Wallet, Numero_wallet, Numero_cheque, Nom_bank, reference, created_at, created_by) 
-                                      VALUES (:Id_paiement, 'livraison_a_domicil',:Montant, :Methode_paiement, :Wallet, :Numero_wallet, :Numero_cheque, :Nom_bank, :reference, NOW(), :created_by)";
+                                      VALUES (:Id_paiement, 'livraison_a_domicile',:Montant, :Methode_paiement, :Wallet, :Numero_wallet, :Numero_cheque, :Nom_bank, :reference, NOW(), :created_by)";
                 $stmt = $pdo->prepare($sqlDetailPaiement);
                 $stmt->execute([
                     ':Id_paiement' => $idPaiement,
@@ -292,7 +292,7 @@ class ClientsModels
                 ]);
 
                 $sqlDetailPaiement = "INSERT INTO details_paiements (Id_paiement, Categories,Montant, Methode_paiement, Wallet, Numero_wallet, Numero_cheque, Nom_bank, reference, created_at, created_by) 
-                VALUES (:Id_paiement, 'collections',:Montant, :Methode_paiement, :Wallet, :Numero_wallet, :Numero_cheque, :Nom_bank, :reference, NOW(), :created_by)";
+                VALUES (:Id_paiement, 'collecte',:Montant, :Methode_paiement, :Wallet, :Numero_wallet, :Numero_cheque, :Nom_bank, :reference, NOW(), :created_by)";
                 $stmt = $pdo->prepare($sqlDetailPaiement);
                 $stmt->execute([
                     ':Id_paiement' => $idPaiement,
